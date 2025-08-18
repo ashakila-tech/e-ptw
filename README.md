@@ -8,7 +8,8 @@
 ## Windows Quickstart
 ### Docker
 ```powershell
-copy .env.example .env
+cd "C:\Users\G14\OneDrive\Documents\work_iotra\PTW\ptw_backend_starter" # or wherever you unzipped the project
+copy .env
 docker compose up --build
 ```
 Open http://localhost:8000/docs
@@ -18,7 +19,7 @@ Open http://localhost:8000/docs
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-copy .env.example .env
+copy .env
 # Set host to localhost in .env if not using Docker
 python -m uvicorn app.main:app --reload
 ```
