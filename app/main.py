@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .database import Base, engine
-from .routers import applications, permit_types
+from .routers import applications, permit_types, authentication
 
 Base.metadata.create_all(bind=engine)
 
@@ -16,6 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(authentication.router, prefix="/api")
 app.include_router(applications.router, prefix="/api")
 app.include_router(permit_types.router, prefix="/api")
 
