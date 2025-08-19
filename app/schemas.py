@@ -25,3 +25,20 @@ class ApplicationOut(ApplicationIn):
     created_time: Optional[datetime] = None
     updated_time: Optional[datetime] = None
     class Config: from_attributes = True
+
+class User(BaseModel):
+    company_id: int
+    name: str
+    email: str
+    password: str
+
+class Login(BaseModel):
+    email: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    email: str | None = None 
