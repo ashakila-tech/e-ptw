@@ -4,16 +4,16 @@ from .. import deps, models, schemas
 from ..security import hashing, oauth2
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/users",
     tags=["Users"]
 )
 
 @router.get("/")
-def get_all(db: Session = Depends(deps.get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
+def list_users(db: Session = Depends(deps.get_db), current_user: schemas.User = Depends(oauth2.get_current_user)):
     return db.query(models.User).all()
 
 @router.post("/")
-def create(request: schemas.User, db: Session = Depends(deps.get_db)):
+def create_user(request: schemas.User, db: Session = Depends(deps.get_db)):
     new_user = models.User(company_id=request.company_id,
                            name=request.name,
                            email=request.email,

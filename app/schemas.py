@@ -32,6 +32,55 @@ class User(BaseModel):
     email: str
     password: str
 
+class Group(BaseModel):
+    company_id: int
+    name: str
+
+class Document(BaseModel):
+    company_id: int
+    name: str
+    path: str
+    time: Optional[datetime] = None
+
+class WorkflowData(BaseModel):
+    company_id: int
+    workflow_id: int
+    name: str
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
+class ApprovalData(BaseModel):
+    company_id: int
+    approval_id: int
+    document_id: Optional[int]
+    workflow_data_id: int
+    status: Optional[str]
+    approver_name: Optional[str]
+    time: Optional[datetime]
+    role_name: Optional[str]
+    level: Optional[int]
+
+class Location(BaseModel):
+    company_id: int
+    name: str
+
+class Company(BaseModel):
+    name: str
+
+class Workflow(BaseModel):
+    company_id: int
+    permit_type_id: int
+    name: str
+
+class Approval(BaseModel):
+    company_id: int
+    workflow_id: int
+    user_group_id: int
+    user_id: int
+    name: str
+    role_name: Optional[str]
+    level: str
+
 class Login(BaseModel):
     email: str
     password: str
