@@ -5,6 +5,28 @@ from .. import models, schemas
 from ..deps import get_db, require_role
 from ..utils.pagination import paginate
 from ..services.workflow import submit_application, approve_step, reject_step
+from sqlalchemy.exc import IntegrityError
+from ..utils.updates import apply_model_update
+
+@router.put("/{app_id}", response_model=schemas.ApplicationOut, dependencies=[Depends(require_role(["user","admin"]))])
+def update_application(app_id: int, payload: schemas.ApplicationIn, db: Session = Depends(get_db)):
+    obj = db.get(models.Application, app_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Application not found")
+    apply_model_update(obj, payload.model_dump())
+    db.commit(); db.refresh(obj)
+    return obj
+
+@router.delete("/{app_id}", status_code=204, dependencies=[Depends(require_role(["admin"]))])
+def delete_application(app_id: int, db: Session = Depends(get_db)):
+    obj = db.get(models.Application, app_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Application not found")
+    try:
+        db.delete(obj); db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Cannot delete: referenced by other records")
 
 router = APIRouter(prefix="/applications", tags=["Applications"])
 
