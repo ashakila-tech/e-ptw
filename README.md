@@ -19,7 +19,11 @@ Open http://localhost:8000/docs
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-copy .env
+copy .env.local
 # Set host to localhost in .env if not using Docker
 python -m uvicorn app.main:app --reload
 ```
+# for EmailStr
+pip install email-validator or pip install "pydantic[email]"
+
+

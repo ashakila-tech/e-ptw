@@ -1,60 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from datetime import datetime
+# app/routers/applications.py
+# Keep factory CRUD for base operations; your custom endpoints remain in this module.
+from fastapi import APIRouter
+from ._crud_factory import make_crud_router
 from .. import models, schemas
-from ..deps import get_db, require_role
-from ..utils.pagination import paginate
-from ..services.workflow import submit_application, approve_step, reject_step
-from sqlalchemy.exc import IntegrityError
-from ..utils.updates import apply_model_update
 
-@router.put("/{app_id}", response_model=schemas.ApplicationOut, dependencies=[Depends(require_role(["user","admin"]))])
-def update_application(app_id: int, payload: schemas.ApplicationIn, db: Session = Depends(get_db)):
-    obj = db.get(models.Application, app_id)
-    if not obj:
-        raise HTTPException(status_code=404, detail="Application not found")
-    apply_model_update(obj, payload.model_dump())
-    db.commit(); db.refresh(obj)
-    return obj
+crud = make_crud_router(
+    Model=models.Application,
+    InSchema=schemas.ApplicationIn,
+    OutSchema=schemas.ApplicationOut,
+    prefix="/applications",
+    tag="Applications",
+    write_roles=["user","admin"],
+)
 
-@router.delete("/{app_id}", status_code=204, dependencies=[Depends(require_role(["admin"]))])
-def delete_application(app_id: int, db: Session = Depends(get_db)):
-    obj = db.get(models.Application, app_id)
-    if not obj:
-        raise HTTPException(status_code=404, detail="Application not found")
-    try:
-        db.delete(obj); db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=409, detail="Cannot delete: referenced by other records")
+router = APIRouter()
+router.include_router(crud)
 
-router = APIRouter(prefix="/applications", tags=["Applications"])
-
-@router.get("/", response_model=dict)
-def list_applications(page: int = 1, page_size: int = 20, db: Session = Depends(get_db)):
-    q = db.query(models.Application)
-    return paginate(q, page, page_size)
-
-@router.get("/{app_id}", response_model=schemas.ApplicationOut)
-def get_application(app_id: int, db: Session = Depends(get_db)):
-    app = db.get(models.Application, app_id)
-    if not app: raise HTTPException(status_code=404, detail="Application not found")
-    return app
-
-@router.post("/", response_model=schemas.ApplicationOut, dependencies=[Depends(require_role(["user","admin"]))])
-def create_application(payload: schemas.ApplicationIn, db: Session = Depends(get_db)):
-    app = models.Application(**payload.dict(), created_by=payload.applicant_id, created_time=datetime.utcnow())
-    db.add(app); db.commit(); db.refresh(app)
-    return app
-
-@router.post("/{app_id}/submit", dependencies=[Depends(require_role(["user","admin"]))])
-def submit(app_id: int, db: Session = Depends(get_db)):
-    return submit_application(db, app_id)
-
-@router.post("/{app_id}/approve", dependencies=[Depends(require_role(["admin"]))])
-def approve(app_id: int, level: int = Query(..., description="Approval level"), db: Session = Depends(get_db)):
-    return approve_step(db, app_id, level)
-
-@router.post("/{app_id}/reject", dependencies=[Depends(require_role(["admin"]))])
-def reject(app_id: int, level: int = Query(...), reason: str = Query(""), db: Session = Depends(get_db)):
-    return reject_step(db, app_id, level, reason)
+# (Optional) add your custom endpoints below, e.g. /submit, /approve, /reject
+# router.post("/{id}/submit") ...
