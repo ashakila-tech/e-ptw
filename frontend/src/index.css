@@ -1,0 +1,25 @@
+/* src/index.css */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif; /* pick any Google Font */
+  background-color: #f5f7fa; /* light gray background */
+  color: #333; /* default text color */
+}
+
+/* Optional: style form inputs & buttons a bit */
+input, button {
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background-color: #4a90e2;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #357ab8;
+}
