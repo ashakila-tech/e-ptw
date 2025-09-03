@@ -7,9 +7,10 @@ class TokenOut(BaseModel):
     token_type: str = "bearer"
 
 class TokenPayload(BaseModel):
-    sub: str  # email/username
+    sub: str
     uid: int | None = None
     company_id: int | None = None
+    role: str | None = None
     
 class CompanyIn(BaseModel): name: str
 class CompanyOut(CompanyIn):
@@ -22,11 +23,26 @@ class PermitTypeOut(PermitTypeIn):
     id: int
     class Config: from_attributes = True
 
-class UserIn(BaseModel):
-    company_id: int; name: str; email: Optional[EmailStr] = None
-class UserOut(UserIn):
+class UserBase(BaseModel):
+    company_id: int
+    name: str
+    email: Optional[EmailStr] = None
+    user_type: Optional[int] = None   # NEW
+
+class UserCreate(UserBase):           # POST schema
+    password: str
+
+class UserIn(UserBase):               # PUT schema
+    company_id: int
+    name: str
+    email: Optional[EmailStr] = None
+    user_type: Optional[int] = None
+    password: str
+
+class UserOut(UserBase):              # Response
     id: int
     class Config: from_attributes = True
+
 
 class LocationIn(BaseModel):
     company_id: int; name: str
@@ -46,15 +62,21 @@ class WorkflowOut(WorkflowIn):
     id: int
     class Config: from_attributes = True
 
-class ApprovalIn(BaseModel):
-    company_id: int; workflow_id: int
-    user_group_id: Optional[int] = None
-    user_id: Optional[int] = None
+class ApplicationIn(BaseModel):
+    permit_type_id: int
+    workflow_data_id: int | None = None   # NEW
+    location_id: int
+    applicant_id: int
     name: str
-    role_name: Optional[str] = None
-    level: int
-class ApprovalOut(ApprovalIn):
+    document_id: int | None = None
+    status: Optional[str] = "DRAFT"
+
+class ApplicationOut(ApplicationIn):
     id: int
+    created_by: int | None = None     # NEW
+    updated_by: int | None = None     # NEW
+    created_time: datetime | None = None
+    updated_time: datetime | None = None
     class Config: from_attributes = True
 
 class GroupIn(BaseModel):
@@ -85,19 +107,26 @@ class ApprovalDataIn(BaseModel):
     time: Optional[datetime] = None
     role_name: Optional[str] = None
     level: Optional[int] = None
+    
 class ApprovalDataOut(ApprovalDataIn):
     id: int
     class Config: from_attributes = True
 
 # Application (example — keep yours if already defined)
+# schemas.py
 class ApplicationIn(BaseModel):
-    permit_type_id: int; location_id: int; applicant_id: int; name: str
-    document_id: Optional[int] = None
-    status: Optional[str] = "DRAFT"
+    permit_type_id: int
+    workflow_data_id: int | None = None
+    location_id: int
+    applicant_id: int
+    name: str
+    document_id: int | None = None
+    status: str | None = "DRAFT"
+
 class ApplicationOut(ApplicationIn):
     id: int
-    created_by: Optional[int] = None
-    updated_by: Optional[int] = None
-    created_time: Optional[datetime] = None
-    updated_time: Optional[datetime] = None
+    created_by: int | None = None
+    updated_by: int | None = None
+    created_time: datetime | None = None
+    updated_time: datetime | None = None
     class Config: from_attributes = True

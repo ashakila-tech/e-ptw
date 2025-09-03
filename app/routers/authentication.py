@@ -15,6 +15,7 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
+   # print (form_data)
     # OAuth2PasswordRequestForm has .username and .password
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user:
@@ -24,6 +25,7 @@ def login(
         )
 
     if not user.password_hash or not hashing.Hash.verify(user.password_hash, form_data.password):
+   #if not hashing.Hash.verify(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
