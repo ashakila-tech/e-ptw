@@ -32,11 +32,14 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
+        
       />
       <Tabs.Screen
         name="mypermit"
         options={{
           title: 'My Permit',
+          headerShown: true,
+          headerTitleAlign: "center",
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="permit.fill" color={color} />,
         }}
       />

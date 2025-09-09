@@ -9,7 +9,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        test: "#a5a5a5ff"
+        primary: "#535252ff",
+        approved: "#249707ff",
+        pending: "#b6b90aff",
+        rejected: "#bb0000ff"
       }
     },
   },
