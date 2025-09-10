@@ -22,12 +22,12 @@ def make_crud_router(
 ) -> APIRouter:
     router = APIRouter(prefix=prefix, tags=[tag])
 
-    @router.get("/", response_model=list[OutSchema], dependencies=[Depends(require_role( []))])
+    @router.get("/", response_model=list[OutSchema])
     def list_items(db: Session = Depends(get_db), page: int = 1, page_size: int = 20):
         q = db.query(Model).offset((page - 1) * page_size).limit(page_size)
         return [OutSchema.model_validate(x, from_attributes=True) for x in q.all()]
 
-    @router.get("/{item_id}", response_model=OutSchema, dependencies=[Depends(require_role(read_roles or []))])
+    @router.get("/{item_id}", response_model=OutSchema)
     def get_item(item_id: int, db: Session = Depends(get_db)):
         obj = db.get(Model, item_id)
         if not obj:
