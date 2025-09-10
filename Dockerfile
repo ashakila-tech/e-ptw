@@ -17,6 +17,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy full app folder into container
 COPY app ./app
 
+# Copy Alembic config and migration scripts
+COPY alembic.ini ./alembic.ini
+COPY alembic ./alembic
+
 # Expose FastAPI port
 EXPOSE 8000
 
