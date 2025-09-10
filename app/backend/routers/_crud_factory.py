@@ -22,12 +22,12 @@ def make_crud_router(
 ) -> APIRouter:
     router = APIRouter(prefix=prefix, tags=[tag])
 
-    @router.get("/", response_model=list[OutSchema])#, dependencies=[Depends(require_role( []))])
+    @router.get("/", response_model=list[OutSchema], dependencies=[Depends(require_role( []))])
     def list_items(db: Session = Depends(get_db), page: int = 1, page_size: int = 20):
         q = db.query(Model).offset((page - 1) * page_size).limit(page_size)
         return [OutSchema.model_validate(x, from_attributes=True) for x in q.all()]
 
-    @router.get("/{item_id}", response_model=OutSchema) #, dependencies=[Depends(require_role(read_roles or []))])
+    @router.get("/{item_id}", response_model=OutSchema, dependencies=[Depends(require_role(read_roles or []))])
     def get_item(item_id: int, db: Session = Depends(get_db)):
         obj = db.get(Model, item_id)
         if not obj:
@@ -38,7 +38,7 @@ def make_crud_router(
     _CreateSchema = CreateSchema or InSchema
 
     if write_roles is not None:   # only add dependency if roles are given
-        @router.post("/", response_model=OutSchema) #, dependencies=[Depends(require_role(write_roles))])
+        @router.post("/", response_model=OutSchema, dependencies=[Depends(require_role(write_roles))])
         def create_item(payload: _CreateSchema, db: Session = Depends(get_db)):
             data = payload.model_dump()
             if create_mutator:
@@ -55,10 +55,9 @@ def make_crud_router(
             obj = Model(**data)
             db.add(obj); db.commit(); db.refresh(obj)
             return obj
-            
 
     # --- UPDATE ---
-    @router.put("/{item_id}", response_model=OutSchema) #, dependencies=[Depends(require_role( []))])
+    @router.put("/{item_id}", response_model=OutSchema, dependencies=[Depends(require_role( []))])
     def update_item(item_id: int, payload: InSchema, db: Session = Depends(get_db)):
         obj = db.get(Model, item_id)
         if not obj:
@@ -69,7 +68,7 @@ def make_crud_router(
         return obj
 
     # --- DELETE ---
-    @router.delete("/{item_id}", status_code=204) #, dependencies=[Depends(require_role([]))])
+    @router.delete("/{item_id}", status_code=204, dependencies=[Depends(require_role([]))])
     def delete_item(item_id: int, db: Session = Depends(get_db)):
         obj = db.get(Model, item_id)
         if not obj:

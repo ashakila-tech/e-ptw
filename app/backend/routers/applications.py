@@ -19,8 +19,8 @@ base = make_crud_router(
 router = APIRouter()
 router.include_router(base)
 
-@router.post("/applications/", response_model=schemas.ApplicationOut)
-#             dependencies=[Depends(require_role(["admin","user"]))])
+@router.post("/applications/", response_model=schemas.ApplicationOut,
+             dependencies=[Depends(require_role(["admin","user"]))])
 def create_application(payload: schemas.ApplicationIn,
                        db: Session = Depends(get_db),
                        me: models.User = Depends(get_current_user)):
@@ -32,8 +32,8 @@ def create_application(payload: schemas.ApplicationIn,
     db.add(obj); db.commit(); db.refresh(obj)
     return obj
 
-@router.put("/applications/{item_id}", response_model=schemas.ApplicationOut)
-#            dependencies=[Depends(require_role(["admin","user"]))])
+@router.put("/applications/{item_id}", response_model=schemas.ApplicationOut,
+            dependencies=[Depends(require_role(["admin","user"]))])
 def update_application(item_id: int,
                        payload: schemas.ApplicationIn,
                        db: Session = Depends(get_db),
