@@ -24,8 +24,8 @@ crud = make_crud_router(
     OutSchema=schemas.UserOut,
     prefix="/users",
     tag="Users",
-    list_roles=["admin"],    # only admin can list
-    read_roles=["admin"],    # only admin can read specific
+    list_roles=None,   # only admin can list
+    read_roles=None,    # only admin can read specific
     write_roles=None,   # keep PUT/DELETE admin-only
     create_mutator=_user_create_mutator,
 )
