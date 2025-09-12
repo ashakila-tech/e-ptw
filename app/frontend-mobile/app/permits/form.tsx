@@ -70,7 +70,7 @@ export default function ApplicationForm() {
         const res = await fetch(`${API_BASE_URL}api/documents/upload`, {
           method: "POST",
           headers: {
-            // 👇 DO NOT set Content-Type manually — let fetch handle it
+            // DO NOT set Content-Type manually — let fetch handle it
             // because FormData automatically sets the correct boundary
           },
           body: formData,
@@ -96,13 +96,13 @@ export default function ApplicationForm() {
   const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
     try {
       const payload = {
-        permit_type_id: permitType,
-        workflow_data_id: 1, // backend may update this automatically
-        location_id: location,
-        applicant_id: 1, // TODO: replace with logged-in user id
-        name: permitName,
-        document_id: documentId, // 👈 use uploaded doc id
+        name: permitName || "Unnamed Permit",
+        permit_type_id: permitType ?? 1,
+        location_id: location ?? 1,
+        document_id: documentId ?? 1,
         status,
+        applicant_id: 1, // TODO: replace with logged-in user id
+        workflow_data_id: 1, // keep if required
       };
 
       console.log("Submitting payload:", payload);
