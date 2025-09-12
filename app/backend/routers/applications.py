@@ -71,23 +71,35 @@ router = APIRouter()
 router.include_router(base)
 
 
-@router.post("/", response_model=schemas.ApplicationOut,
-             dependencies=[Depends(require_role(["admin", "user"]))])
+# @router.post("/", response_model=schemas.ApplicationOut,
+#              dependencies=[Depends(require_role(["admin", "user"]))])
+# def create_application(
+#     payload: schemas.ApplicationIn,
+#     db: Session = Depends(get_db),
+#     me: models.User = Depends(get_current_user),
+# ):
+#     # Ensure referenced document exists
+#     doc = db.get(models.Document, payload.document_id)
+#     if not doc:
+#         raise HTTPException(status_code=400, detail="Invalid document_id")
+
+#     obj = models.Application(
+#         **payload.model_dump(),
+#         created_by=me.id,
+#         updated_by=me.id,
+#     )
+#     db.add(obj)
+#     db.commit()
+#     db.refresh(obj)
+#     return obj
+
+# no auth for creating applications
+@router.post("/", response_model=schemas.ApplicationOut)
 def create_application(
     payload: schemas.ApplicationIn,
     db: Session = Depends(get_db),
-    me: models.User = Depends(get_current_user),
 ):
-    # Ensure referenced document exists
-    doc = db.get(models.Document, payload.document_id)
-    if not doc:
-        raise HTTPException(status_code=400, detail="Invalid document_id")
-
-    obj = models.Application(
-        **payload.model_dump(),
-        created_by=me.id,
-        updated_by=me.id,
-    )
+    obj = models.Application(**payload.model_dump())
     db.add(obj)
     db.commit()
     db.refresh(obj)

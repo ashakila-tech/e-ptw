@@ -32,13 +32,13 @@ export default function ApplicationForm() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const typeRes = await fetch(`${API_BASE_URL}api/permit-types`);
+        const typeRes = await fetch(`${API_BASE_URL}api/permit-types/`);
         const typeData = await typeRes.json();
         setPermitTypeItems(
           typeData.map((t: any) => ({ label: t.name, value: t.id }))
         );
 
-        const locRes = await fetch(`${API_BASE_URL}api/locations`);
+        const locRes = await fetch(`${API_BASE_URL}api/locations/`);
         const locData = await locRes.json();
         setLocationItems(
           locData.map((l: any) => ({ label: l.name, value: l.id }))
@@ -107,7 +107,7 @@ export default function ApplicationForm() {
 
       console.log("Submitting payload:", payload);
 
-      const res = await fetch(`${API_BASE_URL}api/applications`, {
+      const res = await fetch(`${API_BASE_URL}api/applications/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

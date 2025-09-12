@@ -9,8 +9,11 @@ export default function MyPermitTab() {
   useEffect(() => {
     async function fetchPermits() {
       try {
-        const res = await fetch(`${API_BASE_URL}api/applications`);
+        // const res = await fetch(`${API_BASE_URL}api/applications`);
+        const res = await fetch(`${API_BASE_URL}api/applications/`);
         const permits = await res.json();
+
+        console.log("Fetched permits:", permits);
 
         const enrichedPermits = await Promise.all(
           permits.map(async (permit: PermitAPI) => {
