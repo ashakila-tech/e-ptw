@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, Alert } from "react-native";
+import { View, Text, TextInput, Pressable, Alert, TouchableOpacity } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useRouter, Stack } from "expo-router";
+import * as DocumentPicker from "expo-document-picker";
 import { API_BASE_URL } from "@env";
 
 export default function ApplicationForm() {
@@ -10,7 +11,8 @@ export default function ApplicationForm() {
   // --- Form state ---
   const [applicantName, setApplicantName] = useState("");
   const [permitName, setPermitName] = useState("");
-  const [document, setDocument] = useState("");
+  const [documentId, setDocumentId] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // --- Permit Type Dropdown ---
   const [permitTypeOpen, setPermitTypeOpen] = useState(false);
@@ -49,6 +51,48 @@ export default function ApplicationForm() {
     fetchData();
   }, []);
 
+  // --- Pick + upload document ---
+  const pickAndUploadDocument = async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
+
+    if (!result.canceled) {
+      const file = result.assets[0];
+      setUploading(true);
+
+      const formData = new FormData();
+      formData.append("file", {
+        uri: file.uri,
+        name: file.name,
+        type: file.mimeType || "application/octet-stream",
+      } as any);
+
+      try {
+        const res = await fetch(`${API_BASE_URL}api/documents/upload`, {
+          method: "POST",
+          headers: {
+            // 👇 DO NOT set Content-Type manually — let fetch handle it
+            // because FormData automatically sets the correct boundary
+          },
+          body: formData,
+        });
+
+        if (!res.ok) {
+          throw new Error(`Upload failed (${res.status})`);
+        }
+
+        const doc = await res.json();
+        setDocumentId(doc.id);
+        Alert.alert("Upload Success", `Uploaded: ${doc.filename}`);
+      } catch (err: any) {
+        console.error("Upload error:", err);
+        Alert.alert("Error", err.message || "Upload failed");
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  // --- Submit application ---
   const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
     try {
       const payload = {
@@ -57,8 +101,8 @@ export default function ApplicationForm() {
         location_id: location,
         applicant_id: 1, // TODO: replace with logged-in user id
         name: permitName,
-        document_id: 1, // TODO: replace with actual document upload
-        status, // "DRAFT" or "SUBMITTED"
+        document_id: documentId, // 👈 use uploaded doc id
+        status,
       };
 
       console.log("Submitting payload:", payload);
@@ -122,15 +166,25 @@ export default function ApplicationForm() {
         />
       </View>
 
-      {/* Document */}
+      {/* Document Upload */}
       <View className="mb-4">
         <Text className="text-base text-gray-700 mb-2">Document</Text>
-        <TextInput
-          className="border border-gray-300 rounded-2xl px-4 py-3 text-gray-900"
-          placeholder="Enter document (e.g. doc1.pdf)"
-          value={document}
-          onChangeText={setDocument}
-        />
+        <TouchableOpacity
+          onPress={pickAndUploadDocument}
+          className="bg-blue-600 rounded-2xl py-3 px-4 items-center"
+          disabled={uploading}
+        >
+          <Text className="text-white font-semibold">
+            {uploading
+              ? "Uploading..."
+              : documentId
+              ? "Change Document"
+              : "Upload Document"}
+          </Text>
+        </TouchableOpacity>
+        {documentId && (
+          <Text className="text-green-600 mt-2">Document uploaded ✅</Text>
+        )}
       </View>
 
       {/* Permit Type Dropdown */}
