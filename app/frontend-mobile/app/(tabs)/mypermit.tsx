@@ -2,14 +2,15 @@ import React, { useEffect, useState } from "react";
 import PermitCard from "@/components/PermitCard";
 import { FlatList } from "react-native";
 import { API_BASE_URL } from "@env";
+import { useRouter } from "expo-router";
 
 export default function MyPermitTab() {
   const [permitData, setPermitData] = useState<PermitData[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchPermits() {
       try {
-        // const res = await fetch(`${API_BASE_URL}api/applications`);
         const res = await fetch(`${API_BASE_URL}api/applications/`);
         const permits = await res.json();
 
@@ -43,9 +44,10 @@ export default function MyPermitTab() {
               location: location.name || location.title || "",
               permitType: permitType.name || permitType.title || "",
               workflowData: workflowData.status || "",
+              createdBy: permit.created_by || "Unknown",
               createdTime: permit.created_time,
               workStartTime: permit.work_start_time,
-            };
+            } as PermitData;
           })
         );
 
@@ -61,7 +63,19 @@ export default function MyPermitTab() {
   return (
     <FlatList
       data={permitData}
-      renderItem={({ item }) => <PermitCard {...item} />}
+      renderItem={({ item }) => (
+        <PermitCard
+          {...item}
+          onEdit={() => {
+            if (item.status === "DRAFT") {
+              router.push({
+                pathname: "/permits/form" as const,
+                params: { application: JSON.stringify(item) },
+              });
+            }
+          }}
+        />
+      )}
       scrollEnabled={true}
       className="w-full p-3"
     />

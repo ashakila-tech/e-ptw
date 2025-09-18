@@ -1,13 +1,16 @@
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Link } from "expo-router";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+type PermitCardProps = Partial<PermitData> & {
+  onEdit?: () => void;
+};
 
 const PermitCard = ({
   id,
@@ -16,13 +19,12 @@ const PermitCard = ({
   location,
   document,
   permitType,
-  workflowData,
   createdTime,
   workStartTime,
-}: Partial<PermitData>) => {
+  onEdit,
+}: PermitCardProps) => {
   return (
     <View className="bg-white rounded-lg w-full p-4 mb-4">
-      {/* Header */}
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-primary text-lg">
           Status:{" "}
@@ -41,25 +43,39 @@ const PermitCard = ({
           </Text>
         </Text>
 
-        {/* Only Details navigates */}
-        <Link href={`/permits/${id}`} asChild>
-          {/* <TouchableOpacity className="flex-row items-center">
-            <Text>Details
-              <IconSymbol name="chevron.right" color="#000" />
-            </Text>
-          </TouchableOpacity> */}
-          <TouchableOpacity 
-            style={{ flexDirection: "row", alignItems: "center", marginLeft: 12, flexShrink: 0 }}
-          >
-            <Text style={{ marginRight: 6 }}>Details</Text>
-            <IconSymbol name="chevron.right" size={20} color="#000" />
-          </TouchableOpacity>
-        </Link>
+        <View className="flex-row space-x-3">
+          {status === "DRAFT" && onEdit && (
+            <TouchableOpacity
+              onPress={onEdit}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginRight: 12,
+              }}
+            >
+              <Text style={{ marginRight: 6 }}>Edit</Text>
+              <IconSymbol name="pencil" size={18} color="#000" />
+            </TouchableOpacity>
+          )}
+
+          <Link href={`/permits/${id}`} asChild>
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginLeft: 12,
+                flexShrink: 0,
+              }}
+            >
+              <Text style={{ marginRight: 6 }}>Details</Text>
+              <IconSymbol name="chevron.right" size={20} color="#000" />
+            </TouchableOpacity>
+          </Link>
+        </View>
       </View>
 
       <View className="border-b border-gray-300 mb-3" />
 
-      {/* Info rows */}
       <View className="w-full flex-row mb-2">
         <View className="w-1/2">
           <Text className="text-primary"> Name: </Text>

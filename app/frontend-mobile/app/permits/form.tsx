@@ -1,29 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, TouchableOpacity } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { useRouter, Stack } from "expo-router";
+import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import { API_BASE_URL } from "@env";
 
 export default function ApplicationForm() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+
+  // --- Editing mode (parse params if present) ---
+  const existingApp: PermitData | null = params.application
+    ? JSON.parse(params.application as string)
+    : null;
+
+  const isEditing = !!existingApp;
 
   // --- Form state ---
-  const [applicantName, setApplicantName] = useState("");
-  const [permitName, setPermitName] = useState("");
-  const [documentId, setDocumentId] = useState<number | null>(null);
+  const [applicantName, setApplicantName] = useState(existingApp?.createdBy || "");
+  const [permitName, setPermitName] = useState(existingApp?.name || "");
+  const [documentId, setDocumentId] = useState<number | null>(existingApp?.documentId || null);
   const [uploading, setUploading] = useState(false);
 
   // --- Permit Type Dropdown ---
   const [permitTypeOpen, setPermitTypeOpen] = useState(false);
-  const [permitType, setPermitType] = useState<number | null>(null);
+  const [permitType, setPermitType] = useState<number | null>(existingApp?.permitTypeId || null);
   const [permitTypeItems, setPermitTypeItems] = useState<
     { label: string; value: number }[]
   >([]);
 
   // --- Location Dropdown ---
   const [locationOpen, setLocationOpen] = useState(false);
-  const [location, setLocation] = useState<number | null>(null);
+  const [location, setLocation] = useState<number | null>(existingApp?.locationId || null);
   const [locationItems, setLocationItems] = useState<
     { label: string; value: number }[]
   >([]);
@@ -34,15 +42,11 @@ export default function ApplicationForm() {
       try {
         const typeRes = await fetch(`${API_BASE_URL}api/permit-types/`);
         const typeData = await typeRes.json();
-        setPermitTypeItems(
-          typeData.map((t: any) => ({ label: t.name, value: t.id }))
-        );
+        setPermitTypeItems(typeData.map((t: any) => ({ label: t.name, value: t.id })));
 
         const locRes = await fetch(`${API_BASE_URL}api/locations/`);
         const locData = await locRes.json();
-        setLocationItems(
-          locData.map((l: any) => ({ label: l.name, value: l.id }))
-        );
+        setLocationItems(locData.map((l: any) => ({ label: l.name, value: l.id })));
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
       }
@@ -69,10 +73,6 @@ export default function ApplicationForm() {
       try {
         const res = await fetch(`${API_BASE_URL}api/documents/upload`, {
           method: "POST",
-          headers: {
-            // DO NOT set Content-Type manually — let fetch handle it
-            // because FormData automatically sets the correct boundary
-          },
           body: formData,
         });
 
@@ -82,7 +82,7 @@ export default function ApplicationForm() {
 
         const doc = await res.json();
         setDocumentId(doc.id);
-        Alert.alert("Upload Success", `Uploaded: ${doc.filename}`);
+        Alert.alert("Upload Success", `Uploaded: ${doc.name}`);
       } catch (err: any) {
         console.error("Upload error:", err);
         Alert.alert("Error", err.message || "Upload failed");
@@ -102,13 +102,19 @@ export default function ApplicationForm() {
         document_id: documentId ?? 1,
         status,
         applicant_id: 1, // TODO: replace with logged-in user id
-        workflow_data_id: 1, // keep if required
+        workflow_data_id: 1,
       };
 
       console.log("Submitting payload:", payload);
 
-      const res = await fetch(`${API_BASE_URL}api/applications/`, {
-        method: "POST",
+      const url = isEditing
+        ? `${API_BASE_URL}api/applications/${existingApp?.id}`
+        : `${API_BASE_URL}api/applications/`;
+
+      const method = isEditing ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -135,12 +141,9 @@ export default function ApplicationForm() {
     <View className="flex-1 bg-white p-4">
       <Stack.Screen
         options={{
-          title: "New Permit Application",
+          title: isEditing ? "Edit Permit Application" : "New Permit Application",
           headerTitleAlign: "center",
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-          },
+          headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
         }}
       />
 
@@ -183,7 +186,7 @@ export default function ApplicationForm() {
           </Text>
         </TouchableOpacity>
         {documentId && (
-          <Text className="text-green-600 mt-2">Document uploaded ✅</Text>
+          <Text className="text-green-600 mt-2">Document uploaded</Text>
         )}
       </View>
 
@@ -221,7 +224,7 @@ export default function ApplicationForm() {
         />
       </View>
 
-      {/* Save as Draft Button */}
+      {/* Save as Draft */}
       <Pressable
         onPress={() => submitApplication("DRAFT")}
         className="bg-gray-600 rounded-2xl py-4 items-center mt-6"
@@ -229,7 +232,7 @@ export default function ApplicationForm() {
         <Text className="text-white font-semibold text-lg">Save as Draft</Text>
       </Pressable>
 
-      {/* Submit Button */}
+      {/* Submit */}
       <Pressable
         onPress={() => submitApplication("SUBMITTED")}
         className="bg-green-600 rounded-2xl py-4 items-center mt-4"

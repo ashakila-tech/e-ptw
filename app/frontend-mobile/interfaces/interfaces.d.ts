@@ -6,6 +6,7 @@ interface PermitData {
   document: string;
   permitType?: string;
   workflowData?: string;
+  createdBy: string; 
   createdTime: string;
   workStartTime?: string;
   // FKs 
