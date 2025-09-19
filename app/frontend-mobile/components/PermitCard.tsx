@@ -24,7 +24,8 @@ const PermitCard = ({
   onEdit,
 }: PermitCardProps) => {
   return (
-    <View className="bg-white rounded-lg w-full p-4 mb-4">
+    <View className="bg-white rounded-lg w-full p-4 mb-4 shadow-sm">
+      {/* Header Row */}
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-primary text-lg">
           Status:{" "}
@@ -76,6 +77,7 @@ const PermitCard = ({
 
       <View className="border-b border-gray-300 mb-3" />
 
+      {/* Main Info */}
       <View className="w-full flex-row mb-2">
         <View className="w-1/2">
           <Text className="text-primary"> Name: </Text>
@@ -96,7 +98,9 @@ const PermitCard = ({
         </View>
         <View className="w-1/2">
           <Text className="text-primary"> Work Start Date: </Text>
-          <Text className="text-primary font-bold"> {workStartTime} </Text>
+          <Text className="text-primary font-bold">
+            {formatDate(workStartTime)}
+          </Text>
         </View>
       </View>
 
@@ -114,9 +118,9 @@ const PermitCard = ({
   );
 };
 
-function formatDate(dateString: string | undefined): string {
-  if (!dateString) return "-";
-  return dayjs.utc(dateString).tz(dayjs.tz.guess()).format("DD-MM-YYYY HH:mm");
+function formatDate(date?: string | null): string {
+  if (!date) return "-";
+  return dayjs.utc(date).tz(dayjs.tz.guess()).format("DD-MM-YYYY HH:mm");
 }
 
 export default PermitCard;

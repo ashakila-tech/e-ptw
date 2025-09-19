@@ -1,9 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, Alert, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import { API_BASE_URL } from "@env";
+
+interface PermitData {
+  id: number;
+  name: string;
+  status: string;
+  location: string;
+  document: string;
+  permitType?: string;
+  workflowData?: string;
+  createdBy: string;
+  createdTime: string;
+  workStartTime?: string;
+  // FKs
+  applicantId: number;
+  documentId?: number;
+  locationId?: number;
+  permitTypeId?: number;
+  workflowDataId?: number;
+}
 
 export default function ApplicationForm() {
   const router = useRouter();
@@ -17,21 +43,32 @@ export default function ApplicationForm() {
   const isEditing = !!existingApp;
 
   // --- Form state ---
-  const [applicantName, setApplicantName] = useState(existingApp?.createdBy || "");
+  const [applicantName, setApplicantName] = useState(
+    existingApp?.createdBy || ""
+  );
   const [permitName, setPermitName] = useState(existingApp?.name || "");
-  const [documentId, setDocumentId] = useState<number | null>(existingApp?.documentId || null);
+  const [documentId, setDocumentId] = useState<number | null>(
+    existingApp?.documentId || null
+  );
+  const [documentName, setDocumentName] = useState<string | null>(
+    existingApp?.document || null
+  );
   const [uploading, setUploading] = useState(false);
 
   // --- Permit Type Dropdown ---
   const [permitTypeOpen, setPermitTypeOpen] = useState(false);
-  const [permitType, setPermitType] = useState<number | null>(existingApp?.permitTypeId || null);
+  const [permitType, setPermitType] = useState<number | null>(
+    existingApp?.permitTypeId || null
+  );
   const [permitTypeItems, setPermitTypeItems] = useState<
     { label: string; value: number }[]
   >([]);
 
   // --- Location Dropdown ---
   const [locationOpen, setLocationOpen] = useState(false);
-  const [location, setLocation] = useState<number | null>(existingApp?.locationId || null);
+  const [location, setLocation] = useState<number | null>(
+    existingApp?.locationId || null
+  );
   const [locationItems, setLocationItems] = useState<
     { label: string; value: number }[]
   >([]);
@@ -42,11 +79,23 @@ export default function ApplicationForm() {
       try {
         const typeRes = await fetch(`${API_BASE_URL}api/permit-types/`);
         const typeData = await typeRes.json();
-        setPermitTypeItems(typeData.map((t: any) => ({ label: t.name, value: t.id })));
+        setPermitTypeItems(
+          typeData.map((t: any) => ({ label: t.name, value: t.id }))
+        );
+
+        if (existingApp?.permitTypeId) {
+          setPermitType(existingApp.permitTypeId);
+        }
 
         const locRes = await fetch(`${API_BASE_URL}api/locations/`);
         const locData = await locRes.json();
-        setLocationItems(locData.map((l: any) => ({ label: l.name, value: l.id })));
+        setLocationItems(
+          locData.map((l: any) => ({ label: l.name, value: l.id }))
+        );
+
+        if (existingApp?.locationId) {
+          setLocation(existingApp.locationId);
+        }
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
       }
@@ -82,6 +131,7 @@ export default function ApplicationForm() {
 
         const doc = await res.json();
         setDocumentId(doc.id);
+        setDocumentName(doc.name);
         Alert.alert("Upload Success", `Uploaded: ${doc.name}`);
       } catch (err: any) {
         console.error("Upload error:", err);
@@ -141,7 +191,9 @@ export default function ApplicationForm() {
     <View className="flex-1 bg-white p-4">
       <Stack.Screen
         options={{
-          title: isEditing ? "Edit Permit Application" : "New Permit Application",
+          title: isEditing
+            ? "Edit Permit Application"
+            : "New Permit Application",
           headerTitleAlign: "center",
           headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
         }}
@@ -185,8 +237,11 @@ export default function ApplicationForm() {
               : "Upload Document"}
           </Text>
         </TouchableOpacity>
+
         {documentId && (
-          <Text className="text-green-600 mt-2">Document uploaded</Text>
+          <Text className="text-green-600 mt-2">
+            {documentName ? `Uploaded: ${documentName}` : "Document uploaded"}
+          </Text>
         )}
       </View>
 
