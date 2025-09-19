@@ -1,288 +1,183 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  Alert,
-  TouchableOpacity,
-} from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, Pressable } from "react-native";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
-import * as DocumentPicker from "expo-document-picker";
-import { API_BASE_URL } from "@env";
-
-interface PermitData {
-  id: number;
-  name: string;
-  status: string;
-  location: string;
-  document: string;
-  permitType?: string;
-  workflowData?: string;
-  createdBy: string;
-  createdTime: string;
-  workStartTime?: string;
-  // FKs
-  applicantId: number;
-  documentId?: number;
-  locationId?: number;
-  permitTypeId?: number;
-  workflowDataId?: number;
-}
+import DocumentUpload from "@/components/DocumentUpload";
+import DropdownField from "@/components/DropdownField";
+import { useApplicationForm } from "@/hooks/useApplicationForm";
+import DatePickerField from "@/components/DatePickerField";
 
 export default function ApplicationForm() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const existingApp = params.application ? JSON.parse(params.application as string) : null;
+  const [dateError, setDateError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  // --- Editing mode (parse params if present) ---
-  const existingApp: PermitData | null = params.application
-    ? JSON.parse(params.application as string)
-    : null;
+  const {
+    applicantName,
+    setApplicantName,
+    permitName,
+    setPermitName,
+    documentId,
+    documentName,
+    uploading,
+    pickAndUploadDocument,
+    permitTypeOpen,
+    permitType,
+    permitTypeItems,
+    setPermitTypeOpen,
+    setPermitType,
+    setPermitTypeItems,
+    locationOpen,
+    location,
+    locationItems,
+    setLocationOpen,
+    setLocation,
+    setLocationItems,
+    startTime,
+    setStartTime,
+    endTime,
+    setEndTime,
+    submitApplication,
+  } = useApplicationForm(existingApp, router);
 
-  const isEditing = !!existingApp;
-
-  // --- Form state ---
-  const [applicantName, setApplicantName] = useState(
-    existingApp?.createdBy || ""
-  );
-  const [permitName, setPermitName] = useState(existingApp?.name || "");
-  const [documentId, setDocumentId] = useState<number | null>(
-    existingApp?.documentId || null
-  );
-  const [documentName, setDocumentName] = useState<string | null>(
-    existingApp?.document || null
-  );
-  const [uploading, setUploading] = useState(false);
-
-  // --- Permit Type Dropdown ---
-  const [permitTypeOpen, setPermitTypeOpen] = useState(false);
-  const [permitType, setPermitType] = useState<number | null>(
-    existingApp?.permitTypeId || null
-  );
-  const [permitTypeItems, setPermitTypeItems] = useState<
-    { label: string; value: number }[]
-  >([]);
-
-  // --- Location Dropdown ---
-  const [locationOpen, setLocationOpen] = useState(false);
-  const [location, setLocation] = useState<number | null>(
-    existingApp?.locationId || null
-  );
-  const [locationItems, setLocationItems] = useState<
-    { label: string; value: number }[]
-  >([]);
-
-  // --- Fetch dropdown data ---
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const typeRes = await fetch(`${API_BASE_URL}api/permit-types/`);
-        const typeData = await typeRes.json();
-        setPermitTypeItems(
-          typeData.map((t: any) => ({ label: t.name, value: t.id }))
-        );
-
-        if (existingApp?.permitTypeId) {
-          setPermitType(existingApp.permitTypeId);
-        }
-
-        const locRes = await fetch(`${API_BASE_URL}api/locations/`);
-        const locData = await locRes.json();
-        setLocationItems(
-          locData.map((l: any) => ({ label: l.name, value: l.id }))
-        );
-
-        if (existingApp?.locationId) {
-          setLocation(existingApp.locationId);
-        }
-      } catch (err) {
-        console.error("Error fetching dropdown data:", err);
+    // Check date validity
+    if (startTime && endTime) {
+      if (endTime <= startTime) {
+        setDateError("End time must be after start time.");
+      } else {
+        setDateError(null);
       }
+    } else {
+      setDateError(null);
     }
 
-    fetchData();
-  }, []);
-
-  // --- Pick + upload document ---
-  const pickAndUploadDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
-
-    if (!result.canceled) {
-      const file = result.assets[0];
-      setUploading(true);
-
-      const formData = new FormData();
-      formData.append("file", {
-        uri: file.uri,
-        name: file.name,
-        type: file.mimeType || "application/octet-stream",
-      } as any);
-
-      try {
-        const res = await fetch(`${API_BASE_URL}api/documents/upload`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) {
-          throw new Error(`Upload failed (${res.status})`);
-        }
-
-        const doc = await res.json();
-        setDocumentId(doc.id);
-        setDocumentName(doc.name);
-        Alert.alert("Upload Success", `Uploaded: ${doc.name}`);
-      } catch (err: any) {
-        console.error("Upload error:", err);
-        Alert.alert("Error", err.message || "Upload failed");
-      } finally {
-        setUploading(false);
-      }
+    // Check overall form validity
+    if (!applicantName.trim()) {
+      setFormError("Applicant name is required.");
+    } else if (!permitName.trim()) {
+      setFormError("Permit name is required.");
+    } else if (!documentId) {
+      setFormError("Please upload a document.");
+    } else if (!permitType) {
+      setFormError("Please select a permit type.");
+    } else if (!location) {
+      setFormError("Please select a location.");
+    } else if (!startTime || !endTime) {
+      setFormError("Please select both start and end times.");
+    } else if (dateError) {
+      setFormError(dateError);
+    } else {
+      setFormError(null);
     }
-  };
-
-  // --- Submit application ---
-  const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
-    try {
-      const payload = {
-        name: permitName || "Unnamed Permit",
-        permit_type_id: permitType ?? 1,
-        location_id: location ?? 1,
-        document_id: documentId ?? 1,
-        status,
-        applicant_id: 1, // TODO: replace with logged-in user id
-        workflow_data_id: 1,
-      };
-
-      console.log("Submitting payload:", payload);
-
-      const url = isEditing
-        ? `${API_BASE_URL}api/applications/${existingApp?.id}`
-        : `${API_BASE_URL}api/applications/`;
-
-      const method = isEditing ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Failed to save application (${res.status})`);
-      }
-
-      Alert.alert(
-        "Success",
-        status === "DRAFT"
-          ? "Application saved as draft."
-          : "Application submitted successfully."
-      );
-
-      router.push("/(tabs)/mypermit");
-    } catch (err: any) {
-      console.error("Error submitting application:", err);
-      Alert.alert("Error", err.message || "Something went wrong");
-    }
-  };
+  }, [
+    applicantName,
+    permitName,
+    documentId,
+    permitType,
+    location,
+    startTime,
+    endTime,
+    dateError,
+  ]);
 
   return (
     <View className="flex-1 bg-white p-4">
       <Stack.Screen
         options={{
-          title: isEditing
-            ? "Edit Permit Application"
-            : "New Permit Application",
+          title: existingApp ? "Edit Permit Application" : "New Permit Application",
           headerTitleAlign: "center",
           headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
         }}
       />
 
       {/* Applicant Name */}
-      <View className="mb-4">
-        <Text className="text-base text-gray-700 mb-2">Applicant Name</Text>
-        <TextInput
-          className="border border-gray-300 rounded-2xl px-4 py-3 text-gray-900"
-          placeholder="Enter applicant name"
-          value={applicantName}
-          onChangeText={setApplicantName}
-        />
-      </View>
+      <Text className="text-base text-gray-700 mb-2">Applicant Name</Text>
+      <TextInput
+        className="border border-gray-300 rounded-2xl px-4 py-3 text-gray-900 mb-4"
+        placeholder="Enter applicant name"
+        value={applicantName}
+        onChangeText={setApplicantName}
+      />
 
       {/* Permit Name */}
-      <View className="mb-4">
-        <Text className="text-base text-gray-700 mb-2">Permit Name</Text>
-        <TextInput
-          className="border border-gray-300 rounded-2xl px-4 py-3 text-gray-900"
-          placeholder="Enter permit name"
-          value={permitName}
-          onChangeText={setPermitName}
-        />
-      </View>
+      <Text className="text-base text-gray-700 mb-2">Permit Name</Text>
+      <TextInput
+        className="border border-gray-300 rounded-2xl px-4 py-3 text-gray-900 mb-4"
+        placeholder="Enter permit name"
+        value={permitName}
+        onChangeText={setPermitName}
+      />
+
+      {/* Permit Type */}
+      <Text className="text-base text-gray-700 mb-2">Permit Type</Text>
+      <DropdownField
+        label="Permit Type"
+        open={permitTypeOpen}
+        value={permitType}
+        items={permitTypeItems}
+        setOpen={setPermitTypeOpen}
+        setValue={setPermitType}
+        setItems={setPermitTypeItems}
+        placeholder="Select permit type"
+        zIndex={20}
+      />
+
+      {/* Location */}
+      <Text className="text-base text-gray-700 mt-4 mb-2">Location</Text>
+      <DropdownField
+        label="Location"
+        open={locationOpen}
+        value={location}
+        items={locationItems}
+        setOpen={setLocationOpen}
+        setValue={setLocation}
+        setItems={setLocationItems}
+        placeholder="Select location"
+        zIndex={10}
+      />
+
+      {/* Start Time */}
+      <Text className="text-base text-gray-700 mt-4 mb-2">Start Date and Time</Text>
+      <DatePickerField
+        value={startTime}
+        onChange={setStartTime}
+      />
+
+      {/* End Time */}
+      <Text className="text-base text-gray-700 mt-4 mb-2">Start Date and Time</Text>
+      <DatePickerField
+        value={endTime}
+        onChange={setEndTime}
+      />
 
       {/* Document Upload */}
-      <View className="mb-4">
-        <Text className="text-base text-gray-700 mb-2">Document</Text>
-        <TouchableOpacity
-          onPress={pickAndUploadDocument}
-          className="bg-blue-600 rounded-2xl py-3 px-4 items-center"
-          disabled={uploading}
-        >
-          <Text className="text-white font-semibold">
-            {uploading
-              ? "Uploading..."
-              : documentId
-              ? "Change Document"
-              : "Upload Document"}
-          </Text>
-        </TouchableOpacity>
+      <Text className="text-base text-gray-700 mt-4 mb-2">Document</Text>
+      <DocumentUpload
+        uploading={uploading}
+        documentId={documentId}
+        documentName={documentName}
+        onPress={pickAndUploadDocument}
+      />
 
-        {documentId && (
-          <Text className="text-green-600 mt-2">
-            {documentName ? `Uploaded: ${documentName}` : "Document uploaded"}
-          </Text>
-        )}
-      </View>
+      <View className="mt-5"></View>
 
-      {/* Permit Type Dropdown */}
-      <View className="mb-4 z-20">
-        <Text className="text-base text-gray-700 mb-2">Permit Type</Text>
-        <DropDownPicker
-          open={permitTypeOpen}
-          value={permitType}
-          items={permitTypeItems}
-          setOpen={setPermitTypeOpen}
-          setValue={setPermitType}
-          setItems={setPermitTypeItems}
-          placeholder="Select permit type"
-          listMode="MODAL"
-          style={{ borderColor: "#d1d5db", borderRadius: 16 }}
-          dropDownContainerStyle={{ borderColor: "#d1d5db", borderRadius: 16 }}
-        />
-      </View>
+      {dateError && (
+        <Text className="text-red-600 mt-2">{dateError}</Text>
+      )}
 
-      {/* Location Dropdown */}
-      <View className="mb-4 z-10">
-        <Text className="text-base text-gray-700 mb-2">Location</Text>
-        <DropDownPicker
-          open={locationOpen}
-          value={location}
-          items={locationItems}
-          setOpen={setLocationOpen}
-          setValue={setLocation}
-          setItems={setLocationItems}
-          placeholder="Select location"
-          listMode="MODAL"
-          style={{ borderColor: "#d1d5db", borderRadius: 16 }}
-          dropDownContainerStyle={{ borderColor: "#d1d5db", borderRadius: 16 }}
-        />
-      </View>
+      {formError && (
+        <Text className="text-red-600 mt-2">{formError}</Text>
+      )}
 
       {/* Save as Draft */}
       <Pressable
         onPress={() => submitApplication("DRAFT")}
-        className="bg-gray-600 rounded-2xl py-4 items-center mt-6"
+        disabled={!!formError}
+        className={`rounded-2xl py-4 items-center mt-6 ${
+          formError ? "bg-gray-400" : "bg-gray-600"
+        }`}
       >
         <Text className="text-white font-semibold text-lg">Save as Draft</Text>
       </Pressable>
@@ -290,7 +185,10 @@ export default function ApplicationForm() {
       {/* Submit */}
       <Pressable
         onPress={() => submitApplication("SUBMITTED")}
-        className="bg-green-600 rounded-2xl py-4 items-center mt-4"
+        disabled={!!formError}
+        className={`rounded-2xl py-4 items-center mt-4 ${
+          formError ? "bg-gray-400" : "bg-green-600"
+        }`}
       >
         <Text className="text-white font-semibold text-lg">
           Submit Application

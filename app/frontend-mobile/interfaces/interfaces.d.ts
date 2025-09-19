@@ -2,18 +2,19 @@ interface PermitData {
   id: number;
   name: string;
   status: string;
+  location: string;
+  document: string;
   permitType?: string;
-  location?: string;
-  document?: string;
   workflowData?: string;
-  createdBy?: string | null;
-  createdTime?: string | null;
-  workStartTime?: string | null;
-  applicantId?: number;
-  documentId?: number | null;
-  locationId?: number | null;
-  permitTypeId?: number | null;
-  workflowDataId?: number | null;
+  createdBy: string;
+  createdTime: string;
+  workStartTime?: string;
+  workEndTime?: string;
+  applicantId: number;
+  documentId?: number;
+  locationId?: number;
+  permitTypeId?: number;
+  workflowDataId?: number;
 }
 
 interface PermitAPI {

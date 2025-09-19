@@ -21,11 +21,12 @@ const PermitCard = ({
   permitType,
   createdTime,
   workStartTime,
+  workEndTime, // ✅ new field
   onEdit,
 }: PermitCardProps) => {
   return (
-    <View className="bg-white rounded-lg w-full p-4 mb-4 shadow-sm">
-      {/* Header Row */}
+    <View className="bg-white rounded-lg w-full p-4 mb-4">
+      {/* Status + actions */}
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-primary text-lg">
           Status:{" "}
@@ -48,11 +49,7 @@ const PermitCard = ({
           {status === "DRAFT" && onEdit && (
             <TouchableOpacity
               onPress={onEdit}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginRight: 12,
-              }}
+              style={{ flexDirection: "row", alignItems: "center", marginRight: 12 }}
             >
               <Text style={{ marginRight: 6 }}>Edit</Text>
               <IconSymbol name="pencil" size={18} color="#000" />
@@ -61,12 +58,7 @@ const PermitCard = ({
 
           <Link href={`/permits/${id}`} asChild>
             <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginLeft: 12,
-                flexShrink: 0,
-              }}
+              style={{ flexDirection: "row", alignItems: "center", marginLeft: 12 }}
             >
               <Text style={{ marginRight: 6 }}>Details</Text>
               <IconSymbol name="chevron.right" size={20} color="#000" />
@@ -77,7 +69,7 @@ const PermitCard = ({
 
       <View className="border-b border-gray-300 mb-3" />
 
-      {/* Main Info */}
+      {/* Basic info */}
       <View className="w-full flex-row mb-2">
         <View className="w-1/2">
           <Text className="text-primary"> Name: </Text>
@@ -89,6 +81,7 @@ const PermitCard = ({
         </View>
       </View>
 
+      {/* Dates */}
       <View className="w-full flex-row mb-2">
         <View className="w-1/2">
           <Text className="text-primary"> Application Date: </Text>
@@ -97,18 +90,23 @@ const PermitCard = ({
           </Text>
         </View>
         <View className="w-1/2">
-          <Text className="text-primary"> Work Start Date: </Text>
-          <Text className="text-primary font-bold">
-            {formatDate(workStartTime)}
-          </Text>
+          <Text className="text-primary"> Work Start: </Text>
+          <Text className="text-primary font-bold">{formatDate(workStartTime)}</Text>
         </View>
       </View>
 
       <View className="w-full flex-row mb-2">
         <View className="w-1/2">
+          <Text className="text-primary"> Work End: </Text>
+          <Text className="text-primary font-bold">{formatDate(workEndTime)}</Text>
+        </View>
+        <View className="w-1/2">
           <Text className="text-primary"> Document: </Text>
           <Text className="text-primary font-bold"> {document} </Text>
         </View>
+      </View>
+
+      <View className="w-full flex-row mb-2">
         <View className="w-1/2">
           <Text className="text-primary"> Permit Type: </Text>
           <Text className="text-primary font-bold"> {permitType} </Text>
@@ -118,9 +116,9 @@ const PermitCard = ({
   );
 };
 
-function formatDate(date?: string | null): string {
-  if (!date) return "-";
-  return dayjs.utc(date).tz(dayjs.tz.guess()).format("DD-MM-YYYY HH:mm");
+function formatDate(dateString: string | null | undefined): string {
+  if (!dateString) return "-";
+  return dayjs.utc(dateString).tz(dayjs.tz.guess()).format("DD-MM-YYYY HH:mm");
 }
 
 export default PermitCard;

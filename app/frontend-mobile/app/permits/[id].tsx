@@ -108,14 +108,20 @@ export default function PermitDetails() {
     <ScrollView className="flex-1 p-4 bg-gray-100">
       <Stack.Screen
         options={{
-          title: permit?.name || `Permit #${id}`,
-          headerTitleAlign: "center",
+          title: "Permit Details",
+          headerTitleAlign: "left",
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
           },
         }}
       />
+
+      <View className="p-4 mb-4">
+        <Text className="text-center text-2xl font-bold text-gray-800">
+          {permit.name}
+        </Text>
+      </View>
 
       {/* Permit Info */}
       <View className="bg-white rounded-xl p-4 mb-4">
@@ -156,11 +162,12 @@ export default function PermitDetails() {
             ? dayjs(permit.createdTime).format("DD-MM-YYYY HH:mm")
             : "-"}
         </Text>
-        <Text className="text-sm text-gray-600">
-          Work Start:{" "}
-          {permit.workStartTime
-            ? dayjs(permit.workStartTime).format("DD-MM-YYYY HH:mm")
-            : "-"}
+        <Text className="text-gray-700 mb-2">
+          Work Start: {permit.workStartTime ? dayjs(permit.workStartTime).format("DD-MM-YYYY HH:mm") : "-"}
+        </Text>
+
+        <Text className="text-gray-700 mb-2">
+          Work End: {permit.workEndTime ? dayjs(permit.workEndTime).format("DD-MM-YYYY HH:mm") : "-"}
         </Text>
       </View>
 
