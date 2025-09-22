@@ -57,7 +57,8 @@ export default function PermitDetails() {
         workflowData: workflowData?.name || "",
         createdBy: permitData.created_by ?? "",
         createdTime: permitData.created_time,
-        workStartTime: permitData.work_start_time ?? undefined,
+        workStartTime: workflowData?.start_time ?? undefined, // ✅ fixed
+        workEndTime: workflowData?.end_time ?? undefined,     // ✅ added
         applicantId: permitData.applicant_id,
         documentId: permitData.document_id ?? undefined,
         locationId: permitData.location_id ?? undefined,
@@ -125,9 +126,8 @@ export default function PermitDetails() {
 
       {/* Permit Info */}
       <View className="bg-white rounded-xl p-4 mb-4">
-        <Text className="text-lg font-bold text-gray-800 mb-3">
-          Details
-        </Text>
+        <Text className="text-lg font-bold text-gray-800 mb-3">Details</Text>
+
         <Text className="text-sm text-gray-600 mb-1">
           Status:{" "}
           <Text
@@ -144,6 +144,7 @@ export default function PermitDetails() {
             {permit.status}
           </Text>
         </Text>
+
         <Text className="text-sm text-gray-600 mb-1">
           Permit Type: {permit.permitType || "-"}
         </Text>
@@ -159,23 +160,29 @@ export default function PermitDetails() {
         <Text className="text-sm text-gray-600 mb-1">
           Created:{" "}
           {permit.createdTime
-            ? dayjs(permit.createdTime).format("DD-MM-YYYY HH:mm")
+            ? dayjs(permit.createdTime).format("DD-MM-YYYY hh:mm A")
             : "-"}
         </Text>
-        <Text className="text-gray-700 mb-2">
-          Work Start: {permit.workStartTime ? dayjs(permit.workStartTime).format("DD-MM-YYYY HH:mm") : "-"}
+
+        {/* Work start and end */}
+        <Text className="text-sm text-gray-600 mb-1">
+          Work Start:{" "}
+          {permit.workStartTime
+            ? dayjs(permit.workStartTime).format("DD-MM-YYYY hh:mm A")
+            : "-"}
         </Text>
 
-        <Text className="text-gray-700 mb-2">
-          Work End: {permit.workEndTime ? dayjs(permit.workEndTime).format("DD-MM-YYYY HH:mm") : "-"}
+        <Text className="text-sm text-gray-600 mb-1">
+          Work End:{" "}
+          {permit.workEndTime
+            ? dayjs(permit.workEndTime).format("DD-MM-YYYY hh:mm A")
+            : "-"}
         </Text>
       </View>
 
       {/* Approvals Section */}
       <View className="bg-white rounded-xl p-4">
-        <Text className="text-lg font-bold text-gray-800 mb-3">
-          Approvals
-        </Text>
+        <Text className="text-lg font-bold text-gray-800 mb-3">Approvals</Text>
         {Array.isArray(approvals) && approvals.length > 0 ? (
           approvals.map((a, idx) => (
             <View
@@ -186,7 +193,7 @@ export default function PermitDetails() {
                 {a.role_name || a.roleName || "Role"}
               </Text>
               <Text className="text-gray-600">
-                {a.approver_name || a.approverName || "Unknown"} –{" "}
+                {a.approver_name || a.approverName || "Unknown"} -{" "}
                 {a.status || "N/A"}
               </Text>
               <Text className="text-gray-500 text-xs">

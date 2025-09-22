@@ -22,7 +22,7 @@ export default function MyPermitTab() {
         const enrichedPermits: PermitData[] = await Promise.all(
           data.map(async (p) => {
             try {
-              const [docRes, locRes, typeRes, applicantRes] = await Promise.all([
+              const [docRes, locRes, typeRes, applicantRes, workflowRes] = await Promise.all([
                 p.document_id
                   ? fetch(`${API_BASE_URL}api/documents/${p.document_id}`)
                   : null,
@@ -35,12 +35,16 @@ export default function MyPermitTab() {
                 p.applicant_id
                   ? fetch(`${API_BASE_URL}api/users/${p.applicant_id}`)
                   : null,
+                p.workflow_data_id
+                  ? fetch(`${API_BASE_URL}api/workflow-data/${p.workflow_data_id}`)
+                  : null,
               ]);
 
               const document = docRes ? await docRes.json() : null;
               const location = locRes ? await locRes.json() : null;
               const permitType = typeRes ? await typeRes.json() : null;
               const applicant = applicantRes ? await applicantRes.json() : null;
+              const workflowData = workflowRes ? await workflowRes.json() : null;
 
               return {
                 id: p.id,
@@ -49,10 +53,11 @@ export default function MyPermitTab() {
                 location: location?.name || "-",
                 document: document?.name || "-",
                 permitType: permitType?.name || "-",
-                workflowData: undefined,
+                workflowData: workflowData?.name || "-",
                 createdBy: p.created_by || applicant?.name || "Unknown",
                 createdTime: p.created_time,
-                workStartTime: p.work_start_time || undefined,
+                workStartTime: workflowData?.start_time || undefined, // ✅ fixed
+                workEndTime: workflowData?.end_time || undefined,     // ✅ fixed
                 applicantId: p.applicant_id,
                 documentId: p.document_id || undefined,
                 locationId: p.location_id || undefined,

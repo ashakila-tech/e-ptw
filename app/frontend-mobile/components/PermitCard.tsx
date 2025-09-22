@@ -20,8 +20,8 @@ const PermitCard = ({
   document,
   permitType,
   createdTime,
-  workStartTime,
-  workEndTime, // ✅ new field
+  workStartTime, // ✅ added
+  workEndTime,   // ✅ added
   onEdit,
 }: PermitCardProps) => {
   return (
@@ -84,32 +84,36 @@ const PermitCard = ({
       {/* Dates */}
       <View className="w-full flex-row mb-2">
         <View className="w-1/2">
+          <Text className="text-primary"> Work Start: </Text>
+          <Text className="text-primary font-bold">
+            {formatDate(workStartTime)}
+          </Text>
+        </View>
+        <View className="w-1/2">
+          <Text className="text-primary"> Work End: </Text>
+          <Text className="text-primary font-bold">
+            {formatDate(workEndTime)}
+          </Text>
+        </View>
+      </View>
+
+      <View className="w-full flex-row mb-2">
+        <View className="w-1/2">
           <Text className="text-primary"> Application Date: </Text>
           <Text className="text-primary font-bold">
             {formatDate(createdTime)}
           </Text>
         </View>
         <View className="w-1/2">
-          <Text className="text-primary"> Work Start: </Text>
-          <Text className="text-primary font-bold">{formatDate(workStartTime)}</Text>
+          <Text className="text-primary"> Permit Type: </Text>
+          <Text className="text-primary font-bold"> {permitType} </Text>
         </View>
       </View>
 
       <View className="w-full flex-row mb-2">
-        <View className="w-1/2">
-          <Text className="text-primary"> Work End: </Text>
-          <Text className="text-primary font-bold">{formatDate(workEndTime)}</Text>
-        </View>
         <View className="w-1/2">
           <Text className="text-primary"> Document: </Text>
           <Text className="text-primary font-bold"> {document} </Text>
-        </View>
-      </View>
-
-      <View className="w-full flex-row mb-2">
-        <View className="w-1/2">
-          <Text className="text-primary"> Permit Type: </Text>
-          <Text className="text-primary font-bold"> {permitType} </Text>
         </View>
       </View>
     </View>
@@ -118,7 +122,7 @@ const PermitCard = ({
 
 function formatDate(dateString: string | null | undefined): string {
   if (!dateString) return "-";
-  return dayjs.utc(dateString).tz(dayjs.tz.guess()).format("DD-MM-YYYY HH:mm");
+  return dayjs.utc(dateString).tz(dayjs.tz.guess()).format("DD-MM-YYYY hh:mm A");
 }
 
 export default PermitCard;

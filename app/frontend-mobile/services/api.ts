@@ -27,12 +27,42 @@ export async function uploadDocument(file: any) {
   return res.json();
 }
 
-export async function createWorkflow(name: string) {
+export async function createWorkflow(name: string, companyId: number, permitTypeId: number) {
   const res = await fetch(`${API_BASE_URL}api/workflows/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({
+      name,
+      company_id: companyId,
+      permit_type_id: permitTypeId,
+    }),
   });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to create workflow (${res.status}): ${errorText}`);
+  }
+
+  return res.json();
+}
+
+export async function createWorkflowData(payload: any) {
+  const res = await fetch(`${API_BASE_URL}api/workflow-data/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to create workflow-data (${res.status})`);
+  return res.json();
+}
+
+export async function updateWorkflowData(id: number, payload: any) {
+  const res = await fetch(`${API_BASE_URL}api/workflow-data/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to update workflow-data (${res.status})`);
   return res.json();
 }
 
