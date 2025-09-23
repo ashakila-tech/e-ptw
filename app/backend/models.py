@@ -47,14 +47,14 @@ class UserGroup(Base):
 
 class Approval(Base):
     __tablename__ = "approval"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)  # auto
     company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
     workflow_id = Column(Integer, ForeignKey("workflow.id"), nullable=False)
     user_group_id = Column(Integer, ForeignKey("user_group.id"), nullable=True)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
     name = Column(String, nullable=False)
     role_name = Column(String, nullable=True)
-    level = Column(Integer, nullable=False, default=1)
+    level = Column(Integer, nullable=True)
 
 class WorkflowData(Base):
     __tablename__ = "workflow_data"
@@ -96,9 +96,9 @@ class Application(Base):
 
 class ApprovalData(Base):
     __tablename__ = "approval_data"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
-    approval_id = Column(Integer, ForeignKey("approval.id"), nullable=False)
+    approval_id = Column(Integer, ForeignKey("approval.id"), nullable=False)   # keep
     document_id = Column(Integer, ForeignKey("document.id"), nullable=True)
     workflow_data_id = Column(Integer, ForeignKey("workflow_data.id"), nullable=False)
     status = Column(String, nullable=False, default="PENDING")

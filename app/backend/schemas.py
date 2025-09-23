@@ -100,9 +100,11 @@ class WorkflowDataOut(WorkflowDataIn):
     class Config: from_attributes = True
 
 class ApprovalDataIn(BaseModel):
-    company_id: int; approval_id: int; workflow_data_id: int
+    company_id: int 
+    approval_id: int
+    workflow_data_id: int
     document_id: Optional[int] = None
-    status: str
+    status: str = "PENDING"
     approver_name: Optional[str] = None
     time: Optional[datetime] = None
     role_name: Optional[str] = None
