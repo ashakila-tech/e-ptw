@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { API_BASE_URL } from "@env";
 import PermitCard from "@/components/PermitCard";
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export default function MyPermitTab() {
   const router = useRouter();

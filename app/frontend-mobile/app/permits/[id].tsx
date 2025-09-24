@@ -7,8 +7,11 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
-import { API_BASE_URL } from "@env";
+// import { downloadAndShareDocument } from "@/utils/download";
 import dayjs from "dayjs";
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
@@ -57,8 +60,8 @@ export default function PermitDetails() {
         workflowData: workflowData?.name || "",
         createdBy: permitData.created_by ?? "",
         createdTime: permitData.created_time,
-        workStartTime: workflowData?.start_time ?? undefined, // ✅ fixed
-        workEndTime: workflowData?.end_time ?? undefined,     // ✅ added
+        workStartTime: workflowData?.start_time ?? undefined,
+        workEndTime: workflowData?.end_time ?? undefined, 
         applicantId: permitData.applicant_id,
         documentId: permitData.document_id ?? undefined,
         locationId: permitData.location_id ?? undefined,
@@ -151,9 +154,9 @@ export default function PermitDetails() {
         <Text className="text-sm text-gray-600 mb-1">
           Location: {permit.location || "-"}
         </Text>
-        <Text className="text-sm text-gray-600 mb-1">
-          Document: {permit.document || "-"}
-        </Text>
+        <View className="flex-row items-center mb-1">
+          <Text className="text-sm text-gray-600">Document: {permit.document || "-"}</Text>
+        </View>
         <Text className="text-sm text-gray-600 mb-1">
           Workflow: {permit.workflowData || "-"}
         </Text>

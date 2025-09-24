@@ -6,10 +6,8 @@ module.exports = function (api) {
       "nativewind/babel"
     ],
     plugins: [
-      ["module:react-native-dotenv", {
-        "moduleName": "@env",
-        "path": ".env",
-      }]
-    ]
+      require.resolve("react-native-worklets/plugin"),
+      'react-native-reanimated/plugin',
+    ],
   };
 };

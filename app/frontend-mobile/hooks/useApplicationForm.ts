@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { API_BASE_URL } from "@env";
 import { Alert } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import {
@@ -11,6 +10,9 @@ import {
   updateWorkflowData,
   saveApplication,
 } from "@/services/api";
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export function useApplicationForm(existingApp: any, router: any) {
   const [applicantName, setApplicantName] = useState(existingApp?.createdBy || "");

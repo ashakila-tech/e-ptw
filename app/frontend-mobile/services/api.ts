@@ -1,4 +1,6 @@
-import { API_BASE_URL } from "@env";
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export async function fetchPermitTypes() {
   const res = await fetch(`${API_BASE_URL}api/permit-types/`);
