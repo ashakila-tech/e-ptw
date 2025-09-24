@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
-// import { downloadAndShareDocument } from "@/utils/download";
+import { downloadDocument } from "@/utils/download";
 import dayjs from "dayjs";
 import Constants from 'expo-constants';
 
@@ -55,6 +55,7 @@ export default function PermitDetails() {
         name: permitData.name,
         status: permitData.status,
         document: document?.name || "",
+        documentUrl: document ? `${API_BASE_URL}uploads/${document.path}` : undefined, // ✅ new
         location: location?.name || "",
         permitType: permitType?.name || "",
         workflowData: workflowData?.name || "",
@@ -181,6 +182,17 @@ export default function PermitDetails() {
             ? dayjs(permit.workEndTime).format("DD-MM-YYYY hh:mm A")
             : "-"}
         </Text>
+
+        <View className="flex-row items-center justify-between">
+          <Text className="text-gray-800 font-medium">{permit.document}</Text>
+            <TouchableOpacity
+              disabled={!permit.documentUrl}
+              onPress={() => permit.documentUrl && downloadDocument(permit.documentUrl, permit.document)}
+              className="bg-green-500 p-1 rounded"
+            >
+              <Text className="text-white text-xs">Download</Text>
+            </TouchableOpacity>
+        </View>
       </View>
 
       {/* Approvals Section */}

@@ -4,6 +4,7 @@ interface PermitData {
   status: string;
   location: string;
   document: string;
+  documentUrl?: string;
   permitType?: string;
   workflowData?: string;
   createdBy: string;

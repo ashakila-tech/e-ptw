@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
+import Constants from "expo-constants";
 import {
   fetchPermitTypes,
   fetchLocations,
+  fetchUsers,
+  fetchUserGroups,
   uploadDocument,
   createWorkflow,
   createWorkflowData,
   updateWorkflowData,
   saveApplication,
+  createApproval,
 } from "@/services/api";
-import Constants from 'expo-constants';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
@@ -30,6 +33,10 @@ export function useApplicationForm(existingApp: any, router: any) {
   const [location, setLocation] = useState<number | null>(existingApp?.locationId || null);
   const [locationItems, setLocationItems] = useState<{ label: string; value: number }[]>([]);
 
+  const [jobAssignerOpen, setJobAssignerOpen] = useState(false);
+  const [jobAssigner, setJobAssigner] = useState<number | null>(existingApp?.approverId || null);
+  const [jobAssignerItems, setJobAssignerItems] = useState<{ label: string; value: number }[]>([]);
+
   const [startTime, setStartTime] = useState<Date | null>(
     existingApp?.workStartTime ? new Date(existingApp.workStartTime) : null
   );
@@ -37,15 +44,22 @@ export function useApplicationForm(existingApp: any, router: any) {
     existingApp?.workEndTime ? new Date(existingApp.workEndTime) : null
   );
 
-  // fetch dropdowns
+  // Fetch dropdowns
   useEffect(() => {
     async function fetchData() {
       try {
-        const typeData = await fetchPermitTypes();
-        setPermitTypeItems(typeData.map((t: any) => ({ label: t.name, value: t.id })));
+        const [typeData, locData, users, userGroups] = await Promise.all([
+          fetchPermitTypes(),
+          fetchLocations(),
+          fetchUsers(),
+          fetchUserGroups(),
+        ]);
 
-        const locData = await fetchLocations();
+        setPermitTypeItems(typeData.map((t: any) => ({ label: t.name, value: t.id })));
         setLocationItems(locData.map((l: any) => ({ label: l.name, value: l.id })));
+
+        // Map users to job assigners (simple version: all users)
+        setJobAssignerItems(users.map((u: any) => ({ label: u.name, value: u.id })));
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
       }
@@ -53,7 +67,7 @@ export function useApplicationForm(existingApp: any, router: any) {
     fetchData();
   }, []);
 
-  // pick + upload document
+  // Pick + upload document
   const pickAndUploadDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
     if (!result.canceled) {
@@ -72,75 +86,65 @@ export function useApplicationForm(existingApp: any, router: any) {
     }
   };
 
-  // submit / draft
+  // Submit / draft
   const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
     try {
-      // workflowDataId — either reuse existing, or will be assigned when created
+      if (!jobAssigner && status === "SUBMITTED") {
+        return Alert.alert("Error", "Please select a job assigner before submitting.");
+      }
+
       let workflowDataId: number | null = existingApp?.workflowDataId ?? null;
 
       if (workflowDataId) {
-        // --- Editing: update the existing workflow-data ---
-        // fetch the existing workflow-data to obtain workflow_id & company_id
         const wfRes = await fetch(`${API_BASE_URL}api/workflow-data/${workflowDataId}`);
-        if (!wfRes.ok) {
-          // if backend returns 404 or similar, fall through to create new below
-          console.warn(`Failed to fetch existing workflow-data (${wfRes.status}), will try to recreate`);
-        } else {
+        if (wfRes.ok) {
           const existingWorkflowData = await wfRes.json();
-          // obtain workflow_id and company_id from the existing workflow-data
-          const existingWorkflowId = existingWorkflowData.workflow_id ?? existingWorkflowData.workflow?.id;
-          const existingCompanyId = existingWorkflowData.company_id ?? existingWorkflowData.company?.id ?? existingApp?.company_id ?? 1;
-
-          // update workflow-data with new start/end/name
+          const existingWorkflowId = existingWorkflowData.workflow_id;
           await updateWorkflowData(workflowDataId, {
             name: `${permitName} - ${applicantName} - Workflow Data`,
-            start_time: startTime ? startTime.toISOString() : null,
-            end_time: endTime ? endTime.toISOString() : null,
-            workflow_id: existingWorkflowId ?? undefined,
-            company_id: existingCompanyId ?? undefined,
+            start_time: startTime?.toISOString(),
+            end_time: endTime?.toISOString(),
+            workflow_id: existingWorkflowId,
           });
         }
-      } 
+      }
 
-      // If after attempted update we still do not have a workflowDataId (e.g. no existing or fetch failed),
-      // create a new workflow + workflow-data
       if (!workflowDataId) {
-        // create workflow (requires name, company_id, permit_type_id)
-        const companyId = existingApp?.company_id ?? 1; // replace with real company ID from auth/session
-        const permitTypeIdForWorkflow = permitType ?? existingApp?.permitTypeId ?? 0;
-
         const workflow = await createWorkflow(
           `${permitName} - ${applicantName} - Workflow`,
-          companyId,
-          permitTypeIdForWorkflow
+          1, // company_id
+          permitType ?? 0
         );
-
-        // create workflow-data attached to the workflow
         const workflowData = await createWorkflowData({
-          company_id: companyId,
+          company_id: 1,
           workflow_id: workflow.id,
           name: `${permitName} - ${applicantName} - Workflow Data`,
-          start_time: startTime ? startTime.toISOString() : new Date().toISOString(),
-          end_time: endTime ? endTime.toISOString() : new Date().toISOString(),
+          start_time: startTime?.toISOString() || new Date().toISOString(),
+          end_time: endTime?.toISOString() || new Date().toISOString(),
         });
-
         workflowDataId = workflowData.id;
       }
 
-      // --- Now save the application (match backend schema) ---
       const payload = {
-        permit_type_id: permitType ?? existingApp?.permitTypeId ?? 0,
-        workflow_data_id: workflowDataId!,
-        location_id: location ?? existingApp?.locationId ?? 0,
-        applicant_id: 1, // TODO: replace with actual logged-in user id
+        permit_type_id: permitType ?? 0,
+        workflow_data_id: workflowDataId,
+        location_id: location ?? 0,
+        applicant_id: 1, // replace with logged-in user
         name: permitName || "Unnamed Permit",
-        document_id: documentId ?? existingApp?.documentId ?? 0,
+        document_id: documentId ?? 0,
         status,
       };
 
-      console.log("Submitting application payload:", payload);
-
       await saveApplication(existingApp?.id || null, payload, !!existingApp);
+
+      // Create approval if submitting
+      if (status === "SUBMITTED" && jobAssigner) {
+        await createApproval({
+          workflow_data_id: workflowDataId,
+          status: "PENDING",
+          approver_id: jobAssigner,
+        });
+      }
 
       Alert.alert(
         "Success",
@@ -151,11 +155,10 @@ export function useApplicationForm(existingApp: any, router: any) {
 
       router.push("/(tabs)/mypermit");
     } catch (err: any) {
-      console.error("Error in submitApplication:", err);
+      console.error("Error submitting application:", err);
       Alert.alert("Error", err.message || "Something went wrong");
     }
   };
-
 
   return {
     applicantName,
@@ -178,6 +181,12 @@ export function useApplicationForm(existingApp: any, router: any) {
     setLocationOpen,
     setLocation,
     setLocationItems,
+    jobAssignerOpen,
+    jobAssigner,
+    jobAssignerItems,
+    setJobAssignerOpen,
+    setJobAssigner,
+    setJobAssignerItems,
     submitApplication,
     startTime,
     setStartTime,
