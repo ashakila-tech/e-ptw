@@ -29,6 +29,38 @@ export async function fetchUserGroups() {
   return res.json();
 }
 
+export async function fetchJobAssigners() {
+  try {
+    const usersRes = await fetch(`${API_BASE_URL}api/users`);
+    const groupsRes = await fetch(`${API_BASE_URL}api/groups`);
+    const userGroupsRes = await fetch(`${API_BASE_URL}api/user-groups`);
+
+    if (!usersRes.ok) console.error("Users fetch failed:", usersRes.status);
+    if (!groupsRes.ok) console.error("Groups fetch failed:", groupsRes.status);
+    if (!userGroupsRes.ok) console.error("UserGroups fetch failed:", userGroupsRes.status);
+
+    if (!usersRes.ok || !groupsRes.ok || !userGroupsRes.ok) {
+      throw new Error("Failed to fetch assigners data");
+    }
+
+    const users = await usersRes.json();
+    const groups = await groupsRes.json();
+    const userGroups = await userGroupsRes.json();
+
+    const managerGroupId = 3;
+    const managerUserIds = userGroups
+      .filter((ug: any) => ug.group_id === managerGroupId)
+      .map((ug: any) => ug.user_id);
+
+    const managers = users.filter((u: any) => managerUserIds.includes(u.id));
+
+    return managers.map((u: any) => ({ label: u.name, value: u.id }));
+  } catch (err) {
+    console.error("Error fetching job assigners:", err);
+    return [];
+  }
+}
+
 // -------------------- Document Upload --------------------
 export async function uploadDocument(file: any) {
   const formData = new FormData();

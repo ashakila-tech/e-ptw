@@ -12,12 +12,11 @@ export default function ApplicationForm() {
   const existingApp = params.application ? JSON.parse(params.application as string) : null;
 
   const {
-    applicantName, setApplicantName,
     permitName, setPermitName,
     documentId, documentName, uploading, pickAndUploadDocument,
     permitTypeOpen, permitType, permitTypeItems, setPermitTypeOpen, setPermitType, setPermitTypeItems,
     locationOpen, location, locationItems, setLocationOpen, setLocation, setLocationItems,
-    jobAssignerOpen, jobAssigner, jobAssignerItems, setJobAssignerOpen, setJobAssigner, setJobAssignerItems,
+    jobAssignerOpen, jobAssigner, jobAssignerItems, setJobAssignerOpen, setJobAssigner,
     submitApplication,
     startTime, setStartTime, endTime, setEndTime,
   } = useApplicationForm(existingApp, router);
@@ -30,8 +29,7 @@ export default function ApplicationForm() {
       setDateError("End time must be after start time.");
     } else setDateError(null);
 
-    if (!applicantName.trim()) setFormError("Applicant name is required.");
-    else if (!permitName.trim()) setFormError("Permit name is required.");
+    if (!permitName.trim()) setFormError("Permit name is required.");
     else if (!documentId) setFormError("Please upload a document.");
     else if (!permitType) setFormError("Please select a permit type.");
     else if (!location) setFormError("Please select a location.");
@@ -39,7 +37,7 @@ export default function ApplicationForm() {
     else if (!jobAssigner) setFormError("Please select a job assigner.");
     else if (dateError) setFormError(dateError);
     else setFormError(null);
-  }, [applicantName, permitName, documentId, permitType, location, startTime, endTime, jobAssigner, dateError]);
+  }, [permitName, documentId, permitType, location, startTime, endTime, jobAssigner, dateError]);
 
   return (
     <ScrollView className="flex-1 bg-white p-4">
@@ -50,9 +48,9 @@ export default function ApplicationForm() {
       }} />
 
       {/* Applicant Name */}
-      <Text className="text-base text-gray-700 mb-2">Applicant Name</Text>
+      {/* <Text className="text-base text-gray-700 mb-2">Applicant Name</Text>
       <TextInput className="border border-gray-300 rounded-2xl px-4 py-3 mb-4" placeholder="Enter applicant name"
-        value={applicantName} onChangeText={setApplicantName} />
+        value={applicantName} onChangeText={setApplicantName} /> */}
 
       {/* Permit Name */}
       <Text className="text-base text-gray-700 mb-2">Permit Name</Text>
@@ -60,19 +58,29 @@ export default function ApplicationForm() {
         value={permitName} onChangeText={setPermitName} />
 
       {/* Permit Type */}
+      <Text className="text-base text-gray-700 mb-2">Permit Type</Text>
       <DropdownField
         label="Permit Type" open={permitTypeOpen} value={permitType} items={permitTypeItems}
         setOpen={setPermitTypeOpen} setValue={setPermitType} setItems={setPermitTypeItems} placeholder="Select permit type" zIndex={20} />
 
       {/* Location */}
+      <Text className="text-base text-gray-700 mb-2">Location</Text>
       <DropdownField
         label="Location" open={locationOpen} value={location} items={locationItems}
         setOpen={setLocationOpen} setValue={setLocation} setItems={setLocationItems} placeholder="Select location" zIndex={10} />
 
       {/* Job Assigner */}
+      <Text className="text-base text-gray-700 mb-2">Job Assigner</Text>
       <DropdownField
-        label="Job Assigner" open={jobAssignerOpen} value={jobAssigner} items={jobAssignerItems}
-        setOpen={setJobAssignerOpen} setValue={setJobAssigner} setItems={setJobAssignerItems} placeholder="Select job assigner" zIndex={30} />
+        label="Job Assigner"
+        open={jobAssignerOpen}
+        value={jobAssigner}
+        items={jobAssignerItems}
+        setOpen={setJobAssignerOpen}
+        setValue={setJobAssigner}
+        placeholder="Select job assigner"
+        zIndex={30}
+      />
 
       {/* Start / End */}
       <Text className="text-base text-gray-700 mt-4 mb-2">Start Date and Time</Text>
