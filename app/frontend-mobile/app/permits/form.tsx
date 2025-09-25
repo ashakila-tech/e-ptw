@@ -54,23 +54,23 @@ export default function ApplicationForm() {
 
       {/* Permit Name */}
       <Text className="text-base text-gray-700 mb-2">Permit Name</Text>
-      <TextInput className="border border-gray-300 rounded-2xl px-4 py-3 mb-4" placeholder="Enter permit name"
+      <TextInput className="border border-gray-300 rounded-2xl px-4 py-3" placeholder="Enter permit name"
         value={permitName} onChangeText={setPermitName} />
 
       {/* Permit Type */}
-      <Text className="text-base text-gray-700 mb-2">Permit Type</Text>
+      <Text className="text-base text-gray-700 mt-4 mb-2">Permit Type</Text>
       <DropdownField
         label="Permit Type" open={permitTypeOpen} value={permitType} items={permitTypeItems}
         setOpen={setPermitTypeOpen} setValue={setPermitType} setItems={setPermitTypeItems} placeholder="Select permit type" zIndex={20} />
 
       {/* Location */}
-      <Text className="text-base text-gray-700 mb-2">Location</Text>
+      <Text className="text-base text-gray-700 mt-4 mb-2">Location</Text>
       <DropdownField
         label="Location" open={locationOpen} value={location} items={locationItems}
         setOpen={setLocationOpen} setValue={setLocation} setItems={setLocationItems} placeholder="Select location" zIndex={10} />
 
       {/* Job Assigner */}
-      <Text className="text-base text-gray-700 mb-2">Job Assigner</Text>
+      <Text className="text-base text-gray-700 mt-4 mb-2">Job Assigner</Text>
       <DropdownField
         label="Job Assigner"
         open={jobAssignerOpen}
@@ -93,20 +93,39 @@ export default function ApplicationForm() {
       <Text className="text-base text-gray-700 mt-4 mb-2">Document</Text>
       <DocumentUpload uploading={uploading} documentId={documentId} documentName={documentName} onPress={pickAndUploadDocument} />
 
+      <View className="m-10" />
+
       {dateError && <Text className="text-red-600 mt-2">{dateError}</Text>}
       {formError && <Text className="text-red-600 mt-2">{formError}</Text>}
 
-      {/* Save as Draft */}
-      <Pressable onPress={() => submitApplication("DRAFT")} disabled={!!formError}
-        className={`rounded-2xl py-4 items-center mt-6 ${formError ? "bg-gray-400" : "bg-gray-600"}`}>
-        <Text className="text-white font-semibold text-lg">Save as Draft</Text>
-      </Pressable>
+      {/* Action Buttons */}
+      <View className="flex-row mt-8 space-x-4">
+        {/* Save as Draft */}
+        <Pressable
+          onPress={() => submitApplication("DRAFT")}
+          disabled={!!formError}
+          className={`flex-[0.4] rounded-xl py-4 mr-3 items-center ${
+            formError ? "bg-gray-400" : "bg-primary"
+          }`}
+        >
+          <Text className="text-white font-semibold text-base">
+            Save as Draft
+          </Text>
+        </Pressable>
 
-      {/* Submit */}
-      <Pressable onPress={() => submitApplication("SUBMITTED")} disabled={!!formError}
-        className={`rounded-2xl py-4 items-center mt-4 ${formError ? "bg-gray-400" : "bg-green-600"}`}>
-        <Text className="text-white font-semibold text-lg">Submit Application</Text>
-      </Pressable>
+        {/* Submit Application */}
+        <Pressable
+          onPress={() => submitApplication("SUBMITTED")}
+          disabled={!!formError}
+          className={`flex-[0.6] rounded-xl py-4 items-center ${
+            formError ? "bg-gray-400" : "bg-approved"
+          }`}
+        >
+          <Text className="text-white font-semibold text-base">
+            Submit Application
+          </Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }

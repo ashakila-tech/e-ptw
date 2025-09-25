@@ -28,20 +28,10 @@ export default function DocumentUpload({
           {documentName ? `Document: ${documentName}` : "No document uploaded"}
         </Text>
 
-        {/* Download button */}
-        {documentUrl && (
-          <TouchableOpacity
-            onPress={() => downloadDocument(documentUrl, documentName!)}
-            className="bg-green-500 p-1 rounded ml-2"
-          >
-            <Text className="text-white text-xs">Download</Text>
-          </TouchableOpacity>
-        )}
-
         {/* Upload / Change button */}
         <TouchableOpacity
           onPress={onPress}
-          className="bg-blue-600 rounded-2xl py-2 px-4 ml-2"
+          className="bg-primary rounded-2xl py-2 px-4 ml-2"
           disabled={uploading}
         >
           <Text className="text-white text-xs font-semibold">
@@ -52,6 +42,16 @@ export default function DocumentUpload({
               : "Upload"}
           </Text>
         </TouchableOpacity>
+
+        {/* Download button */}
+        {documentUrl && (
+          <TouchableOpacity
+            onPress={() => downloadDocument(documentUrl, documentName!)}
+            className="bg-approved rounded-2xl py-2 px-4 ml-2"
+          >
+            <Text className="text-white text-xs">Download</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
