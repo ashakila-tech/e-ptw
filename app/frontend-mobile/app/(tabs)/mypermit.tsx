@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import PermitCard from "@/components/PermitCard";
 import Constants from "expo-constants";
 import { useUser } from "@/contexts/UserContext";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
@@ -156,12 +157,7 @@ export default function MyPermitTab() {
   });
 
   if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-secondary">
-        <ActivityIndicator size="large" color="#535252" />
-        <Text className="text-primary mt-3">Loading permits...</Text>
-      </View>
-    );
+    return <LoadingScreen message="Fetching data..." />;
   }
 
   return (

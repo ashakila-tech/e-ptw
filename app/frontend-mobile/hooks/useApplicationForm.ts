@@ -4,19 +4,21 @@ import * as DocumentPicker from "expo-document-picker";
 import {
   fetchPermitTypes,
   fetchLocations,
+  fetchUsers,
   uploadDocument,
   createWorkflow,
   createWorkflowData,
-  updateWorkflowData,
   saveApplication,
-  fetchUsers,
   createApproval,
 } from "@/services/api";
-import Constants from 'expo-constants';
+import Constants from "expo-constants";
+import { useUser } from "@/contexts/UserContext";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export function useApplicationForm(existingApp: any, router: any) {
+  const { userId } = useUser();
+
   const [applicantName, setApplicantName] = useState(existingApp?.createdBy || "");
   const [permitName, setPermitName] = useState(existingApp?.name || "");
 
@@ -33,7 +35,7 @@ export function useApplicationForm(existingApp: any, router: any) {
   const [locationItems, setLocationItems] = useState<{ label: string; value: number }[]>([]);
 
   const [jobAssignerOpen, setJobAssignerOpen] = useState(false);
-  const [jobAssigner, setJobAssigner] = useState<number | null>(existingApp?.jobAssignerId || null);
+  const [jobAssigner, setJobAssigner] = useState<number | null>(null);
   const [jobAssignerItems, setJobAssignerItems] = useState<{ label: string; value: number }[]>([]);
 
   const [startTime, setStartTime] = useState<Date | null>(
@@ -43,7 +45,7 @@ export function useApplicationForm(existingApp: any, router: any) {
     existingApp?.workEndTime ? new Date(existingApp.workEndTime) : null
   );
 
-  // fetch dropdowns
+  // Fetch dropdown data
   useEffect(() => {
     async function fetchData() {
       try {
@@ -55,14 +57,26 @@ export function useApplicationForm(existingApp: any, router: any) {
 
         const usersData = await fetchUsers();
         setJobAssignerItems(usersData.map((u: any) => ({ label: u.name, value: u.id })));
+
+        // Pre-fill job assigner after items are loaded
+        if (existingApp?.jobAssignerId != null) {
+          setJobAssigner(existingApp.jobAssignerId);
+        }
+
+        // Set applicant name to current user if available
+        if (userId) {
+          const currentUser = usersData.find((u: any) => u.id === userId);
+          setApplicantName(currentUser?.name || existingApp?.createdBy || "Unknown User");
+        }
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
       }
     }
-    fetchData();
-  }, []);
 
-  // pick + upload document
+    fetchData();
+  }, [existingApp, userId]);
+
+  // Pick and upload document
   const pickAndUploadDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
     if (!result.canceled) {
@@ -81,12 +95,11 @@ export function useApplicationForm(existingApp: any, router: any) {
     }
   };
 
-  // submit / draft
+  // Submit or save draft
   const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
     try {
       let workflowDataId: number | null = existingApp?.workflowDataId ?? null;
 
-      // 1️⃣ Create workflow + workflow-data if not existing
       if (!workflowDataId) {
         const companyId = existingApp?.company_id ?? 1;
         const permitTypeIdForWorkflow = permitType ?? existingApp?.permitTypeId ?? 0;
@@ -108,12 +121,11 @@ export function useApplicationForm(existingApp: any, router: any) {
         workflowDataId = workflowData.id;
       }
 
-      // 2️⃣ Save application
       const payload = {
         permit_type_id: permitType ?? existingApp?.permitTypeId ?? 0,
         workflow_data_id: workflowDataId!,
         location_id: location ?? existingApp?.locationId ?? 0,
-        applicant_id: 1, // hardcoded for now
+        applicant_id: userId ?? 0,
         name: permitName || "Unnamed Permit",
         document_id: documentId ?? existingApp?.documentId ?? 0,
         status,
@@ -122,12 +134,12 @@ export function useApplicationForm(existingApp: any, router: any) {
 
       const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
 
-      // 3️⃣ Create approval automatically if submitting
+      // Create approval automatically if submitting
       if (status === "SUBMITTED" && jobAssigner) {
         const selectedAssigner = jobAssignerItems.find(item => item.value === jobAssigner);
         await createApproval({
           company_id: existingApp?.company_id ?? 1,
-          approval_id: jobAssigner,  // temporary, backend fix later
+          approval_id: jobAssigner,
           workflow_data_id: workflowDataId!,
           document_id: documentId ?? 0,
           status: "PENDING",
