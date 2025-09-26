@@ -3,7 +3,7 @@ interface PermitData {
   name: string;
   status: string;
   location?: string;
-  document?: string;
+  document: string;
   permitType?: string;
   workflowData?: string;
   createdBy?: string;
@@ -12,6 +12,7 @@ interface PermitData {
   workEndTime?: string;
   applicantId?: number;
   documentId?: number;
+  documentUrl?: string;
   locationId?: number;
   permitTypeId?: number;
   workflowDataId?: number;

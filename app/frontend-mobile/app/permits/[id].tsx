@@ -13,6 +13,7 @@ import { downloadDocument } from "@/utils/download";
 import dayjs from "dayjs";
 import Constants from "expo-constants";
 import { useUser } from "@/contexts/UserContext";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
@@ -88,7 +89,7 @@ export default function PermitDetails() {
   }, [id]);
 
   if (loading) {
-    return <ActivityIndicator size="large" className="mt-10" />;
+    return <LoadingScreen message="Fetching data..." />;
   }
 
   if (error) {
@@ -114,18 +115,18 @@ export default function PermitDetails() {
   }
 
   return (
+    <>
+    <Stack.Screen
+      options={{
+        title: "Permit Details",
+        headerTitleAlign: "left",
+        headerTitleStyle: {
+          fontWeight: "bold",
+          fontSize: 18,
+        },
+      }}
+    />
     <ScrollView className="flex-1 p-4 bg-gray-100">
-      <Stack.Screen
-        options={{
-          title: "Permit Details",
-          headerTitleAlign: "left",
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-          },
-        }}
-      />
-
       <View className="p-4 mb-4">
         <Text className="text-center text-2xl font-bold text-primary">
           {permit.name}
@@ -279,5 +280,6 @@ export default function PermitDetails() {
         </View>
       )}
     </ScrollView>
+    </>
   );
 }
