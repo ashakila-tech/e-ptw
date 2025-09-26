@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { API_BASE_URL } from "@env";
 import { Alert } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import {
@@ -10,7 +9,12 @@ import {
   createWorkflowData,
   updateWorkflowData,
   saveApplication,
+  fetchUsers,
+  createApproval,
 } from "@/services/api";
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export function useApplicationForm(existingApp: any, router: any) {
   const [applicantName, setApplicantName] = useState(existingApp?.createdBy || "");
@@ -28,6 +32,10 @@ export function useApplicationForm(existingApp: any, router: any) {
   const [location, setLocation] = useState<number | null>(existingApp?.locationId || null);
   const [locationItems, setLocationItems] = useState<{ label: string; value: number }[]>([]);
 
+  const [jobAssignerOpen, setJobAssignerOpen] = useState(false);
+  const [jobAssigner, setJobAssigner] = useState<number | null>(existingApp?.jobAssignerId || null);
+  const [jobAssignerItems, setJobAssignerItems] = useState<{ label: string; value: number }[]>([]);
+
   const [startTime, setStartTime] = useState<Date | null>(
     existingApp?.workStartTime ? new Date(existingApp.workStartTime) : null
   );
@@ -44,6 +52,9 @@ export function useApplicationForm(existingApp: any, router: any) {
 
         const locData = await fetchLocations();
         setLocationItems(locData.map((l: any) => ({ label: l.name, value: l.id })));
+
+        const usersData = await fetchUsers();
+        setJobAssignerItems(usersData.map((u: any) => ({ label: u.name, value: u.id })));
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
       }
@@ -73,38 +84,11 @@ export function useApplicationForm(existingApp: any, router: any) {
   // submit / draft
   const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
     try {
-      // workflowDataId — either reuse existing, or will be assigned when created
       let workflowDataId: number | null = existingApp?.workflowDataId ?? null;
 
-      if (workflowDataId) {
-        // --- Editing: update the existing workflow-data ---
-        // fetch the existing workflow-data to obtain workflow_id & company_id
-        const wfRes = await fetch(`${API_BASE_URL}api/workflow-data/${workflowDataId}`);
-        if (!wfRes.ok) {
-          // if backend returns 404 or similar, fall through to create new below
-          console.warn(`Failed to fetch existing workflow-data (${wfRes.status}), will try to recreate`);
-        } else {
-          const existingWorkflowData = await wfRes.json();
-          // obtain workflow_id and company_id from the existing workflow-data
-          const existingWorkflowId = existingWorkflowData.workflow_id ?? existingWorkflowData.workflow?.id;
-          const existingCompanyId = existingWorkflowData.company_id ?? existingWorkflowData.company?.id ?? existingApp?.company_id ?? 1;
-
-          // update workflow-data with new start/end/name
-          await updateWorkflowData(workflowDataId, {
-            name: `${permitName} - ${applicantName} - Workflow Data`,
-            start_time: startTime ? startTime.toISOString() : null,
-            end_time: endTime ? endTime.toISOString() : null,
-            workflow_id: existingWorkflowId ?? undefined,
-            company_id: existingCompanyId ?? undefined,
-          });
-        }
-      } 
-
-      // If after attempted update we still do not have a workflowDataId (e.g. no existing or fetch failed),
-      // create a new workflow + workflow-data
+      // 1️⃣ Create workflow + workflow-data if not existing
       if (!workflowDataId) {
-        // create workflow (requires name, company_id, permit_type_id)
-        const companyId = existingApp?.company_id ?? 1; // replace with real company ID from auth/session
+        const companyId = existingApp?.company_id ?? 1;
         const permitTypeIdForWorkflow = permitType ?? existingApp?.permitTypeId ?? 0;
 
         const workflow = await createWorkflow(
@@ -113,7 +97,6 @@ export function useApplicationForm(existingApp: any, router: any) {
           permitTypeIdForWorkflow
         );
 
-        // create workflow-data attached to the workflow
         const workflowData = await createWorkflowData({
           company_id: companyId,
           workflow_id: workflow.id,
@@ -125,20 +108,35 @@ export function useApplicationForm(existingApp: any, router: any) {
         workflowDataId = workflowData.id;
       }
 
-      // --- Now save the application (match backend schema) ---
+      // 2️⃣ Save application
       const payload = {
         permit_type_id: permitType ?? existingApp?.permitTypeId ?? 0,
         workflow_data_id: workflowDataId!,
         location_id: location ?? existingApp?.locationId ?? 0,
-        applicant_id: 1, // TODO: replace with actual logged-in user id
+        applicant_id: 1, // hardcoded for now
         name: permitName || "Unnamed Permit",
         document_id: documentId ?? existingApp?.documentId ?? 0,
         status,
+        job_assigner_id: jobAssigner ?? undefined,
       };
 
-      console.log("Submitting application payload:", payload);
+      const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
 
-      await saveApplication(existingApp?.id || null, payload, !!existingApp);
+      // 3️⃣ Create approval automatically if submitting
+      if (status === "SUBMITTED" && jobAssigner) {
+        const selectedAssigner = jobAssignerItems.find(item => item.value === jobAssigner);
+        await createApproval({
+          company_id: existingApp?.company_id ?? 1,
+          approval_id: jobAssigner,  // temporary, backend fix later
+          workflow_data_id: workflowDataId!,
+          document_id: documentId ?? 0,
+          status: "PENDING",
+          approver_name: selectedAssigner?.label || "Approver",
+          role_name: "Job Assigner",
+          level: 1,
+          time: new Date().toISOString(),
+        });
+      }
 
       Alert.alert(
         "Success",
@@ -153,7 +151,6 @@ export function useApplicationForm(existingApp: any, router: any) {
       Alert.alert("Error", err.message || "Something went wrong");
     }
   };
-
 
   return {
     applicantName,
@@ -176,10 +173,16 @@ export function useApplicationForm(existingApp: any, router: any) {
     setLocationOpen,
     setLocation,
     setLocationItems,
-    submitApplication,
+    jobAssignerOpen,
+    jobAssigner,
+    jobAssignerItems,
+    setJobAssignerOpen,
+    setJobAssigner,
+    setJobAssignerItems,
     startTime,
     setStartTime,
     endTime,
     setEndTime,
+    submitApplication,
   };
 }

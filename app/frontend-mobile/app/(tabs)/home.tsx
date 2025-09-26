@@ -1,29 +1,21 @@
 import { View, Text, Pressable } from "react-native";
-import { Link, useRouter } from "expo-router";
+import { Link } from "expo-router";
+import { useUser } from "@/contexts/UserContext";
 
 export default function Home() {
-  const router = useRouter();
+  const { userId } = useUser();
 
   return (
-    <View className="flex-1 items-center justify-center">
-      <Text className="text-xl font-bold mb-4">Home</Text>
+    <View className="flex-1 items-center justify-center bg-secondary">
+      <Text className="text-lg font-bold mb-6 text-primary">
+        Logged in as User ID: {userId}
+      </Text>
 
-      {/* Option 1: Link */}
       <Link href="/permits/form" asChild>
-        <Pressable className="bg-black px-6 py-3 rounded-2xl">
+        <Pressable className="bg-approved px-6 py-3 rounded-xl">
           <Text className="text-white font-semibold">Apply Permit</Text>
         </Pressable>
       </Link>
-
-      {/* Option 2: useRouter.push */}
-      {/* 
-      <Pressable
-        className="bg-blue-600 px-6 py-3 rounded-2xl"
-        onPress={() => router.push("/application-form")}
-      >
-        <Text className="text-white font-semibold">New Application</Text>
-      </Pressable>
-      */}
     </View>
   );
 }

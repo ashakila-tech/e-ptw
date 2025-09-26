@@ -1,3 +1,5 @@
+// components/PermitCard.tsx
+import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Link } from "expo-router";
@@ -8,11 +10,14 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Keep the PermitData type as defined in your project (this file uses Partial)
 type PermitCardProps = Partial<PermitData> & {
   onEdit?: () => void;
 };
 
-const PermitCard = ({
+const ICON_COLOR_PRIMARY = "#535252"; // fallback color that matches your theme primary
+
+export default function PermitCard({
   id,
   name,
   status,
@@ -20,109 +25,116 @@ const PermitCard = ({
   document,
   permitType,
   createdTime,
-  workStartTime, // ✅ added
-  workEndTime,   // ✅ added
+  workStartTime,
+  workEndTime,
   onEdit,
-}: PermitCardProps) => {
+}: PermitCardProps) {
+  const statusKey = (status ?? "").toString().toUpperCase();
+
+  function getStatusClass() {
+    switch (statusKey) {
+      case "APPROVED":
+        return "text-approved font-bold";
+      case "PENDING":
+      case "SUBMITTED":
+        return "text-pending font-bold";
+      case "REJECTED":
+        return "text-rejected font-bold";
+      case "DRAFT":
+        return "text-primary font-bold";
+      default:
+        return "text-primary font-bold";
+    }
+  }
+
   return (
-    <View className="bg-white rounded-lg w-full p-4 mb-4">
-      {/* Status + actions */}
+    <View className="bg-white rounded-lg w-full p-4 mb-4 shadow-sm">
+      {/* Header: status + actions */}
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-primary text-lg">
-          Status:{" "}
-          <Text
-            className={
-              status === "Approved"
-                ? "text-green-600 font-bold"
-                : status === "Pending"
-                ? "text-yellow-600 font-bold"
-                : status === "Rejected"
-                ? "text-red-600 font-bold"
-                : "text-black font-bold"
-            }
-          >
-            {status}
-          </Text>
+          Status: <Text className={getStatusClass()}>{status ?? "-"}</Text>
         </Text>
 
-        <View className="flex-row space-x-3">
-          {status === "DRAFT" && onEdit && (
+        <View className="flex-row items-center">
+          {statusKey === "DRAFT" && onEdit && (
             <TouchableOpacity
               onPress={onEdit}
-              style={{ flexDirection: "row", alignItems: "center", marginRight: 12 }}
+              className="flex-row items-center mr-4"
+              accessibilityRole="button"
             >
-              <Text style={{ marginRight: 6 }}>Edit</Text>
-              <IconSymbol name="pencil" size={18} color="#000" />
+              <Text className="text-primary mr-2">Edit</Text>
+              <IconSymbol name="pencil" size={18} color={ICON_COLOR_PRIMARY} />
             </TouchableOpacity>
           )}
 
           <Link href={`/permits/${id}`} asChild>
-            <TouchableOpacity
-              style={{ flexDirection: "row", alignItems: "center", marginLeft: 12 }}
-            >
-              <Text style={{ marginRight: 6 }}>Details</Text>
-              <IconSymbol name="chevron.right" size={20} color="#000" />
+            <TouchableOpacity className="flex-row items-center" accessibilityRole="link">
+              <Text className="text-primary mr-2">Details</Text>
+              <IconSymbol name="chevron.right" size={20} color={ICON_COLOR_PRIMARY} />
             </TouchableOpacity>
           </Link>
         </View>
       </View>
 
-      <View className="border-b border-gray-300 mb-3" />
+      <View className="border-b border-gray-200 mb-3" />
 
-      {/* Basic info */}
+      {/* Row 1: name / location */}
       <View className="w-full flex-row mb-2">
-        <View className="w-1/2">
-          <Text className="text-primary"> Name: </Text>
-          <Text className="text-primary font-bold"> {name} </Text>
+        <View className="w-1/2 pr-2">
+          <Text className="text-primary">Name:</Text>
+          <Text className="text-primary font-bold">{name ?? "-"}</Text>
         </View>
-        <View className="w-1/2">
-          <Text className="text-primary"> Location: </Text>
-          <Text className="text-primary font-bold"> {location} </Text>
+        <View className="w-1/2 pl-2">
+          <Text className="text-primary">Location:</Text>
+          <Text className="text-primary font-bold">{location ?? "-"}</Text>
         </View>
       </View>
 
-      {/* Dates */}
+      {/* Row 2: work start / work end */}
       <View className="w-full flex-row mb-2">
-        <View className="w-1/2">
-          <Text className="text-primary"> Work Start: </Text>
-          <Text className="text-primary font-bold">
-            {formatDate(workStartTime)}
-          </Text>
+        <View className="w-1/2 pr-2">
+          <Text className="text-primary">Work Start:</Text>
+          <Text className="text-primary font-bold">{formatDate(workStartTime)}</Text>
         </View>
-        <View className="w-1/2">
-          <Text className="text-primary"> Work End: </Text>
-          <Text className="text-primary font-bold">
-            {formatDate(workEndTime)}
-          </Text>
+        <View className="w-1/2 pl-2">
+          <Text className="text-primary">Work End:</Text>
+          <Text className="text-primary font-bold">{formatDate(workEndTime)}</Text>
         </View>
       </View>
 
+      {/* Row 3: application date / permit type */}
       <View className="w-full flex-row mb-2">
-        <View className="w-1/2">
-          <Text className="text-primary"> Application Date: </Text>
-          <Text className="text-primary font-bold">
-            {formatDate(createdTime)}
-          </Text>
+        <View className="w-1/2 pr-2">
+          <Text className="text-primary">Application Date:</Text>
+          <Text className="text-primary font-bold">{formatDate(createdTime)}</Text>
         </View>
-        <View className="w-1/2">
-          <Text className="text-primary"> Permit Type: </Text>
-          <Text className="text-primary font-bold"> {permitType} </Text>
+        <View className="w-1/2 pl-2">
+          <Text className="text-primary">Permit Type:</Text>
+          <Text className="text-primary font-bold">{permitType ?? "-"}</Text>
         </View>
       </View>
 
-      <View className="w-full flex-row mb-2">
-        <View className="w-1/2">
-          <Text className="text-primary"> Document: </Text>
-          <Text className="text-primary font-bold"> {document} </Text>
-        </View>
+      {/* Document */}
+      <View className="w-full">
+        <Text className="text-primary">Document:</Text>
+        <Text className="text-primary font-bold">{document ?? "-"}</Text>
       </View>
     </View>
   );
-};
-
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return "-";
-  return dayjs.utc(dateString).tz(dayjs.tz.guess()).format("DD-MM-YYYY hh:mm A");
 }
 
-export default PermitCard;
+/**
+ * Accept many possible date forms and return "-" if missing/invalid.
+ */
+function formatDate(dateValue: string | number | Date | null | undefined): string {
+  if (!dateValue) return "-";
+  try {
+    // dayjs accepts Date | number | string
+    const d = dayjs.utc(dateValue as any).tz(dayjs.tz.guess());
+    if (!d.isValid()) return "-";
+    return d.format("DD-MM-YYYY hh:mm A");
+  } catch (e) {
+    // be defensive — if dayjs throws for any input, return fallback
+    return "-";
+  }
+}
