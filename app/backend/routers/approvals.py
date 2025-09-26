@@ -9,12 +9,12 @@ from .. import models, schemas
     #prefix="/approvals",
     #tags=["approvals"]
     #)
-
+    
 router = make_crud_router(
     Model=models.Approval,
-    InSchema=schemas.ApprovalIn,      # ✅ correct
-    OutSchema=schemas.ApprovalOut,    # ✅ correct
+    InSchema=schemas.ApprovalIn,     # ✅ must be ApprovalIn
+    OutSchema=schemas.ApprovalOut,   # ✅ and ApprovalOut
     prefix="/approvals",
-    tags=["approvals"],
+    tag="Approvals",
     write_roles=["admin"],
     )
