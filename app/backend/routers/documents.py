@@ -1,95 +1,80 @@
-# # app/routers/documents.py
-# from ._crud_factory import make_crud_router
-# from .. import models, schemas
-# router = make_crud_router(
-#     Model=models.Document,
-#     InSchema=schemas.DocumentIn,
-#     OutSchema=schemas.DocumentOut,
-#     prefix="/documents",
-#     tag="Documents",
-#     write_roles=["admin"],
-# )
-
 # app/routers/documents.py
-import os, uuid, shutil
-from datetime import datetime
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+import os, shutil, mimetypes
 
 from ._crud_factory import make_crud_router
 from .. import models, schemas
-from ..deps import get_db, require_role
+from ..deps import get_db
 
-UPLOAD_DIR = "/mnt/data/ptw-uploads"
+UPLOAD_DIR = "uploads"
 
-# --- Generic CRUD (list/get/update/delete) ---
-crud_router = make_crud_router(
+# ---------- CRUD: list/get/put (no JSON create) ----------
+crud = make_crud_router(
     Model=models.Document,
-    InSchema=schemas.DocumentIn,
+    InSchema=schemas.DocumentUpdate,   # used for PUT (partial)
     OutSchema=schemas.DocumentOut,
     prefix="/documents",
     tag="Documents",
-    write_roles=["admin"],
+    list_roles=None,
+    read_roles=None,
+    write_roles=None,                  # open for now; tighten later
 )
 
-router = APIRouter()
-router.include_router(crud_router)
+extra = APIRouter(prefix="/documents", tags=["Documents"])
 
-
-# --- Custom upload endpoint ---
-# @router.post("/documents/upload", response_model=schemas.DocumentOut,
-#              dependencies=[Depends(require_role(["admin", "user"]))])
-# @router.post("/documents/upload", response_model=schemas.DocumentOut)
-# def upload_document(
-#     file: UploadFile = File(...),
-#     db: Session = Depends(get_db),
-# ):
-#     now = datetime.utcnow()
-#     folder = os.path.join(UPLOAD_DIR, str(now.year), f"{now.month:02d}")
-#     os.makedirs(folder, exist_ok=True)
-
-#     ext = os.path.splitext(file.filename)[1]
-#     filename = f"{uuid.uuid4().hex}{ext}"
-#     filepath = os.path.join(folder, filename)
-
-#     with open(filepath, "wb") as buffer:
-#         shutil.copyfileobj(file.file, buffer)
-
-#     doc = models.Document(
-#         name=file.filename,
-#         path=filepath,
-#         time=now,
-#         company_id=1,  # TODO: set properly if multi-company
-#     )
-#     db.add(doc)
-#     db.commit()
-#     db.refresh(doc)
-#     return schemas.DocumentOut.model_validate(doc, from_attributes=True)
-
-# no auth for uploading documents
-@router.post("/documents/upload", response_model=schemas.DocumentOut)
+@extra.post("/upload", response_model=schemas.DocumentOut)
 def upload_document(
+    company_id: int,
+    name: str,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
-    now = datetime.utcnow()
-    folder = os.path.join(UPLOAD_DIR, str(now.year), f"{now.month:02d}")
-    os.makedirs(folder, exist_ok=True)
+    allowed = {
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "image/jpeg",
+        "image/png",
+    }
+    if file.content_type not in allowed:
+        raise HTTPException(400, detail=f"Unsupported file type: {file.content_type}")
 
-    ext = os.path.splitext(file.filename)[1]
-    filename = f"{uuid.uuid4().hex}{ext}"
-    filepath = os.path.join(folder, filename)
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    safe_name = file.filename.replace("/", "_").replace("\\", "_")
+    path = os.path.join(UPLOAD_DIR, safe_name)
 
-    with open(filepath, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    with open(path, "wb") as buf:
+        shutil.copyfileobj(file.file, buf)
 
-    doc = models.Document(
-        name=file.filename,
-        path=filepath,
-        time=now,
-        company_id=1,
-    )
-    db.add(doc)
-    db.commit()
-    db.refresh(doc)
-    return schemas.DocumentOut.model_validate(doc, from_attributes=True)
+    doc = models.Document(company_id=company_id, name=name, path=path)
+    db.add(doc); db.commit(); db.refresh(doc)
+    return doc
+
+@extra.get("/{doc_id}/download")
+def download_document(doc_id: int, db: Session = Depends(get_db)):
+    doc = db.get(models.Document, doc_id)
+    if not doc:
+        raise HTTPException(404, "Document not found")
+    if not os.path.exists(doc.path):
+        raise HTTPException(410, "File missing on server")
+    ctype = mimetypes.guess_type(doc.path)[0] or "application/octet-stream"
+    return FileResponse(path=doc.path, media_type=ctype, filename=os.path.basename(doc.path))
+
+@extra.delete("/{doc_id}", status_code=204)
+def delete_document(doc_id: int, db: Session = Depends(get_db)):
+    doc = db.get(models.Document, doc_id)
+    if not doc:
+        raise HTTPException(404, "Document not found")
+    try:
+        if doc.path and os.path.exists(doc.path):
+            os.remove(doc.path)
+    except Exception:
+        pass
+    db.delete(doc); db.commit()
+    return
+
+router = APIRouter()
+router.include_router(crud)    # GET list/get, PUT
+router.include_router(extra)   # POST upload, GET download, DELETE

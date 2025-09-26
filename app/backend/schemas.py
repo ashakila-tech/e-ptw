@@ -33,6 +33,7 @@ class PermitTypeOut(PermitTypeIn):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
+
 class PermitTypeUpdate(BaseModel):
     company_id: Optional[int] = None
     name: Optional[str] = None
@@ -51,7 +52,7 @@ class UserOut(UserBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
-class UserUpdate(BaseModel):  # PUT/PATCH (all optional)
+class UserUpdate(BaseModel):  # PUT/PATCH (all optional) 
     company_id: Optional[int] = None
     name: Optional[str] = None
     email: Optional[EmailStr] = None
@@ -72,21 +73,20 @@ class LocationUpdate(BaseModel):
     name: Optional[str] = None
 
 # ---------- Document ----------
-class DocumentIn(BaseModel):
+# Response model (read)
+class DocumentOut(BaseModel):
+    id: int
     company_id: int
     name: str
-    path: str
+    path: str                     # server-managed
     time: Optional[datetime] = None
-
-class DocumentOut(DocumentIn):
-    id: int
     model_config = ConfigDict(from_attributes=True)
 
+# Update model (what clients can change)
 class DocumentUpdate(BaseModel):
     company_id: Optional[int] = None
     name: Optional[str] = None
-    path: Optional[str] = None
-    time: Optional[datetime] = None
+    # path/time are intentionally NOT updatable
 
 # ---------- Workflow ----------
 class WorkflowIn(BaseModel):
