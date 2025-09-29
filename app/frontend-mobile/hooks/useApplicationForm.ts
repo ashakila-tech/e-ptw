@@ -127,7 +127,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         location_id: location ?? existingApp?.locationId ?? 0,
         applicant_id: userId ?? 0,
         name: permitName || "Unnamed Permit",
-        document_id: documentId ?? existingApp?.documentId ?? 0,
+        document_id: documentId ?? existingApp?.documentId ?? null,
         status,
         job_assigner_id: jobAssigner ?? undefined,
       };

@@ -25,21 +25,17 @@ export default function ApplicationForm() {
   const [dateError, setDateError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Form validation
+  // Validate only for SUBMIT, not for DRAFT
   useEffect(() => {
-    if (startTime && endTime && endTime <= startTime) {
-      setDateError("End time must be after start time.");
-    } else setDateError(null);
-
     if (!permitName.trim()) setFormError("Permit name is required.");
-    else if (!documentId) setFormError("Please upload a document.");
+    // else if (!documentId) setFormError("Please upload a document.");
     else if (!permitType) setFormError("Please select a permit type.");
     else if (!location) setFormError("Please select a location.");
     else if (!startTime || !endTime) setFormError("Please select both start and end times.");
     else if (!jobAssigner) setFormError("Please select a job assigner.");
-    else if (dateError) setFormError(dateError);
+    else if (startTime && endTime && endTime <= startTime) setFormError("End time must be after start time.");
     else setFormError(null);
-  }, [permitName, documentId, permitType, location, startTime, endTime, jobAssigner, dateError]);
+  }, [permitName, permitType, location, startTime, endTime, jobAssigner]);
 
   // Determine if dropdown data is still loading
   const loading = permitTypeItems.length === 0 || locationItems.length === 0 || jobAssignerItems.length === 0;
@@ -144,24 +140,29 @@ export default function ApplicationForm() {
 
       {/* Action Buttons */}
       <View className="flex-row mt-8 space-x-4">
+        {/* Save as Draft */}
         <Pressable
           onPress={() => submitApplication("DRAFT")}
-          disabled={!!formError}
-          className={`flex-[0.4] rounded-xl py-4 mr-3 items-center ${
-            formError ? "bg-gray-400" : "bg-primary"
-          }`}
+          className="flex-[0.4] rounded-xl py-4 mr-3 items-center bg-primary"
         >
-          <Text className="text-white font-semibold text-base">Save as Draft</Text>
+          <Text className="text-white font-semibold text-base">
+            Save as Draft
+          </Text>
         </Pressable>
 
+        {/* Submit Application */}
         <Pressable
-          onPress={() => submitApplication("SUBMITTED")}
+          onPress={() => {
+            if (!formError) submitApplication("SUBMITTED");
+          }}
           disabled={!!formError}
           className={`flex-[0.6] rounded-xl py-4 items-center ${
             formError ? "bg-gray-400" : "bg-approved"
           }`}
         >
-          <Text className="text-white font-semibold text-base">Submit Application</Text>
+          <Text className="text-white font-semibold text-base">
+            Submit Application
+          </Text>
         </Pressable>
       </View>
     </ScrollView>
