@@ -3,7 +3,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8000", // change to your backend URL or EC2 URL
+  baseURL: import.meta.env.VITE_API_BASE, // uses your EC2 URL
 });
 
 // 🔑 Attach token from localStorage to every request
@@ -29,4 +29,3 @@ export const getApprovals = () => API.get("/api/approvals");
 export const createApproval = (data) => API.post("/api/approvals", data);
 
 export default API;
-
