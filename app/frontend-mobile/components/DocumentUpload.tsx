@@ -25,7 +25,7 @@ export default function DocumentUpload({
     <View className="mb-1">
       <View className="flex-row items-center justify-between">
         <Text className="text-gray-800 flex-1">
-          {documentName ? `Document: ${documentName}` : "No document uploaded"}
+          {documentName ? documentName : "No document uploaded"}
         </Text>
 
         {/* Upload / Change button */}
