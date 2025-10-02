@@ -11,6 +11,7 @@ services:
         condition: service_healthy
     volumes:
       - ./app:/app/app
+      - ./uploads:/app/uploads
 
   db:
     image: postgres:16
