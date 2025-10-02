@@ -3,7 +3,6 @@ import { Button, Alert } from "react-native";
 import {
   View,
   Text,
-  ActivityIndicator,
   ScrollView,
   TouchableOpacity,
   Pressable,
@@ -19,8 +18,8 @@ const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
-  const [permit, setPermit] = useState<PermitData | null>(null);
-  const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
+  const [permit, setPermit] = useState<any | null>(null);
+  const [approvals, setApprovals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isApproval } = useUser();
@@ -34,25 +33,29 @@ export default function PermitDetails() {
       const res = await fetch(`${API_BASE_URL}api/applications/${id}`);
       if (!res.ok) throw new Error(`Failed to fetch permit (${res.status})`);
 
-      const permitData: PermitAPI = await res.json();
+      const permitData = await res.json();
 
       // Fetch related entities in parallel
-      const [docRes, locRes, typeRes, workflowRes, approvalsRes] =
+      const [docRes, locRes, typeRes, workflowRes, approvalsRes, assignerRes] =
         await Promise.all([
           fetch(`${API_BASE_URL}api/documents/${permitData.document_id}`),
           fetch(`${API_BASE_URL}api/locations/${permitData.location_id}`),
           fetch(`${API_BASE_URL}api/permit-types/${permitData.permit_type_id}`),
           fetch(`${API_BASE_URL}api/workflow-data/${permitData.workflow_data_id}`),
           fetch(`${API_BASE_URL}api/approvals/${permitData.workflow_data_id}`),
+          permitData.job_assigner_id
+            ? fetch(`${API_BASE_URL}api/users/${permitData.job_assigner_id}`)
+            : Promise.resolve(null),
         ]);
 
-      const [document, location, permitType, workflowData, approvalsJson] =
+      const [document, location, permitType, workflowData, approvalsJson, jobAssigner] =
         await Promise.all([
           docRes.json(),
           locRes.json(),
           typeRes.json(),
           workflowRes.json(),
           approvalsRes.json(),
+          assignerRes ? assignerRes.json() : null,
         ]);
 
       setPermit({
@@ -73,6 +76,7 @@ export default function PermitDetails() {
         locationId: permitData.location_id ?? undefined,
         permitTypeId: permitData.permit_type_id ?? undefined,
         workflowDataId: permitData.workflow_data_id ?? undefined,
+        jobAssigner: jobAssigner?.name || "-", // NEW
       });
 
       setApprovals(Array.isArray(approvalsJson) ? approvalsJson : []);
@@ -116,170 +120,179 @@ export default function PermitDetails() {
 
   return (
     <>
-    <Stack.Screen
-      options={{
-        title: "Permit Details",
-        headerTitleAlign: "left",
-        headerTitleStyle: {
-          fontWeight: "bold",
-          fontSize: 18,
-        },
-      }}
-    />
-    <ScrollView className="flex-1 p-4 bg-gray-100">
-      <View className="p-4 mb-4">
-        <Text className="text-center text-2xl font-bold text-primary">
-          {permit.name}
-        </Text>
-      </View>
-
-      {/* Permit Info */}
-      <View className="bg-white rounded-xl p-4 mb-4">
-        <Text className="text-xl font-bold text-primary mb-3">Details</Text>
-
-        <Text className="text-base text-primary mb-2">
-          Status:{" "}
-          <Text
-            className={
-              permit.status === "Approved"
-                ? "text-approved font-semibold"
-                : permit.status === "Pending"
-                ? "text-pending font-semibold"
-                : permit.status === "Rejected"
-                ? "text-rejected font-semibold"
-                : "text-primary font-semibold"
-            }
-          >
-            {permit.status}
+      <Stack.Screen
+        options={{
+          title: "Permit Details",
+          headerTitleAlign: "left",
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+          },
+        }}
+      />
+      <ScrollView className="flex-1 p-4 bg-gray-100">
+        <View className="p-4 mb-4">
+          <Text className="text-center text-2xl font-bold text-primary">
+            {permit.name}
           </Text>
-        </Text>
-
-        <Text className="text-base text-primary mb-2">
-          Permit Type: <Text className="font-semibold">{permit.permitType || "-"}</Text>
-        </Text>
-        
-        <Text className="text-base text-primary mb-2">
-          Location: <Text className="font-semibold">{permit.location || "-"}</Text>
-        </Text>
-        
-        <Text className="text-base text-primary mb-2">
-          Created:{" "}
-          <Text className="font-semibold">
-            {permit.createdTime
-              ? dayjs(permit.createdTime).format("DD-MM-YYYY hh:mm A")
-              : "-"}
-          </Text>
-        </Text>
-
-        <Text className="text-base text-primary mb-2">
-          Work Start:{" "}
-          <Text className="font-semibold">
-            {permit.workStartTime
-              ? dayjs(permit.workStartTime).format("DD-MM-YYYY hh:mm A")
-              : "-"}
-          </Text>
-        </Text>
-
-        <Text className="text-base text-primary mb-2">
-          Work End:{" "}
-          <Text className="font-semibold">
-          {permit.workEndTime
-            ? dayjs(permit.workEndTime).format("DD-MM-YYYY hh:mm A")
-            : "-"}
-          </Text>
-        </Text>
-
-        <Text className="text-base text-primary mb-2">
-          Workflow: <Text className="font-semibold">{permit.workflowData || "-"}</Text>
-        </Text>
-      </View>
-
-      <View className="bg-white rounded-xl p-4 mb-4">
-        <Text className="text-xl font-bold text-primary mb-3">Attachments</Text>
-
-        <View className="flex-row items-center justify-between">
-          <Text className="text-base text-primary">
-            Document: 
-            <Text className="font-semibold"> {permit.document}</Text>
-          </Text>
-          <TouchableOpacity
-            disabled={!permit.documentUrl}
-            onPress={() =>
-              permit.documentUrl && downloadDocument(permit.documentUrl, permit.document)
-            }
-            className="bg-primary px-3 py-2 rounded"
-          >
-            <Text className="text-white text-sm font-semibold">Download</Text>
-          </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Approvals Section */}
-      <View className="bg-white rounded-xl p-4">
-        <Text className="text-lg font-bold text-primary mb-3">Approvals</Text>
-        {Array.isArray(approvals) && approvals.length > 0 ? (
-          approvals.map((a, idx) => (
-            <View
-              key={a.id || idx}
-              className="border-b border-gray-300 pb-2 mb-2"
+        {/* Permit Info */}
+        <View className="bg-white rounded-xl p-4 mb-4">
+          <Text className="text-xl font-bold text-primary mb-3">Details</Text>
+
+          <Text className="text-base text-primary mb-2">
+            Status:{" "}
+            <Text
+              className={
+                permit.status === "Approved"
+                  ? "text-approved font-semibold"
+                  : permit.status === "Pending"
+                  ? "text-pending font-semibold"
+                  : permit.status === "Rejected"
+                  ? "text-rejected font-semibold"
+                  : "text-primary font-semibold"
+              }
             >
-              <Text className="font-semibold text-primary">
-                {a.role_name || a.roleName || "Role"}
-              </Text>
-              <Text className="text-primary">
-                {a.approver_name || a.approverName || "Unknown"} -{" "}
-                <Text
-                  className={
-                    a.status === "Approved"
-                      ? "text-approved font-semibold"
-                      : a.status === "Pending"
-                      ? "text-pending font-semibold"
-                      : a.status === "Rejected"
-                      ? "text-rejected font-semibold"
-                      : "text-primary font-semibold"
-                  }
-                >
-                  {a.status || "N/A"}
-                </Text>
-              </Text>
-              <Text className="text-xs text-gray-500">
-                {a.time
-                  ? dayjs(a.time).format("DD-MM-YYYY HH:mm")
-                  : "No timestamp"}
-              </Text>
-            </View>
-          ))
-        ) : (
-          <Text className="text-gray-500 italic">No approvals yet</Text>
-        )}
-      </View>
+              {permit.status}
+            </Text>
+          </Text>
 
-      {isApproval && (
-        <View className="flex-row mt-6 space-x-4">
-          {/* Reject button */}
-          <Pressable
-            onPress={() => {
-              console.log("Rejecting permit:", permit.id);
-              Alert.alert("Rejection", "Permit rejected successfully (mock).");
-            }}
-            className="flex-[0.4] bg-rejected py-3 mr-3 rounded-xl items-center"
-          >
-            <Text className="text-white font-semibold text-base">Reject</Text>
-          </Pressable>
+          <Text className="text-base text-primary mb-2">
+            Permit Type:{" "}
+            <Text className="font-semibold">{permit.permitType || "-"}</Text>
+          </Text>
 
-          {/* Approve button */}
-          <Pressable
-            onPress={() => {
-              console.log("Approving permit:", permit.id);
-              Alert.alert("Approval", "Permit approved successfully (mock).");
-            }}
-            className="flex-[0.6] bg-approved py-3 rounded-xl items-center"
-          >
-            <Text className="text-white font-semibold text-base">Approve</Text>
-          </Pressable>
+          <Text className="text-base text-primary mb-2">
+            Location: <Text className="font-semibold">{permit.location || "-"}</Text>
+          </Text>
+
+          <Text className="text-base text-primary mb-2">
+            Job Assigner:{" "}
+            <Text className="font-semibold">{permit.jobAssigner || "-"}</Text>
+          </Text>
+
+          <Text className="text-base text-primary mb-2">
+            Created:{" "}
+            <Text className="font-semibold">
+              {permit.createdTime
+                ? dayjs(permit.createdTime).format("DD-MM-YYYY hh:mm A")
+                : "-"}
+            </Text>
+          </Text>
+
+          <Text className="text-base text-primary mb-2">
+            Work Start:{" "}
+            <Text className="font-semibold">
+              {permit.workStartTime
+                ? dayjs(permit.workStartTime).format("DD-MM-YYYY hh:mm A")
+                : "-"}
+            </Text>
+          </Text>
+
+          <Text className="text-base text-primary mb-2">
+            Work End:{" "}
+            <Text className="font-semibold">
+              {permit.workEndTime
+                ? dayjs(permit.workEndTime).format("DD-MM-YYYY hh:mm A")
+                : "-"}
+            </Text>
+          </Text>
+
+          <Text className="text-base text-primary mb-2">
+            Workflow:{" "}
+            <Text className="font-semibold">{permit.workflowData || "-"}</Text>
+          </Text>
         </View>
-      )}
-    </ScrollView>
+
+        {/* Attachments */}
+        <View className="bg-white rounded-xl p-4 mb-4">
+          <Text className="text-xl font-bold text-primary mb-3">Attachments</Text>
+
+          <View className="flex-row items-center justify-between">
+            <Text className="text-base text-primary">
+              Document:
+              <Text className="font-semibold"> {permit.document}</Text>
+            </Text>
+            <TouchableOpacity
+              disabled={!permit.documentUrl}
+              onPress={() =>
+                permit.documentUrl &&
+                downloadDocument(permit.documentUrl, permit.document)
+              }
+              className="bg-primary px-3 py-2 rounded"
+            >
+              <Text className="text-white text-sm font-semibold">Download</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Approvals Section */}
+        <View className="bg-white rounded-xl p-4">
+          <Text className="text-lg font-bold text-primary mb-3">Approvals</Text>
+          {Array.isArray(approvals) && approvals.length > 0 ? (
+            approvals.map((a, idx) => (
+              <View
+                key={a.id || idx}
+                className="border-b border-gray-300 pb-2 mb-2"
+              >
+                <Text className="font-semibold text-primary">
+                  {a.role_name || a.roleName || "Role"}
+                </Text>
+                <Text className="text-primary">
+                  {a.approver_name || a.approverName || "Unknown"} -{" "}
+                  <Text
+                    className={
+                      a.status === "Approved"
+                        ? "text-approved font-semibold"
+                        : a.status === "Pending"
+                        ? "text-pending font-semibold"
+                        : a.status === "Rejected"
+                        ? "text-rejected font-semibold"
+                        : "text-primary font-semibold"
+                    }
+                  >
+                    {a.status || "N/A"}
+                  </Text>
+                </Text>
+                <Text className="text-xs text-gray-500">
+                  {a.time
+                    ? dayjs(a.time).format("DD-MM-YYYY HH:mm")
+                    : "No timestamp"}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <Text className="text-gray-500 italic">No approvals yet</Text>
+          )}
+        </View>
+
+        {isApproval && (
+          <View className="flex-row mt-6 space-x-4">
+            {/* Reject button */}
+            <Pressable
+              onPress={() => {
+                console.log("Rejecting permit:", permit.id);
+                Alert.alert("Rejection", "Permit rejected successfully (mock).");
+              }}
+              className="flex-[0.4] bg-rejected py-3 mr-3 rounded-xl items-center"
+            >
+              <Text className="text-white font-semibold text-base">Reject</Text>
+            </Pressable>
+
+            {/* Approve button */}
+            <Pressable
+              onPress={() => {
+                console.log("Approving permit:", permit.id);
+                Alert.alert("Approval", "Permit approved successfully (mock).");
+              }}
+              className="flex-[0.6] bg-approved py-3 rounded-xl items-center"
+            >
+              <Text className="text-white font-semibold text-base">Approve</Text>
+            </Pressable>
+          </View>
+        )}
+      </ScrollView>
     </>
   );
 }

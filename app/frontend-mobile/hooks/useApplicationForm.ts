@@ -4,20 +4,22 @@ import * as DocumentPicker from "expo-document-picker";
 import {
   fetchPermitTypes,
   fetchLocations,
-  fetchUsers,
   uploadDocument,
   createWorkflow,
   createWorkflowData,
   saveApplication,
+  fetchUsers,
   createApproval,
 } from "@/services/api";
 import Constants from "expo-constants";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/UserContext";  // import user context
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export function useApplicationForm(existingApp: any, router: any) {
-  const { userId } = useUser();
+  const { userId } = useUser();  // get logged in userId
+
+  const [loading, setLoading] = useState(true);
 
   const [applicantName, setApplicantName] = useState(existingApp?.createdBy || "");
   const [permitName, setPermitName] = useState(existingApp?.name || "");
@@ -34,8 +36,11 @@ export function useApplicationForm(existingApp: any, router: any) {
   const [location, setLocation] = useState<number | null>(existingApp?.locationId || null);
   const [locationItems, setLocationItems] = useState<{ label: string; value: number }[]>([]);
 
+  // --- Job Assigner ---
   const [jobAssignerOpen, setJobAssignerOpen] = useState(false);
-  const [jobAssigner, setJobAssigner] = useState<number | null>(null);
+  const [jobAssigner, setJobAssigner] = useState<number | null>(
+    existingApp?.jobAssignerId ?? existingApp?.job_assigner_id ?? null
+  );
   const [jobAssignerItems, setJobAssignerItems] = useState<{ label: string; value: number }[]>([]);
 
   const [startTime, setStartTime] = useState<Date | null>(
@@ -45,7 +50,7 @@ export function useApplicationForm(existingApp: any, router: any) {
     existingApp?.workEndTime ? new Date(existingApp.workEndTime) : null
   );
 
-  // Fetch dropdown data
+  // fetch dropdowns + applicant name
   useEffect(() => {
     async function fetchData() {
       try {
@@ -58,25 +63,39 @@ export function useApplicationForm(existingApp: any, router: any) {
         const usersData = await fetchUsers();
         setJobAssignerItems(usersData.map((u: any) => ({ label: u.name, value: u.id })));
 
-        // Pre-fill job assigner after items are loaded
-        if (existingApp?.jobAssignerId != null) {
-          setJobAssigner(existingApp.jobAssignerId);
-        }
-
-        // Set applicant name to current user if available
+        // set applicant name from context
         if (userId) {
           const currentUser = usersData.find((u: any) => u.id === userId);
-          setApplicantName(currentUser?.name || existingApp?.createdBy || "Unknown User");
+          setApplicantName(currentUser?.name || "Unknown User");
         }
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [userId]);
+
+  useEffect(() => {
+    async function fetchJobAssigners() {
+      try {
+        const usersData = await fetchUsers();
+        setJobAssignerItems(usersData.map((u: any) => ({ label: u.name, value: u.id })));
+
+        // Reapply jobAssigner value once items are loaded
+        if (existingApp?.jobAssignerId ?? existingApp?.job_assigner_id) {
+          setJobAssigner(existingApp.jobAssignerId ?? existingApp.job_assigner_id);
+        }
+      } catch (err) {
+        console.error("Error fetching job assigners:", err);
       }
     }
 
-    fetchData();
-  }, [existingApp, userId]);
+    fetchJobAssigners();
+  }, []);
 
-  // Pick and upload document
+  // pick + upload document
   const pickAndUploadDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
     if (!result.canceled) {
@@ -95,17 +114,25 @@ export function useApplicationForm(existingApp: any, router: any) {
     }
   };
 
-  // Submit or save draft
+  // submit / draft
   const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
     try {
       let workflowDataId: number | null = existingApp?.workflowDataId ?? null;
 
+      // Create workflow + workflow-data if not existing
       if (!workflowDataId) {
         const companyId = existingApp?.company_id ?? 1;
-        const permitTypeIdForWorkflow = permitType ?? existingApp?.permitTypeId ?? 0;
+
+        // Always use a valid permitTypeId (fallback to first available or 1)
+        const permitTypeIdForWorkflow =
+          permitType ??
+          existingApp?.permitTypeId ??
+          (permitTypeItems.length > 0 ? permitTypeItems[0].value : 1);
+
+        console.log("Creating workflow with permitTypeId:", permitTypeIdForWorkflow);
 
         const workflow = await createWorkflow(
-          `${permitName} - ${applicantName} - Workflow`,
+          `${permitName || "Untitled"} - ${applicantName} - Workflow`,
           companyId,
           permitTypeIdForWorkflow
         );
@@ -113,7 +140,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         const workflowData = await createWorkflowData({
           company_id: companyId,
           workflow_id: workflow.id,
-          name: `${permitName} - ${applicantName} - Workflow Data`,
+          name: `${permitName || "Untitled"} - ${applicantName} - Workflow Data`,
           start_time: startTime ? startTime.toISOString() : new Date().toISOString(),
           end_time: endTime ? endTime.toISOString() : new Date().toISOString(),
         });
@@ -121,16 +148,28 @@ export function useApplicationForm(existingApp: any, router: any) {
         workflowDataId = workflowData.id;
       }
 
-      const payload = {
-        permit_type_id: permitType ?? existingApp?.permitTypeId ?? 0,
+      // --- Build payload (same as before, with fallbacks) ---
+      const fallbackPermitTypeId = permitTypeItems.length > 0 ? permitTypeItems[0].value : 1;
+      const fallbackLocationId = locationItems.length > 0 ? locationItems[0].value : 1;
+
+      const payload: any = {
+        permit_type_id: permitType ?? existingApp?.permitTypeId ?? fallbackPermitTypeId,
         workflow_data_id: workflowDataId!,
-        location_id: location ?? existingApp?.locationId ?? 0,
+        location_id: location ?? existingApp?.locationId ?? fallbackLocationId,
         applicant_id: userId ?? 0,
         name: permitName || "Unnamed Permit",
-        document_id: documentId ?? existingApp?.documentId ?? null,
         status,
-        job_assigner_id: jobAssigner ?? undefined,
       };
+
+      if (documentId ?? existingApp?.documentId) {
+        payload.document_id = documentId ?? existingApp?.documentId;
+      }
+
+      if (jobAssigner) {
+        payload.job_assigner_id = jobAssigner;
+      }
+
+      console.log("Final application payload:", payload);
 
       const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
 
@@ -165,6 +204,7 @@ export function useApplicationForm(existingApp: any, router: any) {
   };
 
   return {
+    loading,
     applicantName,
     setApplicantName,
     permitName,
