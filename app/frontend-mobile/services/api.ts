@@ -62,7 +62,7 @@ export async function fetchJobAssigners() {
 }
 
 // -------------------- Document Upload --------------------
-export async function uploadDocument(file: any) {
+export async function uploadDocument(file: any, companyId: number = 1) {
   const formData = new FormData();
   formData.append("file", {
     uri: file.uri,
@@ -70,15 +70,26 @@ export async function uploadDocument(file: any) {
     name: file.name,
   } as any);
 
-  const res = await fetch(`${API_BASE_URL}api/documents/upload`, {
+  // Attach company_id and name as query parameters instead of form data
+  const query = `?company_id=${encodeURIComponent(companyId)}&name=${encodeURIComponent(file.name)}`;
+
+  const res = await fetch(`${API_BASE_URL}api/documents/upload${query}`, {
     method: "POST",
     body: formData,
-    headers: { "Content-Type": "multipart/form-data" },
+    headers: {
+      Accept: "application/json",
+    },
   });
 
-  if (!res.ok) throw new Error("Failed to upload document");
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Upload failed:", res.status, text);
+    throw new Error(`Failed to upload document (${res.status})`);
+  }
+
   return res.json();
 }
+
 
 // -------------------- Workflow --------------------
 export async function createWorkflow(name: string, company_id: number, permit_type_id: number) {
@@ -127,13 +138,55 @@ export async function saveApplication(id: number | null, payload: any, isUpdate:
 }
 
 // -------------------- Approvals --------------------
-export async function createApproval(payload: any) {
+
+// Create Approval
+export async function createApproval(approval: {
+  company_id: number;
+  workflow_id: number;
+  user_group_id?: number | null;
+  user_id: number;
+  name: string;
+  role_name: string;
+  level: number;
+}) {
   const res = await fetch(`${API_BASE_URL}api/approvals/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(approval),
   });
 
-  if (!res.ok) throw new Error("Failed to create approval");
-  return res.json();
+  const text = await res.text();
+  if (!res.ok) {
+    console.error("Approval creation failed:", res.status, text);
+    throw new Error(`Failed to create approval (${res.status})`);
+  }
+
+  return JSON.parse(text);
+}
+
+// Create Approval Data
+export async function createApprovalData(approvalData: {
+  company_id: number;
+  approval_id: number;
+  document_id: number;
+  workflow_data_id: number;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  approver_name: string;
+  time: string;
+  role_name: string;
+  level: number;
+}) {
+  const res = await fetch(`${API_BASE_URL}api/approval-data/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(approvalData),
+  });
+
+  const text = await res.text();
+  if (!res.ok) {
+    console.error("ApprovalData creation failed:", res.status, text);
+    throw new Error(`Failed to create approval data (${res.status})`);
+  }
+
+  return JSON.parse(text);
 }

@@ -10,16 +10,15 @@ import {
   saveApplication,
   fetchUsers,
   createApproval,
+  createApprovalData,
 } from "@/services/api";
 import Constants from "expo-constants";
-import { useUser } from "@/contexts/UserContext";  // import user context
+import { useUser } from "@/contexts/UserContext";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export function useApplicationForm(existingApp: any, router: any) {
-  const { userId } = useUser();  // get logged in userId
-
-  const [loading, setLoading] = useState(true);
+  const { userId } = useUser();
 
   const [applicantName, setApplicantName] = useState(existingApp?.createdBy || "");
   const [permitName, setPermitName] = useState(existingApp?.name || "");
@@ -36,11 +35,8 @@ export function useApplicationForm(existingApp: any, router: any) {
   const [location, setLocation] = useState<number | null>(existingApp?.locationId || null);
   const [locationItems, setLocationItems] = useState<{ label: string; value: number }[]>([]);
 
-  // --- Job Assigner ---
   const [jobAssignerOpen, setJobAssignerOpen] = useState(false);
-  const [jobAssigner, setJobAssigner] = useState<number | null>(
-    existingApp?.jobAssignerId ?? existingApp?.job_assigner_id ?? null
-  );
+  const [jobAssigner, setJobAssigner] = useState<number | null>(existingApp?.jobAssignerId || null);
   const [jobAssignerItems, setJobAssignerItems] = useState<{ label: string; value: number }[]>([]);
 
   const [startTime, setStartTime] = useState<Date | null>(
@@ -50,7 +46,7 @@ export function useApplicationForm(existingApp: any, router: any) {
     existingApp?.workEndTime ? new Date(existingApp.workEndTime) : null
   );
 
-  // fetch dropdowns + applicant name
+  // Fetch dropdowns and applicant name
   useEffect(() => {
     async function fetchData() {
       try {
@@ -63,46 +59,26 @@ export function useApplicationForm(existingApp: any, router: any) {
         const usersData = await fetchUsers();
         setJobAssignerItems(usersData.map((u: any) => ({ label: u.name, value: u.id })));
 
-        // set applicant name from context
         if (userId) {
           const currentUser = usersData.find((u: any) => u.id === userId);
           setApplicantName(currentUser?.name || "Unknown User");
         }
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
-      } finally {
-        setLoading(false);
       }
     }
     fetchData();
   }, [userId]);
 
-  useEffect(() => {
-    async function fetchJobAssigners() {
-      try {
-        const usersData = await fetchUsers();
-        setJobAssignerItems(usersData.map((u: any) => ({ label: u.name, value: u.id })));
-
-        // Reapply jobAssigner value once items are loaded
-        if (existingApp?.jobAssignerId ?? existingApp?.job_assigner_id) {
-          setJobAssigner(existingApp.jobAssignerId ?? existingApp.job_assigner_id);
-        }
-      } catch (err) {
-        console.error("Error fetching job assigners:", err);
-      }
-    }
-
-    fetchJobAssigners();
-  }, []);
-
-  // pick + upload document
+  // Pick and upload document
   const pickAndUploadDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
     if (!result.canceled) {
       const file = result.assets[0];
       setUploading(true);
       try {
-        const doc = await uploadDocument(file);
+        const companyId = existingApp?.company_id ?? 1;
+        const doc = await uploadDocument(file, companyId);
         setDocumentId(doc.id);
         setDocumentName(doc.name);
         Alert.alert("Upload Success", `Uploaded: ${doc.name}`);
@@ -114,24 +90,25 @@ export function useApplicationForm(existingApp: any, router: any) {
     }
   };
 
-  // submit / draft
+  // Submit or save as draft
   const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
     try {
+      console.log("STEP 1: Starting submitApplication");
+
+      let workflow: any = null;
       let workflowDataId: number | null = existingApp?.workflowDataId ?? null;
 
-      // Create workflow + workflow-data if not existing
+      // Create workflow and workflow data if not already existing
       if (!workflowDataId) {
         const companyId = existingApp?.company_id ?? 1;
-
-        // Always use a valid permitTypeId (fallback to first available or 1)
         const permitTypeIdForWorkflow =
           permitType ??
           existingApp?.permitTypeId ??
           (permitTypeItems.length > 0 ? permitTypeItems[0].value : 1);
 
-        console.log("Creating workflow with permitTypeId:", permitTypeIdForWorkflow);
+        console.log("STEP 2: Starting createWorkflow and createWorkflowData");
 
-        const workflow = await createWorkflow(
+        workflow = await createWorkflow(
           `${permitName || "Untitled"} - ${applicantName} - Workflow`,
           companyId,
           permitTypeIdForWorkflow
@@ -148,7 +125,6 @@ export function useApplicationForm(existingApp: any, router: any) {
         workflowDataId = workflowData.id;
       }
 
-      // --- Build payload (same as before, with fallbacks) ---
       const fallbackPermitTypeId = permitTypeItems.length > 0 ? permitTypeItems[0].value : 1;
       const fallbackLocationId = locationItems.length > 0 ? locationItems[0].value : 1;
 
@@ -169,18 +145,42 @@ export function useApplicationForm(existingApp: any, router: any) {
         payload.job_assigner_id = jobAssigner;
       }
 
-      console.log("Final application payload:", payload);
-
       const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
 
-      // Create approval automatically if submitting
+      console.log("STEP 3: Starting createApproval if SUBMITTED");
+
+      // Create approval and approval data when submitting
       if (status === "SUBMITTED" && jobAssigner) {
         const selectedAssigner = jobAssignerItems.find(item => item.value === jobAssigner);
-        await createApproval({
+
+        console.log("Creating approval with payload:", {
           company_id: existingApp?.company_id ?? 1,
-          approval_id: jobAssigner,
-          workflow_data_id: workflowDataId!,
-          document_id: documentId ?? 0,
+          workflow_id: workflowDataId!,
+          user_group_id: null,
+          user_id: jobAssigner,
+          name: "Job Assigner",
+          role_name: "Job Assigner",
+          level: 1,
+        });
+
+
+        const approval = await createApproval({
+          company_id: existingApp?.company_id ?? 1,
+          workflow_id: workflow?.id ?? existingApp?.workflow_id ?? 0, // Fixed: use workflow ID
+          user_group_id: null,
+          user_id: jobAssigner,
+          name: "Job Assigner",
+          role_name: "Job Assigner",
+          level: 1,
+        });
+
+        console.log("Approval payload being sent:", approval);
+
+        await createApprovalData({
+          company_id: existingApp?.company_id ?? 1,
+          approval_id: approval.id,
+          document_id: payload.document_id ?? 0,
+          workflow_data_id: workflowDataId!, // Fixed: correct mapping
           status: "PENDING",
           approver_name: selectedAssigner?.label || "Approver",
           role_name: "Job Assigner",
@@ -204,7 +204,6 @@ export function useApplicationForm(existingApp: any, router: any) {
   };
 
   return {
-    loading,
     applicantName,
     setApplicantName,
     permitName,
