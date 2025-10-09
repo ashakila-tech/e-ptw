@@ -145,7 +145,11 @@ export function useApplicationForm(existingApp: any, router: any) {
         payload.job_assigner_id = jobAssigner;
       }
 
+      console.log("STEP 2.5: Application payload:", payload);
+
       const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
+
+      console.log("STEP 2.6: Application save result:", applicationId);
 
       console.log("STEP 3: Starting createApproval if SUBMITTED");
 
@@ -197,10 +201,14 @@ export function useApplicationForm(existingApp: any, router: any) {
       );
 
       router.push("/(tabs)/mypermit");
-    } catch (err: any) {
-      console.error("Error in submitApplication:", err);
-      Alert.alert("Error", err.message || "Something went wrong");
-    }
+      } catch (err: any) {
+        console.error("Error in submitApplication full details:", JSON.stringify(err, null, 2));
+        if (err.response) {
+          console.error("Response error data:", err.response.data);
+          console.error("Response status:", err.response.status);
+        }
+        Alert.alert("Error", err.message || "Something went wrong");
+      }
   };
 
   return {
