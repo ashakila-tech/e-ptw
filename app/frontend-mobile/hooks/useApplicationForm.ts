@@ -128,12 +128,16 @@ export function useApplicationForm(existingApp: any, router: any) {
       const fallbackPermitTypeId = permitTypeItems.length > 0 ? permitTypeItems[0].value : 1;
       const fallbackLocationId = locationItems.length > 0 ? locationItems[0].value : 1;
 
+      const companyId = existingApp?.company_id ?? 1; // Default to 1 if not provided
+
       const payload: any = {
+        company_id: companyId,
         permit_type_id: permitType ?? existingApp?.permitTypeId ?? fallbackPermitTypeId,
         workflow_data_id: workflowDataId!,
         location_id: location ?? existingApp?.locationId ?? fallbackLocationId,
         applicant_id: userId ?? 0,
         name: permitName || "Unnamed Permit",
+        document_id: documentId ?? existingApp?.documentId ?? null,
         status,
       };
 

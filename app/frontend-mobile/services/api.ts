@@ -133,8 +133,12 @@ export async function saveApplication(id: number | null, payload: any, isUpdate:
     body: JSON.stringify(payload),
   });
 
+  const text = await res.text();
+  console.log("📦 Application response status:", res.status);
+  console.log("📦 Application response text:", text);
+
   if (!res.ok) throw new Error("Failed to save application");
-  return res.json();
+  return JSON.parse(text);
 }
 
 // -------------------- Approvals --------------------
