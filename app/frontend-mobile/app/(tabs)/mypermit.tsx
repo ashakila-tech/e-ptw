@@ -29,6 +29,26 @@ export default function MyPermitTab() {
   >(isApproval ? "all" : "all");
 
   useEffect(() => {
+    async function fetchAllPermits() {
+      let page = 1;
+      const allPermits: PermitAPI[] = [];
+      let hasMore = true;
+
+      while (hasMore) {
+        const res = await fetch(`${API_BASE_URL}api/applications/?page=${page}`);
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          allPermits.push(...data);
+          page += 1;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      return allPermits;
+    }
+
     async function fetchPermits() {
       if (!userId) return;
       setLoading(true);
@@ -38,9 +58,9 @@ export default function MyPermitTab() {
 
         if (!isApproval) {
           // Applicant view
-          const res = await fetch(`${API_BASE_URL}api/applications/`);
-          const allPermits: PermitAPI[] = await res.json();
+          const allPermits = await fetchAllPermits();
           permitsData = allPermits.filter((p) => p.applicant_id === userId);
+          console.log("Fetched applicant permits:", permitsData.length);
         } else {
           // Approval view
           const approvalsRes = await fetch(`${API_BASE_URL}api/approval-data/`);
@@ -49,10 +69,7 @@ export default function MyPermitTab() {
             .filter((a) => a.approver_id === userId)
             .map((a) => a.workflow_data_id);
 
-          const applicationsRes = await fetch(
-            `${API_BASE_URL}api/applications/`
-          );
-          const allPermits: PermitAPI[] = await applicationsRes.json();
+          const allPermits = await fetchAllPermits();
           permitsData = allPermits.filter((p) =>
             assignedWorkflowIds.includes(p.workflow_data_id)
           );

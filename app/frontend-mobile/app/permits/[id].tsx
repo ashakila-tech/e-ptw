@@ -30,34 +30,37 @@ export default function PermitDetails() {
     setError(null);
 
     try {
+      // 1. Fetch permit
       const res = await fetch(`${API_BASE_URL}api/applications/${id}`);
       if (!res.ok) throw new Error(`Failed to fetch permit (${res.status})`);
-
       const permitData = await res.json();
 
-      // Fetch related entities in parallel
-      const [docRes, locRes, typeRes, workflowRes, approvalsRes, assignerRes] =
-        await Promise.all([
-          fetch(`${API_BASE_URL}api/documents/${permitData.document_id}`),
-          fetch(`${API_BASE_URL}api/locations/${permitData.location_id}`),
-          fetch(`${API_BASE_URL}api/permit-types/${permitData.permit_type_id}`),
-          fetch(`${API_BASE_URL}api/workflow-data/${permitData.workflow_data_id}`),
-          fetch(`${API_BASE_URL}api/approvals/${permitData.workflow_data_id}`),
-          permitData.job_assigner_id
-            ? fetch(`${API_BASE_URL}api/users/${permitData.job_assigner_id}`)
-            : Promise.resolve(null),
-        ]);
+      // 2. Fetch related entities in parallel (except approvals)
+      const [docRes, locRes, typeRes, workflowRes, assignerRes] = await Promise.all([
+        fetch(`${API_BASE_URL}api/documents/${permitData.document_id}`),
+        fetch(`${API_BASE_URL}api/locations/${permitData.location_id}`),
+        fetch(`${API_BASE_URL}api/permit-types/${permitData.permit_type_id}`),
+        fetch(`${API_BASE_URL}api/workflow-data/${permitData.workflow_data_id}`),
+        permitData.job_assigner_id
+          ? fetch(`${API_BASE_URL}api/users/${permitData.job_assigner_id}`)
+          : Promise.resolve(null),
+      ]);
 
-      const [document, location, permitType, workflowData, approvalsJson, jobAssigner] =
-        await Promise.all([
-          docRes.json(),
-          locRes.json(),
-          typeRes.json(),
-          workflowRes.json(),
-          approvalsRes.json(),
-          assignerRes ? assignerRes.json() : null,
-        ]);
+      const [document, location, permitType, workflowData, jobAssigner] = await Promise.all([
+        docRes.json(),
+        locRes.json(),
+        typeRes.json(),
+        workflowRes.json(),
+        assignerRes ? assignerRes.json() : null,
+      ]);
 
+      // 3. ✅ Fetch approvals based on workflow_id
+      const approvalsRes = await fetch(
+        `${API_BASE_URL}api/approvals/?workflow_id=${workflowData.workflow_id}`
+      );
+      const approvalsJson = await approvalsRes.json();
+
+      // 4. Set state
       setPermit({
         id: permitData.id,
         name: permitData.name,
@@ -76,7 +79,7 @@ export default function PermitDetails() {
         locationId: permitData.location_id ?? undefined,
         permitTypeId: permitData.permit_type_id ?? undefined,
         workflowDataId: permitData.workflow_data_id ?? undefined,
-        jobAssigner: jobAssigner?.name || "-", // NEW
+        jobAssigner: jobAssigner?.name || "-",
       });
 
       setApprovals(Array.isArray(approvalsJson) ? approvalsJson : []);
@@ -159,8 +162,7 @@ export default function PermitDetails() {
           </Text>
 
           <Text className="text-base text-primary mb-2">
-            Permit Type:{" "}
-            <Text className="font-semibold">{permit.permitType || "-"}</Text>
+            Permit Type: <Text className="font-semibold">{permit.permitType || "-"}</Text>
           </Text>
 
           <Text className="text-base text-primary mb-2">
@@ -168,8 +170,7 @@ export default function PermitDetails() {
           </Text>
 
           <Text className="text-base text-primary mb-2">
-            Job Assigner:{" "}
-            <Text className="font-semibold">{permit.jobAssigner || "-"}</Text>
+            Job Assigner: <Text className="font-semibold">{permit.jobAssigner || "-"}</Text>
           </Text>
 
           <Text className="text-base text-primary mb-2">
@@ -200,8 +201,7 @@ export default function PermitDetails() {
           </Text>
 
           <Text className="text-base text-primary mb-2">
-            Workflow:{" "}
-            <Text className="font-semibold">{permit.workflowData || "-"}</Text>
+            Workflow: <Text className="font-semibold">{permit.workflowData || "-"}</Text>
           </Text>
         </View>
 
@@ -211,8 +211,7 @@ export default function PermitDetails() {
 
           <View className="flex-row items-center justify-between">
             <Text className="text-base text-primary">
-              Document:
-              <Text className="font-semibold"> {permit.document}</Text>
+              Document: <Text className="font-semibold">{permit.document}</Text>
             </Text>
             <TouchableOpacity
               disabled={!permit.documentUrl}
@@ -267,9 +266,9 @@ export default function PermitDetails() {
           )}
         </View>
 
+        {/* Action Buttons */}
         {isApproval && (
           <View className="flex-row mt-6 space-x-4">
-            {/* Reject button */}
             <Pressable
               onPress={() => {
                 console.log("Rejecting permit:", permit.id);
@@ -280,7 +279,6 @@ export default function PermitDetails() {
               <Text className="text-white font-semibold text-base">Reject</Text>
             </Pressable>
 
-            {/* Approve button */}
             <Pressable
               onPress={() => {
                 console.log("Approving permit:", permit.id);
