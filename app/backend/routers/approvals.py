@@ -6,22 +6,7 @@ from ._crud_factory import make_crud_router
 from ..deps import get_db
 from .. import models, schemas
 
-#router = make_crud_router(
-    #model=models.Approval,  
-    #schema_in=schemas.ApprovalIn,
-    #schema_out=schemas.ApprovalOut,
-    #prefix="/approvals",
-    #tags=["approvals"]
-    #)
-    
-router = make_crud_router(
-    Model=models.Approval,
-    InSchema=schemas.ApprovalIn,     # must be ApprovalIn
-    OutSchema=schemas.ApprovalOut,   # and ApprovalOut
-    prefix="/approvals",
-    tag="Approvals",
-    write_roles=["admin"],
-    )
+router = APIRouter(prefix="/approvals", tags=["Approvals"])
 
 @router.get("/filter", response_model=List[schemas.ApprovalOut])
 def get_approvals_by_workflow(
@@ -32,3 +17,14 @@ def get_approvals_by_workflow(
     if workflow_id:
         query = query.filter(models.Approval.workflow_id == workflow_id)
     return query.all()
+
+crud_router = make_crud_router(
+    Model=models.Approval,
+    InSchema=schemas.ApprovalIn,     # must be ApprovalIn
+    OutSchema=schemas.ApprovalOut,   # and ApprovalOut
+    prefix="",
+    tag="Approvals",
+    write_roles=["admin"],
+    )
+
+router.include_router(crud_router)
