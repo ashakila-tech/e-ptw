@@ -16,14 +16,14 @@ from .. import models, schemas
     
 router = make_crud_router(
     Model=models.Approval,
-    InSchema=schemas.ApprovalIn,     # ✅ must be ApprovalIn
-    OutSchema=schemas.ApprovalOut,   # ✅ and ApprovalOut
+    InSchema=schemas.ApprovalIn,     # must be ApprovalIn
+    OutSchema=schemas.ApprovalOut,   # and ApprovalOut
     prefix="/approvals",
     tag="Approvals",
     write_roles=["admin"],
     )
 
-@router.get("/approvals/filter", response_model=List[schemas.ApprovalOut])
+@router.get("/filter", response_model=List[schemas.ApprovalOut])
 def get_approvals_by_workflow(
     workflow_id: Optional[int] = Query(None, description="Filter by workflow_id"),
     db: Session = Depends(get_db),
