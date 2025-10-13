@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from ._crud_factory import make_crud_router
+from ..deps import get_db
 from .. import models, schemas
 
 #router = make_crud_router(
