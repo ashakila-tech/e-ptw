@@ -38,6 +38,16 @@ def login(
     )
     return schemas.TokenOut(access_token=access_token, token_type="bearer")
 
+@router.post("/register")
+def create(request: schemas.User, db: Session = Depends(get_db)):
+    new_user = models.User(company_id=request.company_id,
+                           name=request.name,
+                           email=request.email,
+                           password_hash=hashing.Hash.bcrypt(request.password))
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
 @router.get("/me", response_model=schemas.UserOut)
 def me(current_user: models.User = Depends(get_current_user)):
