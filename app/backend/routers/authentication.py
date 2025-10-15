@@ -39,7 +39,7 @@ def login(
     return schemas.TokenOut(access_token=access_token, token_type="bearer")
 
 @router.post("/register")
-def create(request: schemas.User, db: Session = Depends(get_db)):
+def create(request: schemas.UserCreate, db: Session = Depends(get_db)):
     new_user = models.User(company_id=request.company_id,
                            name=request.name,
                            email=request.email,
