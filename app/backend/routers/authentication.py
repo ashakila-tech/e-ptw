@@ -43,6 +43,7 @@ def create(request: schemas.UserCreate, db: Session = Depends(get_db)):
     new_user = models.User(company_id=request.company_id,
                            name=request.name,
                            email=request.email,
+                           user_type=request.user_type,
                            password_hash=hashing.Hash.make(request.password))
     db.add(new_user)
     db.commit()

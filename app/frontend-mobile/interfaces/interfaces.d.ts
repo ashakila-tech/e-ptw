@@ -2,6 +2,7 @@ interface PermitData {
   id: number;
   name: string;
   status: string;
+  approvalStatus: string;
   location?: string;
   document: string;
   permitType?: string;

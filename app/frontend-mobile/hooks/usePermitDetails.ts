@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Constants from "expo-constants";
 import dayjs from "dayjs";
+import { PermitStatus } from "@/constants/Status";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
@@ -20,7 +21,8 @@ export function usePermitDetails(id?: string) {
       if (!res.ok) throw new Error(`Failed to fetch permit (${res.status})`);
       const permitData = await res.json();
 
-      const [docRes, locRes, typeRes, workflowRes, assignerRes] = await Promise.all([
+      const [apNameRes, docRes, locRes, typeRes, workflowRes, assignerRes] = await Promise.all([
+        fetch(`${API_BASE_URL}api/users/${permitData.applicant_id}`),
         fetch(`${API_BASE_URL}api/documents/${permitData.document_id}`),
         fetch(`${API_BASE_URL}api/locations/${permitData.location_id}`),
         fetch(`${API_BASE_URL}api/permit-types/${permitData.permit_type_id}`),
@@ -30,7 +32,8 @@ export function usePermitDetails(id?: string) {
           : Promise.resolve(null),
       ]);
 
-      const [document, location, permitType, workflowData, jobAssigner] = await Promise.all([
+      const [applicantName, document, location, permitType, workflowData, jobAssigner] = await Promise.all([
+        apNameRes.json(),
         docRes.json(),
         locRes.json(),
         typeRes.json(),
@@ -62,7 +65,7 @@ export function usePermitDetails(id?: string) {
         );
         return {
           ...a,
-          status: match?.status || "PENDING", // default to PENDING
+          status: match?.status || PermitStatus.PENDING, // default to PENDING
           approver_name: match?.approver_name || a.name || "Unknown",
           time: match?.time || null,
         };
@@ -97,6 +100,7 @@ export function usePermitDetails(id?: string) {
         workStartTime: workflowData?.start_time ?? undefined,
         workEndTime: workflowData?.end_time ?? undefined,
         applicantId: permitData.applicant_id,
+        applicantName: applicantName?.name || "-",
         documentId: permitData.document_id ?? undefined,
         locationId: permitData.location_id ?? undefined,
         permitTypeId: permitData.permit_type_id ?? undefined,

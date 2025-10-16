@@ -14,6 +14,7 @@ import {
 } from "@/services/api";
 import Constants from "expo-constants";
 import { useUser } from "@/contexts/UserContext";
+import { PermitStatus } from "@/constants/Status";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
@@ -189,7 +190,7 @@ export function useApplicationForm(existingApp: any, router: any) {
           approval_id: approval.id,
           document_id: payload.document_id ?? 0,
           workflow_data_id: workflowDataId!, // Fixed: correct mapping
-          status: "PENDING",
+          status: PermitStatus.PENDING,
           approver_name: selectedAssigner?.label || "Approver",
           role_name: "Job Assigner",
           level: 1,

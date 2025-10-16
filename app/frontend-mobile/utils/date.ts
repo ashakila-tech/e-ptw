@@ -1,21 +1,24 @@
-// utils/date.ts
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 /**
- * Format an ISO string or Date into a human-friendly string
- * Example: "2025-09-22T11:17:51.914Z" → "Sep 22, 2025, 11:17 AM"
+ * Accept many possible date forms and return "-" if missing/invalid.
  */
-export function formatDate(date?: string | Date | null): string {
-  if (!date) return "—";
-
-  const parsed = typeof date === "string" ? new Date(date) : date;
-
-  if (isNaN(parsed.getTime())) return "Invalid Date";
-
-  return parsed.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function formatDate(dateValue: string | number | Date | null | undefined): string {
+  if (!dateValue) return "-";
+  try {
+    // dayjs accepts Date | number | string
+    const d = dayjs.utc(dateValue as any).tz(dayjs.tz.guess());
+    if (!d.isValid()) return "-";
+    return d.format("DD-MM-YYYY hh:mm A");
+  } catch (e) {
+    // be defensive — if dayjs throws for any input, return fallback
+    return "-";
+  }
 }
+
+export { formatDate };

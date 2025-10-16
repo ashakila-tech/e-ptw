@@ -1,11 +1,12 @@
 import React from "react";
+import LoadingScreen from "@/components/LoadingScreen";
 import { View, Text, ScrollView, TouchableOpacity, Pressable, Alert } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { usePermitDetails } from "@/hooks/usePermitDetails";
 import { useUser } from "@/contexts/UserContext";
-import LoadingScreen from "@/components/LoadingScreen";
-import dayjs from "dayjs";
 import { downloadDocument } from "@/utils/download";
+import { getStatusClass } from "@/utils/class";
+import { formatDate } from "@/utils/date";
 
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
@@ -35,60 +36,34 @@ export default function PermitDetails() {
     <>
       <Stack.Screen
         options={{
-          title: "Permit Details",
+          title: permit.name || "Permit Details",
           headerTitleAlign: "left",
           headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
         }}
       />
 
       <ScrollView className="flex-1 p-4 bg-gray-100">
-        {/* Title */}
-        <View className="p-4 mb-4">
-          <Text className="text-center text-2xl font-bold text-primary">{permit.name}</Text>
-        </View>
-
         {/* Details */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Details</Text>
+          
           <Text className="text-base text-primary mb-2">
-            Status:{" "}
-            <Text
-              className={
-                permit.status === "Approved"
-                  ? "text-approved font-semibold"
-                  : permit.status === "Pending"
-                  ? "text-pending font-semibold"
-                  : permit.status === "Rejected"
-                  ? "text-rejected font-semibold"
-                  : "text-primary font-semibold"
-              }
-            >
-              {permit.status}
-            </Text>
+            Status: <Text className={getStatusClass(permit.status)}>{permit.status || "-"}</Text>
+          </Text>
+          <Text className="text-base text-primary mb-2">
+            Applicant Name: <Text className="font-semibold">{permit.applicantName || "-"}</Text>
+          </Text>
+          <Text className="text-base text-primary mb-2">
+            Location: <Text className="font-semibold">{permit.location || "-"}</Text>
           </Text>
           <Text className="text-base text-primary mb-2">
             Permit Type: <Text className="font-semibold">{permit.permitType || "-"}</Text>
           </Text>
           <Text className="text-base text-primary mb-2">
-            Location: <Text className="font-semibold">{permit.location || "-"}</Text>
-          </Text>
-          {/* Comment this job assigner for now */}
-          {/* <Text className="text-base text-primary mb-2">
-            Job Assigner: <Text className="font-semibold">{permit.jobAssigner || "-"}</Text>
-          </Text> */}
-          <Text className="text-base text-primary mb-2">
-            Created:{" "}
-            <Text className="font-semibold">
-              {permit.createdTime
-                ? dayjs(permit.createdTime).format("DD-MM-YYYY hh:mm A")
-                : "-"}
-            </Text>
-          </Text>
-          <Text className="text-base text-primary mb-2">
             Work Start:{" "}
             <Text className="font-semibold">
               {permit.workStartTime
-                ? dayjs(permit.workStartTime).format("DD-MM-YYYY hh:mm A")
+                ? formatDate(permit.workStartTime)
                 : "-"}
             </Text>
           </Text>
@@ -96,7 +71,15 @@ export default function PermitDetails() {
             Work End:{" "}
             <Text className="font-semibold">
               {permit.workEndTime
-                ? dayjs(permit.workEndTime).format("DD-MM-YYYY hh:mm A")
+                ? formatDate(permit.workEndTime)
+                : "-"}
+            </Text>
+          </Text>
+          <Text className="text-base text-primary mb-2">
+            Created:{" "}
+            <Text className="font-semibold">
+              {permit.createdTime
+                ? formatDate(permit.createdTime)
                 : "-"}
             </Text>
           </Text>
@@ -130,7 +113,7 @@ export default function PermitDetails() {
 
           {Array.isArray(approvals) && approvals.length > 0 ? (
             approvals.map((a, idx) => {
-              const status = a.status?.toLowerCase?.();
+              const status = a.status;
 
               return (
                 <View
@@ -150,26 +133,14 @@ export default function PermitDetails() {
 
                   <Text className="text-base text-primary mb-1">
                     Status:{" "}
-                    <Text
-                      className={
-                        status === "approved"
-                          ? "text-approved font-semibold"
-                          : status === "pending"
-                          ? "text-pending font-semibold"
-                          : status === "rejected"
-                          ? "text-rejected font-semibold"
-                          : "text-primary font-semibold"
-                      }
-                    >
-                      {a.status || "N/A"}
-                    </Text>
+                    <Text className={getStatusClass(status)}>{a.status || "N/A"}</Text>
                   </Text>
 
                   <Text className="text-base text-primary mb-0">
                     Time:{" "}
                     <Text className="font-semibold">
                       {a.time
-                        ? dayjs(a.time).format("DD-MM-YYYY hh:mm A")
+                        ? formatDate(a.time)
                         : "-"}
                     </Text>
                   </Text>

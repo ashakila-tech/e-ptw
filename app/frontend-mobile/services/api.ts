@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import { PermitStatus } from "@/constants/Status";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
@@ -134,8 +135,8 @@ export async function saveApplication(id: number | null, payload: any, isUpdate:
   });
 
   const text = await res.text();
-  console.log("📦 Application response status:", res.status);
-  console.log("📦 Application response text:", text);
+  console.log("Application response status:", res.status);
+  console.log("Application response text:", text);
 
   if (!res.ok) throw new Error("Failed to save application");
   return JSON.parse(text);
@@ -174,7 +175,7 @@ export async function createApprovalData(approvalData: {
   approval_id: number;
   document_id: number;
   workflow_data_id: number;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: PermitStatus.PENDING | PermitStatus.APPROVED | PermitStatus.REJECTED;
   approver_name: string;
   time: string;
   role_name: string;
