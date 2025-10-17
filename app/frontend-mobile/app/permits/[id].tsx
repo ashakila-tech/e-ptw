@@ -235,10 +235,9 @@ export default function PermitDetails() {
               disabled={isAlreadyHandled}
               onPress={() => confirmAction(PermitStatus.REJECTED)}
               className={`flex-1 py-3 mr-3 rounded-xl items-center ${
-                permit?.approvalStatus === PermitStatus.REJECTED ||
-                permit?.approvalStatus === PermitStatus.APPROVED
-                  ? "bg-rejected"
-                  : "bg-gray-400"
+                isAlreadyHandled
+                  ? "bg-gray-400"
+                  : "bg-rejected"
 
               }`}
             >
@@ -251,10 +250,9 @@ export default function PermitDetails() {
               disabled={isAlreadyHandled}
               onPress={() => confirmAction(PermitStatus.APPROVED)}
               className={`flex-1 py-3 rounded-xl items-center ${
-                permit?.approvalStatus === PermitStatus.REJECTED ||
-                permit?.approvalStatus === PermitStatus.APPROVED
-                  ? "bg-approved"
-                  : "bg-gray-400"
+                isAlreadyHandled
+                  ? "bg-gray-400"
+                  : "bg-approved"
               }`}
             >
               <Text className="text-white font-semibold text-base">

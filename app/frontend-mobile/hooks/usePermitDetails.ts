@@ -79,8 +79,6 @@ export function usePermitDetails(id?: string) {
             company_id: match?.company_id || permitData.company_id || 1,
           };
         });
-
-        console.log("approvalData from API:", approvalData);
       }
 
       // Enrich approvals with actual user names
@@ -120,11 +118,8 @@ export function usePermitDetails(id?: string) {
         jobAssigner: jobAssigner?.name || "-",
       });
 
-      console.log("merged approvals:", approvalsList);
-
       // Set updated approval statuses
       setApprovals(enrichedApprovals);
-      console.log(enrichedApprovals);
     } catch (err: any) {
       console.error("Error fetching permit details:", err);
       setError(err.message || "Failed to fetch permit details");

@@ -21,8 +21,8 @@ module.exports = {
         },
         approved: "#249707",
         pending: "#b6b90a",
-        rejected: "#bb0000",
-        submitted: "#0a64b6",
+        rejected: "#be1c1cff",
+        submitted: "#0d5facff",
         draft: "#474747ff",
       },
       borderRadius: {

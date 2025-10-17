@@ -33,7 +33,8 @@ export default function PermitCard({
       {/* Header: status + actions */}
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-primary text-lg">
-          Status: <Text className={getStatusClass(status)}>{status ?? "-"}</Text>
+          {/* Status: <Text className={getStatusClass(status)}>{status ?? "-"}</Text> */}
+          Status: <Text className={getStatusClass(status)}>{status}</Text>
         </Text>
 
         <View className="flex-row items-center">
