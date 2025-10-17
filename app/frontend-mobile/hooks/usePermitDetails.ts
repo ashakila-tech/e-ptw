@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Constants from "expo-constants";
-import dayjs from "dayjs";
 import { PermitStatus } from "@/constants/Status";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
@@ -17,84 +16,96 @@ export function usePermitDetails(id?: string) {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}api/applications/${id}`);
+      // Fetch base permit
+      const res = await fetch(`${API_BASE_URL}api/applications/${id}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`Failed to fetch permit (${res.status})`);
       const permitData = await res.json();
 
+      // Fetch related entities
       const [apNameRes, docRes, locRes, typeRes, workflowRes, assignerRes] = await Promise.all([
-        fetch(`${API_BASE_URL}api/users/${permitData.applicant_id}`),
-        fetch(`${API_BASE_URL}api/documents/${permitData.document_id}`),
-        fetch(`${API_BASE_URL}api/locations/${permitData.location_id}`),
-        fetch(`${API_BASE_URL}api/permit-types/${permitData.permit_type_id}`),
-        fetch(`${API_BASE_URL}api/workflow-data/${permitData.workflow_data_id}`),
+        fetch(`${API_BASE_URL}api/users/${permitData.applicant_id}`, { cache: "no-store" }),
+        fetch(`${API_BASE_URL}api/documents/${permitData.document_id}`, { cache: "no-store" }),
+        fetch(`${API_BASE_URL}api/locations/${permitData.location_id}`, { cache: "no-store" }),
+        fetch(`${API_BASE_URL}api/permit-types/${permitData.permit_type_id}`, { cache: "no-store" }),
+        fetch(`${API_BASE_URL}api/workflow-data/${permitData.workflow_data_id}`, { cache: "no-store" }),
         permitData.job_assigner_id
-          ? fetch(`${API_BASE_URL}api/users/${permitData.job_assigner_id}`)
+          ? fetch(`${API_BASE_URL}api/users/${permitData.job_assigner_id}`, { cache: "no-store" })
           : Promise.resolve(null),
       ]);
 
-      const [applicantName, document, location, permitType, workflowData, jobAssigner] = await Promise.all([
-        apNameRes.json(),
-        docRes.json(),
-        locRes.json(),
-        typeRes.json(),
-        workflowRes.json(),
-        assignerRes ? assignerRes.json() : null,
-      ]);
+      const [applicantName, document, location, permitType, workflowData, jobAssigner] =
+        await Promise.all([
+          apNameRes.json(),
+          docRes.json(),
+          locRes.json(),
+          typeRes.json(),
+          workflowRes.json(),
+          assignerRes ? assignerRes.json() : null,
+        ]);
 
-    // Fetch approvals and their statuses
-    let approvalsList: any[] = [];
-    if (workflowData?.workflow_id && workflowData?.id) {
-      // Fetch all approval roles for this workflow
-      const approvalsRes = await fetch(
-        `${API_BASE_URL}api/approvals/filter?workflow_id=${workflowData.workflow_id}`
-      );
-      if (approvalsRes.ok) {
-        approvalsList = await approvalsRes.json();
+      // Fetch approvals and their current statuses
+      let approvalsList: any[] = [];
+      if (workflowData?.workflow_id && workflowData?.id) {
+        // Get workflow roles
+        const approvalsRes = await fetch(
+          `${API_BASE_URL}api/approvals/filter?workflow_id=${workflowData.workflow_id}`,
+          { cache: "no-store" }
+        );
+        if (approvalsRes.ok) {
+          approvalsList = await approvalsRes.json();
+        }
+
+        // Get approval data (actual actions)
+        const approvalDataRes = await fetch(
+          `${API_BASE_URL}api/approval-data/filter?workflow_data_id=${workflowData.id}`,
+          { cache: "no-store" }
+        );
+        const approvalData = approvalDataRes.ok ? await approvalDataRes.json() : [];
+
+        // Merge approval roles with actual approval data
+        approvalsList = approvalsList.map((a) => {
+          const match = approvalData.find(
+            (d: any) =>
+              String(d.approval_id) === String(a.id) &&
+              String(d.workflow_data_id) === String(workflowData.id)
+          );
+
+          return {
+            ...a,
+            status: match?.status || PermitStatus.PENDING,
+            approver_name: match?.approver_name || a.name || "Unknown",
+            time: match?.time || null,
+            company_id: match?.company_id || permitData.company_id || 1,
+          };
+        });
+
+        console.log("approvalData from API:", approvalData);
       }
 
-      // Fetch approval status data (actual approvals made)
-      const approvalDataRes = await fetch(
-        `${API_BASE_URL}api/approval-data/filter?workflow_data_id=${workflowData.id}`
-      );
-      const approvalData = approvalDataRes.ok ? await approvalDataRes.json() : [];
-
-      // Merge them: attach status info from approvalData by matching approval_id
-      approvalsList = approvalsList.map((a) => {
-        const match = approvalData.find(
-          (d: any) => d.approval_id === a.id && d.workflow_data_id === workflowData.id
-        );
-        return {
-          ...a,
-          status: match?.status || PermitStatus.PENDING, // default to PENDING
-          approver_name: match?.approver_name || a.name || "Unknown",
-          time: match?.time || null,
-        };
-      });
-    }
-
-      // Enrich approvals
+      // Enrich approvals with actual user names
       const enrichedApprovals = await Promise.all(
         approvalsList.map(async (a) => {
           if (a.user_id) {
-            const userRes = await fetch(`${API_BASE_URL}api/users/${a.user_id}`);
+            const userRes = await fetch(`${API_BASE_URL}api/users/${a.user_id}`, { cache: "no-store" });
             if (userRes.ok) {
               const user = await userRes.json();
-              a.approver_name = user?.name || "Unknown";
+              a.approver_name = user?.name || a.approver_name || "Unknown";
             }
           }
           return a;
         })
       );
 
+      // Final permit data object
       setPermit({
         id: permitData.id,
         name: permitData.name,
         status: permitData.status,
-        document: document?.name || "",
+        document: document?.name || "-",
         documentUrl: document ? `${API_BASE_URL}uploads/${document.path}` : undefined,
-        location: location?.name || "",
-        permitType: permitType?.name || "",
-        workflowData: workflowData?.name || "",
+        location: location?.name || "-",
+        permitType: permitType?.name || "-",
+        workflowData: workflowData?.name || "-",
         createdBy: permitData.created_by ?? "",
         createdTime: permitData.created_time,
         workStartTime: workflowData?.start_time ?? undefined,
@@ -108,7 +119,11 @@ export function usePermitDetails(id?: string) {
         jobAssigner: jobAssigner?.name || "-",
       });
 
+      console.log("merged approvals:", approvalsList);
+
+      // Set updated approval statuses
       setApprovals(enrichedApprovals);
+      console.log(enrichedApprovals);
     } catch (err: any) {
       console.error("Error fetching permit details:", err);
       setError(err.message || "Failed to fetch permit details");

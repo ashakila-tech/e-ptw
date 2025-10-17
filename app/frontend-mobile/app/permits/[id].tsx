@@ -7,6 +7,10 @@ import { useUser } from "@/contexts/UserContext";
 import { downloadDocument } from "@/utils/download";
 import { getStatusClass } from "@/utils/class";
 import { formatDate } from "@/utils/date";
+import { PermitStatus } from "@/constants/Status";
+import Constants from "expo-constants";
+
+const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
@@ -32,6 +36,62 @@ export default function PermitDetails() {
       </View>
     );
 
+  // --- Approval Actions ---
+  async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
+    try {
+      if (!approvals || approvals.length === 0) {
+        Alert.alert("Error", "No approval record found.");
+        return;
+      }
+
+      const myApproval = approvals.find(a => a.status === PermitStatus.PENDING);
+      if (!myApproval) {
+        Alert.alert("Error", "No pending approval found for you.");
+        return;
+      }
+
+      const payload = {
+        company_id: myApproval.company_id || permit.company_id || 1,
+        approval_id: myApproval.id,
+        document_id: permit.documentId || 0,
+        workflow_data_id: permit.workflowDataId || 0,
+        status: action,
+        approver_name: myApproval.approver_name || "Unknown",
+        time: new Date().toISOString(),
+        role_name: myApproval.role_name || "Approver",
+        level: myApproval.level || 1,
+      };
+
+      const res = await fetch(`${API_BASE_URL}api/approval-data/${myApproval.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+
+      Alert.alert("Success", `Permit ${action.toLowerCase()} successfully!`);
+      refetch();
+    } catch (err: any) {
+      console.error("Approval update failed:", err);
+      Alert.alert("Error", err.message || "Failed to update status");
+    }
+  }
+
+  function confirmAction(action: "APPROVED" | "REJECTED") {
+    Alert.alert(
+      action === "APPROVED" ? "Approve Permit" : "Reject Permit",
+      `Confirm to ${action.toLowerCase()} this permit?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Yes", onPress: () => handleApprovalAction(action) },
+      ]
+    );
+  }
+
   return (
     <>
       <Stack.Screen
@@ -43,44 +103,53 @@ export default function PermitDetails() {
       />
 
       <ScrollView className="flex-1 p-4 bg-gray-100">
-        {/* Details */}
+        {/* Permit Summary */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Details</Text>
-          
+
+          {/* ✅ Overall Approval Status */}
           <Text className="text-base text-primary mb-2">
-            Status: <Text className={getStatusClass(permit.status)}>{permit.status || "-"}</Text>
+            Approval Status:{" "}
+            <Text className={getStatusClass(permit.approvalStatus)}>
+              {permit.approvalStatus || PermitStatus.PENDING}
+            </Text>
           </Text>
+
+          {/* Permit internal status */}
           <Text className="text-base text-primary mb-2">
-            Applicant Name: <Text className="font-semibold">{permit.applicantName || "-"}</Text>
+            Permit Status:{" "}
+            <Text className={getStatusClass(permit.status)}>
+              {permit.status || "-"}
+            </Text>
+          </Text>
+
+          <Text className="text-base text-primary mb-2">
+            Applicant Name:{" "}
+            <Text className="font-semibold">{permit.applicantName || "-"}</Text>
           </Text>
           <Text className="text-base text-primary mb-2">
             Location: <Text className="font-semibold">{permit.location || "-"}</Text>
           </Text>
           <Text className="text-base text-primary mb-2">
-            Permit Type: <Text className="font-semibold">{permit.permitType || "-"}</Text>
+            Permit Type:{" "}
+            <Text className="font-semibold">{permit.permitType || "-"}</Text>
           </Text>
           <Text className="text-base text-primary mb-2">
             Work Start:{" "}
             <Text className="font-semibold">
-              {permit.workStartTime
-                ? formatDate(permit.workStartTime)
-                : "-"}
+              {permit.workStartTime ? formatDate(permit.workStartTime) : "-"}
             </Text>
           </Text>
           <Text className="text-base text-primary mb-2">
             Work End:{" "}
             <Text className="font-semibold">
-              {permit.workEndTime
-                ? formatDate(permit.workEndTime)
-                : "-"}
+              {permit.workEndTime ? formatDate(permit.workEndTime) : "-"}
             </Text>
           </Text>
           <Text className="text-base text-primary mb-2">
             Created:{" "}
             <Text className="font-semibold">
-              {permit.createdTime
-                ? formatDate(permit.createdTime)
-                : "-"}
+              {permit.createdTime ? formatDate(permit.createdTime) : "-"}
             </Text>
           </Text>
           <Text className="text-base text-primary mb-2">
@@ -100,7 +169,9 @@ export default function PermitDetails() {
               onPress={() =>
                 permit.documentUrl && downloadDocument(permit.documentUrl, permit.document)
               }
-              className="bg-primary px-3 py-2 rounded"
+              className={`px-3 py-2 rounded ${
+                permit.documentUrl ? "bg-primary" : "bg-gray-400"
+              }`}
             >
               <Text className="text-white text-sm font-semibold">Download</Text>
             </TouchableOpacity>
@@ -112,62 +183,56 @@ export default function PermitDetails() {
           <Text className="text-xl font-bold text-primary mb-3">Approvals</Text>
 
           {Array.isArray(approvals) && approvals.length > 0 ? (
-            approvals.map((a, idx) => {
-              const status = a.status;
-
-              return (
-                <View
-                  key={a.id || idx}
-                  className="border-b border-gray-200 pb-3 mb-3"
-                >
-                  <Text className="text-base text-primary mb-1">
-                    Role: <Text className="font-semibold">{a.role_name || a.roleName || "Role"}</Text>
+            approvals.map((a, idx) => (
+              <View
+                key={a.id || idx}
+                className="border-b border-gray-200 pb-3 mb-3"
+              >
+                <Text className="text-base text-primary mb-1">
+                  Role:{" "}
+                  <Text className="font-semibold">
+                    {a.role_name || a.roleName || "Role"}
                   </Text>
+                </Text>
 
-                  <Text className="text-base text-primary mb-1">
-                    Approver:{" "}
-                    <Text className="font-semibold">
-                      {a.approver_name || "Unknown"}
-                    </Text>
-                  </Text>
+                <Text className="text-base text-primary mb-1">
+                  Approver:{" "}
+                  <Text className="font-semibold">{a.approver_name || "Unknown"}</Text>
+                </Text>
 
-                  <Text className="text-base text-primary mb-1">
-                    Status:{" "}
-                    <Text className={getStatusClass(status)}>{a.status || "N/A"}</Text>
+                <Text className="text-base text-primary mb-1">
+                  Status:{" "}
+                  <Text className={getStatusClass(a.status)}>
+                    {a.status || PermitStatus.PENDING}
                   </Text>
+                </Text>
 
-                  <Text className="text-base text-primary mb-0">
-                    Time:{" "}
-                    <Text className="font-semibold">
-                      {a.time
-                        ? formatDate(a.time)
-                        : "-"}
-                    </Text>
+                <Text className="text-base text-primary mb-0">
+                  Time:{" "}
+                  <Text className="font-semibold">
+                    {a.time ? formatDate(a.time) : "-"}
                   </Text>
-                </View>
-              );
-            })
+                </Text>
+              </View>
+            ))
           ) : (
             <Text className="text-gray-500 italic">No approvals yet</Text>
           )}
         </View>
 
-        {/* Approval Buttons (Mock) */}
+        {/* Approval Buttons */}
         {isApproval && (
-          <View className="flex-row mt-6 space-x-4">
+          <View className="flex-row mt-6">
             <Pressable
-              onPress={() => {
-                Alert.alert("Rejection", "Permit rejected successfully (mock).");
-              }}
-              className="flex-[0.4] bg-rejected py-3 mr-3 rounded-xl items-center"
+              onPress={() => confirmAction(PermitStatus.REJECTED)}
+              className="flex-1 bg-rejected py-3 mr-3 rounded-xl items-center"
             >
               <Text className="text-white font-semibold text-base">Reject</Text>
             </Pressable>
+
             <Pressable
-              onPress={() => {
-                Alert.alert("Approval", "Permit approved successfully (mock).");
-              }}
-              className="flex-[0.6] bg-approved py-3 rounded-xl items-center"
+              onPress={() => confirmAction(PermitStatus.APPROVED)}
+              className="flex-1 bg-approved py-3 rounded-xl items-center"
             >
               <Text className="text-white font-semibold text-base">Approve</Text>
             </Pressable>

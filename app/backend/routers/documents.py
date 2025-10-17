@@ -1,4 +1,3 @@
-# app/routers/documents.py
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session

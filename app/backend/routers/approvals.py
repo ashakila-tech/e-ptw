@@ -6,8 +6,10 @@ from ._crud_factory import make_crud_router
 from ..deps import get_db
 from .. import models, schemas
 
+# Create the base router
 router = APIRouter(prefix="/approvals", tags=["Approvals"])
 
+# Custom filter endpoint
 @router.get("/filter", response_model=List[schemas.ApprovalOut])
 def get_approvals_by_workflow(
     workflow_id: Optional[int] = Query(None, description="Filter by workflow_id"),
@@ -18,6 +20,7 @@ def get_approvals_by_workflow(
         query = query.filter(models.Approval.workflow_id == workflow_id)
     return query.all()
 
+# Attach the CRUD routes
 crud_router = make_crud_router(
     Model=models.Approval,
     InSchema=schemas.ApprovalIn,     # must be ApprovalIn

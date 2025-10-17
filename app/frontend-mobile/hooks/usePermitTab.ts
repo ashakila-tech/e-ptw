@@ -50,18 +50,146 @@ export function usePermitTab() {
     return all;
   }, []);
 
-  // Main fetch logic
+  // // Main fetch logic
+  // const fetchPermits = useCallback(async () => {
+  //   if (!userId) return;
+  //   setLoading(true);
+
+  //   try {
+  //     let permitsData: any[] = [];
+  //     let allApprovalData: any[] = [];
+
+  //     if (!isApproval) {
+  //       // Applicant / Contractor view
+  //       const allApplications = await fetchAllApplications();
+  //       permitsData = allApplications.filter((p) => p.applicant_id === userId);
+  //     } else {
+  //       // Approver view
+  //       const approvalsRes = await fetch(`${API_BASE_URL}api/approvals/`);
+  //       const allApprovals = await approvalsRes.json();
+
+  //       const myApprovals = allApprovals.filter((a: any) => a.user_id === userId);
+  //       const myApprovalIds = myApprovals.map((a: any) => a.id);
+
+  //       // Fetch approval-data
+  //       const approvalDataRes = await fetch(`${API_BASE_URL}api/approval-data/`);
+  //       allApprovalData = await approvalDataRes.json();
+
+  //       const myApprovalData = allApprovalData.filter((ad: any) =>
+  //         myApprovalIds.includes(ad.approval_id)
+  //       );
+
+  //       const myWorkflowDataIds = myApprovalData.map(
+  //         (ad: any) => ad.workflow_data_id
+  //       );
+
+  //       // Fetch applications (permits)
+  //       const allApplications = await fetchAllApplications();
+  //       permitsData = allApplications.filter((p) =>
+  //         myWorkflowDataIds.includes(p.workflow_data_id)
+  //       );
+
+  //       // Attach approvalStatus to each permit
+  //       permitsData = permitsData.map((p) => {
+  //         const approval = myApprovalData.find(
+  //           (ad: any) => ad.workflow_data_id === p.workflow_data_id
+  //         );
+  //         return {
+  //           ...p,
+  //           approvalStatus: approval?.status || PermitStatus.PENDING, // ✅
+  //         };
+  //       });
+  //     }
+
+  //     // Enrich each permit with related data
+  //     const enrichedPermits: PermitData[] = await Promise.all(
+  //       permitsData.map(async (p) => {
+  //         const [docRes, locRes, typeRes, applicantRes, workflowRes, approvalDataRes] =
+  //           await Promise.all([
+  //             p.document_id
+  //               ? fetch(`${API_BASE_URL}api/documents/${p.document_id}`)
+  //               : null,
+  //             p.location_id
+  //               ? fetch(`${API_BASE_URL}api/locations/${p.location_id}`)
+  //               : null,
+  //             p.permit_type_id
+  //               ? fetch(`${API_BASE_URL}api/permit-types/${p.permit_type_id}`)
+  //               : null,
+  //             p.applicant_id
+  //               ? fetch(`${API_BASE_URL}api/users/${p.applicant_id}`)
+  //               : null,
+  //             p.workflow_data_id
+  //               ? fetch(`${API_BASE_URL}api/workflow-data/${p.workflow_data_id}`)
+  //               : null,
+  //             p.workflow_data_id
+  //               ? fetch(`${API_BASE_URL}api/approval-data/?workflow_data_id=${p.workflow_data_id}`)
+  //               : null,
+  //           ]);
+
+  //         const document = docRes ? await docRes.json() : null;
+  //         const location = locRes ? await locRes.json() : null;
+  //         const permitType = typeRes ? await typeRes.json() : null;
+  //         const applicant = applicantRes ? await applicantRes.json() : null;
+  //         const workflowData = workflowRes ? await workflowRes.json() : null;
+  //         const approvalDataList = approvalDataRes ? await approvalDataRes.json() : [];
+
+  //         // TEMP - get latest approval for this workflow_data_id
+  //         const latestApproval = Array.isArray(approvalDataList) && approvalDataList.length > 0
+  //           ? approvalDataList[approvalDataList.length - 1]
+  //           : null;
+
+  //         return {
+  //           id: p.id,
+  //           name: p.name,
+  //           status: p.status,
+  //           approvalStatus: latestApproval?.status || null,
+  //           location: location?.name || "-",
+  //           document: document?.name || "-",
+  //           permitType: permitType?.name || "-",
+  //           workflowData: workflowData?.name || "-",
+  //           createdBy: applicant?.name || "Unknown",
+  //           createdTime: p.created_time,
+  //           workStartTime: workflowData?.start_time,
+  //           workEndTime: workflowData?.end_time,
+  //           applicantId: p.applicant_id,
+  //           documentId: p.document_id,
+  //           locationId: p.location_id,
+  //           permitTypeId: p.permit_type_id,
+  //           workflowDataId: p.workflow_data_id,
+  //         };
+  //       })
+  //     );
+
+  //     // Sort newest first
+  //     enrichedPermits.sort((a, b) => {
+  //       const dateA = a.createdTime ? new Date(a.createdTime).getTime() : 0;
+  //       const dateB = b.createdTime ? new Date(b.createdTime).getTime() : 0;
+  //       return dateB - dateA;
+  //     });
+
+  //     setPermits(enrichedPermits);
+  //   } catch (err: any) {
+  //     console.error("Error fetching permits:", err);
+  //     Alert.alert("Error", err.message || "Failed to load permits");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [userId, isApproval, fetchAllApplications]);
+
   const fetchPermits = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
 
     try {
       let permitsData: any[] = [];
-      let allApprovalData: any[] = [];
+      const allApplications = await fetchAllApplications();
+
+      // 🔹 Always fetch approval-data
+      const approvalDataRes = await fetch(`${API_BASE_URL}api/approval-data/`);
+      const allApprovalData = await approvalDataRes.json();
 
       if (!isApproval) {
         // Applicant / Contractor view
-        const allApplications = await fetchAllApplications();
         permitsData = allApplications.filter((p) => p.applicant_id === userId);
       } else {
         // Approver view
@@ -71,10 +199,6 @@ export function usePermitTab() {
         const myApprovals = allApprovals.filter((a: any) => a.user_id === userId);
         const myApprovalIds = myApprovals.map((a: any) => a.id);
 
-        // Fetch approval-data
-        const approvalDataRes = await fetch(`${API_BASE_URL}api/approval-data/`);
-        allApprovalData = await approvalDataRes.json();
-
         const myApprovalData = allApprovalData.filter((ad: any) =>
           myApprovalIds.includes(ad.approval_id)
         );
@@ -83,66 +207,48 @@ export function usePermitTab() {
           (ad: any) => ad.workflow_data_id
         );
 
-        // Fetch applications (permits)
-        const allApplications = await fetchAllApplications();
+        // Filter to only permits the approver is involved with
         permitsData = allApplications.filter((p) =>
           myWorkflowDataIds.includes(p.workflow_data_id)
         );
-
-        // Attach approvalStatus to each permit
-        permitsData = permitsData.map((p) => {
-          const approval = myApprovalData.find(
-            (ad: any) => ad.workflow_data_id === p.workflow_data_id
-          );
-          return {
-            ...p,
-            approvalStatus: approval?.status || PermitStatus.PENDING, // ✅
-          };
-        });
       }
 
-      // Enrich each permit with related data
+      // 🔹 Create a map of workflow_data_id → latest approval status
+      const permitApprovalMap: Record<number, string> = {};
+      allApprovalData.forEach((ad: any) => {
+        if (ad.workflow_data_id) {
+          permitApprovalMap[ad.workflow_data_id] = ad.status;
+        }
+      });
+
+      // 🔹 Enrich each permit
       const enrichedPermits: PermitData[] = await Promise.all(
         permitsData.map(async (p) => {
-          const [docRes, locRes, typeRes, applicantRes, workflowRes, approvalDataRes] =
-            await Promise.all([
-              p.document_id
-                ? fetch(`${API_BASE_URL}api/documents/${p.document_id}`)
-                : null,
-              p.location_id
-                ? fetch(`${API_BASE_URL}api/locations/${p.location_id}`)
-                : null,
-              p.permit_type_id
-                ? fetch(`${API_BASE_URL}api/permit-types/${p.permit_type_id}`)
-                : null,
-              p.applicant_id
-                ? fetch(`${API_BASE_URL}api/users/${p.applicant_id}`)
-                : null,
-              p.workflow_data_id
-                ? fetch(`${API_BASE_URL}api/workflow-data/${p.workflow_data_id}`)
-                : null,
-              p.workflow_data_id
-                ? fetch(`${API_BASE_URL}api/approval-data/?workflow_data_id=${p.workflow_data_id}`)
-                : null,
-            ]);
+          const [
+            docRes,
+            locRes,
+            typeRes,
+            applicantRes,
+            workflowRes,
+          ] = await Promise.all([
+            p.document_id ? fetch(`${API_BASE_URL}api/documents/${p.document_id}`) : null,
+            p.location_id ? fetch(`${API_BASE_URL}api/locations/${p.location_id}`) : null,
+            p.permit_type_id ? fetch(`${API_BASE_URL}api/permit-types/${p.permit_type_id}`) : null,
+            p.applicant_id ? fetch(`${API_BASE_URL}api/users/${p.applicant_id}`) : null,
+            p.workflow_data_id ? fetch(`${API_BASE_URL}api/workflow-data/${p.workflow_data_id}`) : null,
+          ]);
 
           const document = docRes ? await docRes.json() : null;
           const location = locRes ? await locRes.json() : null;
           const permitType = typeRes ? await typeRes.json() : null;
           const applicant = applicantRes ? await applicantRes.json() : null;
           const workflowData = workflowRes ? await workflowRes.json() : null;
-          const approvalDataList = approvalDataRes ? await approvalDataRes.json() : [];
-
-          // TEMP - get latest approval for this workflow_data_id
-          const latestApproval = Array.isArray(approvalDataList) && approvalDataList.length > 0
-            ? approvalDataList[approvalDataList.length - 1]
-            : null;
 
           return {
             id: p.id,
             name: p.name,
             status: p.status,
-            approvalStatus: latestApproval?.status || null,
+            approvalStatus: permitApprovalMap[p.workflow_data_id] ?? undefined,
             location: location?.name || "-",
             document: document?.name || "-",
             permitType: permitType?.name || "-",
@@ -160,7 +266,6 @@ export function usePermitTab() {
         })
       );
 
-      // Sort newest first
       enrichedPermits.sort((a, b) => {
         const dateA = a.createdTime ? new Date(a.createdTime).getTime() : 0;
         const dateB = b.createdTime ? new Date(b.createdTime).getTime() : 0;
