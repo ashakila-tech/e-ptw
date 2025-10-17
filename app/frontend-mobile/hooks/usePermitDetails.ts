@@ -72,6 +72,7 @@ export function usePermitDetails(id?: string) {
 
           return {
             ...a,
+            user_id: a.user_id,
             status: match?.status || PermitStatus.PENDING,
             approver_name: match?.approver_name || a.name || "Unknown",
             time: match?.time || null,

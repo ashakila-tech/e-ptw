@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.orm import Session, joinedload
+from typing import Optional, List
 
 from ._crud_factory import make_crud_router
 from .. import models, schemas
@@ -56,3 +57,36 @@ def update_application(
     db.commit()
     db.refresh(obj)
     return obj
+
+# --- Filter Endpoint for Optimized Fetching ---
+@router.get("/filter", response_model=List[schemas.ApplicationOut])
+def filter_applications(
+    applicant_id: Optional[int] = Query(None, description="Filter by applicant_id"),
+    company_id: Optional[int] = Query(None, description="Filter by company_id"),
+    workflow_data_id: Optional[int] = Query(None, description="Filter by workflow_data_id"),
+    db: Session = Depends(get_db),
+):
+    """
+    Optimized backend-side filtering for application list.
+    This lets the frontend load only relevant permits instead of fetching everything.
+    """
+
+    query = db.query(models.Application)
+
+    # Simple filters
+    if applicant_id:
+        query = query.filter(models.Application.applicant_id == applicant_id)
+    if company_id:
+        query = query.filter(models.Application.company_id == company_id)
+    if workflow_data_id:
+        query = query.filter(models.Application.workflow_data_id == workflow_data_id)
+
+    # Eager-load related models to avoid N+1 queries (optional but faster)
+    query = query.options(
+        joinedload(models.Application.document),
+        joinedload(models.Application.location),
+        joinedload(models.Application.permit_type),
+        joinedload(models.Application.workflow_data),
+    )
+
+    return query.all()

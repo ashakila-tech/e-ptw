@@ -15,7 +15,7 @@ const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
   const { permit, approvals, loading, error, refetch } = usePermitDetails(id as string);
-  const { isApproval } = useUser();
+  const { userId, isApproval } = useUser();
 
   if (loading) return <LoadingScreen message="Fetching data..." />;
 
@@ -36,6 +36,11 @@ export default function PermitDetails() {
       </View>
     );
 
+  const myApproval = approvals?.find((a) => a.user_id === userId);
+  const isAlreadyHandled =
+    myApproval?.status === PermitStatus.APPROVED ||
+    myApproval?.status === PermitStatus.REJECTED;
+
   // --- Approval Actions ---
   async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
     try {
@@ -45,6 +50,9 @@ export default function PermitDetails() {
       }
 
       const myApproval = approvals.find(a => a.status === PermitStatus.PENDING);
+      const isAlreadyHandled =
+        myApproval?.status === PermitStatus.APPROVED ||
+        myApproval?.status === PermitStatus.REJECTED;
       if (!myApproval) {
         Alert.alert("Error", "No pending approval found for you.");
         return;
@@ -106,14 +114,6 @@ export default function PermitDetails() {
         {/* Permit Summary */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Details</Text>
-
-          {/* ✅ Overall Approval Status */}
-          <Text className="text-base text-primary mb-2">
-            Approval Status:{" "}
-            <Text className={getStatusClass(permit.approvalStatus)}>
-              {permit.approvalStatus || PermitStatus.PENDING}
-            </Text>
-          </Text>
 
           {/* Permit internal status */}
           <Text className="text-base text-primary mb-2">
@@ -222,21 +222,47 @@ export default function PermitDetails() {
 
         {/* Approval Buttons */}
         {isApproval && (
+          <>
+          <View>
+            {isAlreadyHandled && (
+              <Text className="text-gray-600 italic mt-3">
+                You have already {myApproval?.status.toLowerCase()} this permit.
+              </Text>
+            )}
+          </View>
           <View className="flex-row mt-6">
             <Pressable
+              disabled={isAlreadyHandled}
               onPress={() => confirmAction(PermitStatus.REJECTED)}
-              className="flex-1 bg-rejected py-3 mr-3 rounded-xl items-center"
+              className={`flex-1 py-3 mr-3 rounded-xl items-center ${
+                permit?.approvalStatus === PermitStatus.REJECTED ||
+                permit?.approvalStatus === PermitStatus.APPROVED
+                  ? "bg-rejected"
+                  : "bg-gray-400"
+
+              }`}
             >
-              <Text className="text-white font-semibold text-base">Reject</Text>
+              <Text className="text-white font-semibold text-base">
+                Reject
+              </Text>
             </Pressable>
 
             <Pressable
+              disabled={isAlreadyHandled}
               onPress={() => confirmAction(PermitStatus.APPROVED)}
-              className="flex-1 bg-approved py-3 rounded-xl items-center"
+              className={`flex-1 py-3 rounded-xl items-center ${
+                permit?.approvalStatus === PermitStatus.REJECTED ||
+                permit?.approvalStatus === PermitStatus.APPROVED
+                  ? "bg-approved"
+                  : "bg-gray-400"
+              }`}
             >
-              <Text className="text-white font-semibold text-base">Approve</Text>
+              <Text className="text-white font-semibold text-base">
+                Approve
+              </Text>
             </Pressable>
           </View>
+          </>
         )}
       </ScrollView>
     </>

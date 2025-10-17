@@ -15,6 +15,9 @@ def get_approvals_by_workflow(
     workflow_id: Optional[int] = Query(None, description="Filter by workflow_id"),
     db: Session = Depends(get_db),
 ):
+    """
+    Filter approvals records by workflow_data_id.
+    """
     query = db.query(models.Approval)
     if workflow_id:
         query = query.filter(models.Approval.workflow_id == workflow_id)
@@ -23,8 +26,8 @@ def get_approvals_by_workflow(
 # Attach the CRUD routes
 crud_router = make_crud_router(
     Model=models.Approval,
-    InSchema=schemas.ApprovalIn,     # must be ApprovalIn
-    OutSchema=schemas.ApprovalOut,   # and ApprovalOut
+    InSchema=schemas.ApprovalIn,
+    OutSchema=schemas.ApprovalOut,
     prefix="",
     tag="Approvals",
     write_roles=["admin"],
