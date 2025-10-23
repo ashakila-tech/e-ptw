@@ -217,7 +217,7 @@ export function usePermitTab() {
             id: p.id,
             name: p.name,
             status: p.status,
-            approvalStatus: permitApprovalMap[p.workflow_data_id] ?? undefined,
+            approvalStatus: permitApprovalMap[p.workflow_data_id] ?? "-",
             location: location?.name || "-",
             document: document?.name || "-",
             permitType: permitType?.name || "-",

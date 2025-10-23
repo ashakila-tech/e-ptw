@@ -1,4 +1,7 @@
 /** @type {import('tailwindcss').Config} */
+
+const themeColors = ["approved", "pending", "rejected", "submitted", "draft"];
+
 module.exports = {
   content: [
     "./App.tsx",
@@ -6,6 +9,10 @@ module.exports = {
     "./components/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
+  safelist: [
+    ...themeColors.map((c) => `text-${c}`),
+    ...themeColors.map((c) => `bg-${c}`),
+  ],
   theme: {
     extend: {
       colors: {
