@@ -101,7 +101,7 @@ export function usePermitDetails(id?: string) {
         name: permitData.name,
         status: permitData.status,
         document: document?.name || "-",
-        documentUrl: document ? `${API_BASE_URL}uploads/${document.path}` : undefined,
+        documentUrl: document ? `${API_BASE_URL}api/documents/${document?.id}/download` : undefined,
         location: location?.name || "-",
         permitType: permitType?.name || "-",
         workflowData: workflowData?.name || "-",

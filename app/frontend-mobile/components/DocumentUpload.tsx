@@ -19,7 +19,12 @@ export default function DocumentUpload({
   onPress,
 }: DocumentUploadProps) {
   // Construct the download URL if document exists
-  const documentUrl = documentId && documentName ? `${API_BASE_URL}uploads/${documentName}` : undefined;
+  const documentUrl = documentId && documentName ? `${API_BASE_URL}api/documents/${documentId}/download` : undefined;
+
+  const handleDownload = async (docId: number | null | undefined, name: string) => {
+    const url = `${API_BASE_URL}api/documents/${docId}/download`;
+    await downloadDocument(url, name);
+  };
 
   return (
     <View className="mb-1">
@@ -46,7 +51,7 @@ export default function DocumentUpload({
         {/* Download button */}
         {documentUrl && (
           <TouchableOpacity
-            onPress={() => downloadDocument(documentUrl, documentName!)}
+            onPress={() => handleDownload(documentId, documentName!)}
             className="bg-approved rounded-2xl py-2 px-4 ml-2"
           >
             <Text className="text-white text-xs">Download</Text>
