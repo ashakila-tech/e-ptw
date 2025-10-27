@@ -47,3 +47,41 @@ crud = make_crud_router(
 
 router = APIRouter()
 router.include_router(crud)
+
+@router.get("/by-group-name/{group_name}", response_model=list[schemas.UserOut])
+def get_users_by_group_name(
+    group_name: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Return all users belonging to a group with the given name (case-insensitive).
+    Example: GET /users/by-group-name/Manager
+    """
+    users = (
+        db.query(models.User)
+        .join(models.UserGroup, models.User.id == models.UserGroup.user_id)
+        .join(models.Group, models.UserGroup.group_id == models.Group.id)
+        .filter(models.Group.name.ilike(group_name))
+        .all()
+    )
+
+    return users
+
+
+@router.get("/by-group-id/{group_id}", response_model=list[schemas.UserOut])
+def get_users_by_group_id(
+    group_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Return all users belonging to a group by numeric ID.
+    Example: GET /users/by-group-id/3
+    """
+    users = (
+        db.query(models.User)
+        .join(models.UserGroup, models.User.id == models.UserGroup.user_id)
+        .filter(models.UserGroup.group_id == group_id)
+        .all()
+    )
+
+    return users
