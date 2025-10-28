@@ -6,12 +6,28 @@ import { useUser } from "@/contexts/UserContext";
 import PermitCard from "@/components/PermitCard";
 import LoadingScreen from "@/components/LoadingScreen";
 import { PermitStatus } from "@/constants/Status";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 export default function MyPermitTab() {
   const router = useRouter();
   const { isApproval } = useUser();
-  const { permits, loading } = usePermitTab();
+  const { permits, loading, refetch } = usePermitTab();
   const [activeTab, setActiveTab] = useState("all");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch(); // use the hook’s refetch
+    setRefreshing(false);
+  };
+
+  // Automatically refetch when tab/screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   // Tab setup with global constants
   const applicantTabs = [
