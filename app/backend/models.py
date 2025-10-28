@@ -92,7 +92,14 @@ class Application(Base):
     created_by = Column(Integer, ForeignKey("user.id"), nullable=True)                 # NEW
     updated_by = Column(Integer, ForeignKey("user.id"), nullable=True)                 # NEW
     created_time = Column(DateTime, server_default=func.now())                         # NEW
-    updated_time = Column(DateTime, onupdate=func.now())  
+    updated_time = Column(DateTime, onupdate=func.now())
+    permit_type = relationship("PermitType", lazy="joined")
+    workflow_data = relationship("WorkflowData", lazy="joined")
+    location = relationship("Location", lazy="joined")
+    document = relationship("Document", lazy="joined")
+    applicant = relationship("User", foreign_keys=[applicant_id], lazy="joined")
+    created_by_user = relationship("User", foreign_keys=[created_by], lazy="joined")
+    updated_by_user = relationship("User", foreign_keys=[updated_by], lazy="joined")
 
 class ApprovalData(Base):
     __tablename__ = "approval_data"
