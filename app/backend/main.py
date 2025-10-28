@@ -15,16 +15,16 @@ app = FastAPI(title=settings.APP_NAME)
 app.include_router(authentication.router)
 
 # API routes
-app.include_router(companies.router, prefix="/api")
+app.include_router(companies.crud_router, prefix="/api")
 app.include_router(permit_types.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
-app.include_router(locations.router, prefix="/api")
+app.include_router(locations.crud_router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
-app.include_router(workflows.router, prefix="/api")
+app.include_router(workflows.crud_router, prefix="/api")
 app.include_router(approvals.router, prefix="/api")
 app.include_router(groups.router, prefix="/api")
-app.include_router(user_groups.router, prefix="/api")
-app.include_router(workflow_data.router, prefix="/api")
+app.include_router(user_groups.crud_router, prefix="/api")
+app.include_router(workflow_data.crud_router, prefix="/api")
 app.include_router(approval_data.router, prefix="/api")
 app.include_router(applications.router, prefix="/api")  # <<< only once
 
