@@ -8,6 +8,7 @@ from ..deps import get_db, get_current_user
 from ..security import hashing, token
 from ..config import settings
 
+# Create the base router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/login", response_model=schemas.TokenOut)

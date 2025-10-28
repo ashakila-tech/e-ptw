@@ -6,33 +6,23 @@ from ._crud_factory import make_crud_router
 from .. import models, schemas
 from ..deps import get_db, get_current_user, require_role
 
-# Factory for list/get/delete
-crud = make_crud_router(
-    Model=models.Application,
-    InSchema=schemas.ApplicationIn,
-    OutSchema=schemas.ApplicationOut,
-    prefix="/applications",
-    tag="Applications",
-    list_roles=["admin", "user"],
-    read_roles=["admin", "user"],
-    write_roles=["admin", "user"],
-)
-
+# Create the base router
 router = APIRouter(prefix="/applications", tags=["Applications"])
-router.include_router(crud, tags=["Applications"])
 
-# no auth for creating applications
+# No auth for creating applications
 @router.post("/", response_model=schemas.ApplicationOut)
 def create_application(
     payload: schemas.ApplicationIn,
     db: Session = Depends(get_db),
 ):
+    """
+    Create a new application without authentication.
+    """
     obj = models.Application(**payload.model_dump())
     db.add(obj)
     db.commit()
     db.refresh(obj)
     return obj
-
 
 @router.put("/{item_id}", response_model=schemas.ApplicationOut,
             dependencies=[Depends(require_role(["admin", "user"]))])
@@ -42,6 +32,9 @@ def update_application(
     db: Session = Depends(get_db),
     me: models.User = Depends(get_current_user),
 ):
+    """
+    Specialised update an existing application.
+    """
     obj = db.get(models.Application, item_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Application not found")
@@ -58,7 +51,7 @@ def update_application(
     db.refresh(obj)
     return obj
 
-# --- Filter Endpoint for Optimized Fetching ---
+# Filter Endpoint for Optimized Fetching
 @router.get("/filter", response_model=List[schemas.ApplicationOut])
 def filter_applications(
     applicant_id: Optional[int] = Query(None, description="Filter by applicant_id"),
@@ -90,3 +83,17 @@ def filter_applications(
     )
 
     return query.all()
+
+# Attach the CRUD routes, GET/POST/PUT/DELETE
+crud_router = make_crud_router(
+    Model=models.Application,
+    InSchema=schemas.ApplicationIn,
+    OutSchema=schemas.ApplicationOut,
+    prefix="",
+    tag="Applications",
+    list_roles=["admin", "user"],
+    read_roles=["admin", "user"],
+    write_roles=["admin", "user"],
+)
+
+router.include_router(crud_router)

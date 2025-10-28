@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..deps import get_db
 
+# Create the base router
 router = APIRouter(prefix="/groups", tags=["Groups"])
 
 @router.get("/options")

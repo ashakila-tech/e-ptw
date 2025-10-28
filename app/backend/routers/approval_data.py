@@ -34,7 +34,7 @@ def filter_approval_data(
 
     return results
 
-# Attach the CRUD routes
+# Attach the CRUD routes, GET/POST/PUT/DELETE
 crud_router = make_crud_router(
     Model=models.ApprovalData,
     InSchema=schemas.ApprovalDataIn,

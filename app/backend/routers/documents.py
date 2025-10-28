@@ -9,27 +9,19 @@ from ..deps import get_db
 
 UPLOAD_DIR = "uploads"
 
-# ---------- CRUD: list/get/put (no JSON create) ----------
-crud = make_crud_router(
-    Model=models.Document,
-    InSchema=schemas.DocumentUpdate,   # used for PUT (partial)
-    OutSchema=schemas.DocumentOut,
-    prefix="/documents",
-    tag="Documents",
-    list_roles=None,
-    read_roles=None,
-    write_roles=None,                  # open for now; tighten later
-)
+# Create the base router
+router = APIRouter(prefix="/documents", tags=["Documents"])
 
-extra = APIRouter(prefix="/documents", tags=["Documents"])
-
-@extra.post("/upload", response_model=schemas.DocumentOut)
+@router.post("/upload", response_model=schemas.DocumentOut)
 def upload_document(
     company_id: int,
     name: str,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
+    """
+    Upload a document and store it in the server.
+    """
     allowed = {
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -51,8 +43,11 @@ def upload_document(
     db.add(doc); db.commit(); db.refresh(doc)
     return doc
 
-@extra.get("/{doc_id}/download")
+@router.get("/{doc_id}/download")
 def download_document(doc_id: int, db: Session = Depends(get_db)):
+    """
+    Download a document from the server by its ID.
+    """
     doc = db.get(models.Document, doc_id)
     if not doc:
         raise HTTPException(404, "Document not found")
@@ -61,8 +56,11 @@ def download_document(doc_id: int, db: Session = Depends(get_db)):
     ctype = mimetypes.guess_type(doc.path)[0] or "application/octet-stream"
     return FileResponse(path=doc.path, media_type=ctype, filename=os.path.basename(doc.path))
 
-@extra.delete("/{doc_id}", status_code=204)
+@router.delete("/{doc_id}", status_code=204)
 def delete_document(doc_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a document record and its file from the server.
+    """
     doc = db.get(models.Document, doc_id)
     if not doc:
         raise HTTPException(404, "Document not found")
@@ -74,6 +72,16 @@ def delete_document(doc_id: int, db: Session = Depends(get_db)):
     db.delete(doc); db.commit()
     return
 
-router = APIRouter()
-router.include_router(crud)    # GET list/get, PUT
-router.include_router(extra)   # POST upload, GET download, DELETE
+# Attach the CRUD routes, GET/POST/PUT/DELETE
+crud_router = make_crud_router(
+    Model=models.Document,
+    InSchema=schemas.DocumentUpdate,   # used for PUT (partial)
+    OutSchema=schemas.DocumentOut,
+    prefix="",
+    tag="Documents",
+    list_roles=None,
+    read_roles=None,
+    write_roles=None,                  # open for now; tighten later
+)
+
+router.include_router(crud_router)    # GET list/get, PUT

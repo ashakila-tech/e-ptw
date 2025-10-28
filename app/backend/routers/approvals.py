@@ -23,7 +23,7 @@ def get_approvals_by_workflow(
         query = query.filter(models.Approval.workflow_id == workflow_id)
     return query.all()
 
-# Attach the CRUD routes
+# Attach the CRUD routes, GET/POST/PUT/DELETE
 crud_router = make_crud_router(
     Model=models.Approval,
     InSchema=schemas.ApprovalIn,
