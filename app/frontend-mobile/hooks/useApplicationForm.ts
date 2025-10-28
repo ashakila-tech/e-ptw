@@ -9,6 +9,7 @@ import {
   createWorkflowData,
   saveApplication,
   fetchUsers,
+  fetchUsersByGroupName,
   createApproval,
   createApprovalData,
 } from "@/services/api";
@@ -17,6 +18,7 @@ import { useUser } from "@/contexts/UserContext";
 import { PermitStatus } from "@/constants/Status";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+const APPROVER_GROUP_NAME = "group-3";
 
 export function useApplicationForm(existingApp: any, router: any) {
   const { userId } = useUser();
@@ -57,11 +59,17 @@ export function useApplicationForm(existingApp: any, router: any) {
         const locData = await fetchLocations();
         setLocationItems(locData.map((l: any) => ({ label: l.name, value: l.id })));
 
-        const usersData = await fetchUsers();
-        setJobAssignerItems(usersData.map((u: any) => ({ label: u.name, value: u.id })));
+        // Fetch only users from a specific group (e.g., "Supervisor")
+        const approversData = await fetchUsersByGroupName(APPROVER_GROUP_NAME);
+        setJobAssignerItems(
+          approversData.map((u: any) => ({
+            label: u.name,
+            value: u.id,
+          }))
+        );
 
         if (userId) {
-          const currentUser = usersData.find((u: any) => u.id === userId);
+          const currentUser = approversData.find((u: any) => u.id === userId);
           setApplicantName(currentUser?.name || "Unknown User");
         }
       } catch (err) {
@@ -70,6 +78,7 @@ export function useApplicationForm(existingApp: any, router: any) {
     }
     fetchData();
   }, [userId]);
+
 
   // Pick and upload document
   const pickAndUploadDocument = async () => {

@@ -36,8 +36,8 @@ crud = make_crud_router(
     InSchema=schemas.UserCreate,        # POST schema
     OutSchema=schemas.UserOut,
     UpdateSchema=schemas.UserUpdate,    # PUT/PATCH schema (partial)
-    prefix="/users",
-    tag="Users",
+    prefix="",
+    tag="",
     list_roles=None,    # ← allow all authenticated users
     read_roles=None,    # ← allow all authenticated users
     write_roles=None,   # ← allow all authenticated users (PUT/PATCH/DELETE)
@@ -45,7 +45,7 @@ crud = make_crud_router(
     update_mutator=_user_update_mutator,
 )
 
-router = APIRouter()
+router = APIRouter(prefix="/users", tags=["Users"])
 router.include_router(crud)
 
 @router.get("/by-group-name/{group_name}", response_model=list[schemas.UserOut])

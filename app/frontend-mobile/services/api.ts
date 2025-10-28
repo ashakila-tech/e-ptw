@@ -24,6 +24,18 @@ export async function fetchUsers() {
   return res.json();
 }
 
+export async function fetchUsersByGroupName(groupName: string) {
+  const res = await fetch(`${API_BASE_URL}api/users/by-group-name/${groupName}`);
+  if (!res.ok) throw new Error(`Failed to fetch users for group ${groupName}`);
+  return await res.json();
+}
+
+export async function fetchUsersByGroupId(groupId: number) {
+  const res = await fetch(`${API_BASE_URL}api/users/by-group-id/${groupId}`);
+  if (!res.ok) throw new Error(`Failed to fetch users for group ID ${groupId}`);
+  return await res.json();
+}
+
 export async function fetchUserGroups() {
   const res = await fetch(`${API_BASE_URL}api/user-groups/`);
   if (!res.ok) throw new Error("Failed to fetch user groups");
