@@ -7,7 +7,7 @@ from .. import models, schemas
 from ..deps import get_db, get_current_user, require_role
 
 # Factory for list/get/delete
-base = make_crud_router(
+crud = make_crud_router(
     Model=models.Application,
     InSchema=schemas.ApplicationIn,
     OutSchema=schemas.ApplicationOut,
@@ -18,8 +18,8 @@ base = make_crud_router(
     write_roles=["admin", "user"],
 )
 
-router = APIRouter()
-router.include_router(base)
+router = APIRouter(prefix="/applications", tags=["Applications"])
+router.include_router(crud, tags=["Applications"])
 
 # no auth for creating applications
 @router.post("/", response_model=schemas.ApplicationOut)

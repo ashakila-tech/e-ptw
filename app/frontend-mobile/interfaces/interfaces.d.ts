@@ -78,3 +78,5 @@ interface ApprovalItem {
   timestamp?: string;
   [k: string]: any;
 };
+
+export default PermitData;
