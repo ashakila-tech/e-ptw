@@ -18,7 +18,9 @@ import { useUser } from "@/contexts/UserContext";
 import { PermitStatus } from "@/constants/Status";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
-const APPROVER_GROUP_NAME = "group-3";
+const APPROVER_GROUP_NAME = Constants.expoConfig?.extra?.APPROVER_GROUP_NAME;
+const PLACEHOLDER_ID = 1;
+const PLACEHOLDER_THRESHOLD = 3;
 
 export function useApplicationForm(existingApp: any, router: any) {
   const { userId } = useUser();
@@ -54,18 +56,30 @@ export function useApplicationForm(existingApp: any, router: any) {
     async function fetchData() {
       try {
         const typeData = await fetchPermitTypes();
-        setPermitTypeItems(typeData.map((t: any) => ({ label: t.name, value: t.id })));
+        // Filter out the first three items (placedholders)
+        setPermitTypeItems(
+          typeData
+            .filter((t: any) => t.id > 3)
+            .map((t: any) => ({ label: t.name, value: t.id }))
+        );
 
         const locData = await fetchLocations();
-        setLocationItems(locData.map((l: any) => ({ label: l.name, value: l.id })));
+        // Filter out the first three items (placedholders)
+        setLocationItems(
+          locData
+            .filter((l: any) => l.id > 3)
+            .map((l: any) => ({ label: l.name, value: l.id }))
+        );
 
-        // Fetch only users from a specific group (e.g., "Supervisor")
         const approversData = await fetchUsersByGroupName(APPROVER_GROUP_NAME);
+        // Filter out the first three items (placedholders)
         setJobAssignerItems(
-          approversData.map((u: any) => ({
-            label: u.name,
-            value: u.id,
-          }))
+          approversData
+            .filter((u: any) => u.id > 3)
+            .map((u: any) => ({
+              label: u.name,
+              value: u.id,
+            }))
         );
 
         if (userId) {
@@ -79,8 +93,34 @@ export function useApplicationForm(existingApp: any, router: any) {
     fetchData();
   }, [userId]);
 
+  // Pre-fill dropdowns after items are loaded, with placeholder filtering
+  useEffect(() => {
+    if (existingApp) {
+      if (permitTypeItems.length > 0) {
+        setPermitType(
+          existingApp.permitTypeId && existingApp.permitTypeId > PLACEHOLDER_THRESHOLD
+            ? Number(existingApp.permitTypeId)
+            : null
+        );
+      }
+      if (locationItems.length > 0) {
+        setLocation(
+          existingApp.locationId && existingApp.locationId > PLACEHOLDER_THRESHOLD
+            ? Number(existingApp.locationId)
+            : null
+        );
+      }
+      if (jobAssignerItems.length > 0) {
+        setJobAssigner(
+          existingApp.jobAssignerId && existingApp.jobAssignerId > PLACEHOLDER_THRESHOLD
+            ? Number(existingApp.jobAssignerId)
+            : null
+        );
+      }
+    }
+  }, [existingApp, permitTypeItems, locationItems, jobAssignerItems]);
 
-  // Pick and upload document
+  // Functionality to upload document
   const pickAndUploadDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
     if (!result.canceled) {
@@ -101,22 +141,146 @@ export function useApplicationForm(existingApp: any, router: any) {
   };
 
   // Submit or save as draft
+  // const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
+  //   try {
+  //     let workflow: any = null;
+  //     let workflowDataId: number | null = existingApp?.workflowDataId ?? null;
+
+  //     // Create workflow and workflow data if not already existing
+  //     if (!workflowDataId) {
+  //       const companyId = existingApp?.company_id ?? 1;
+  //       const permitTypeIdForWorkflow =
+  //         permitType ??
+  //         existingApp?.permitTypeId ??
+  //         (permitTypeItems.length > 0 ? permitTypeItems[0].value : 1);
+
+  //       workflow = await createWorkflow(
+  //         `${permitName || "Untitled"} - ${applicantName} - Workflow`,
+  //         companyId,
+  //         permitTypeIdForWorkflow
+  //       );
+
+  //       const workflowData = await createWorkflowData({
+  //         company_id: companyId,
+  //         workflow_id: workflow.id,
+  //         name: `${permitName || "Untitled"} - ${applicantName} - Workflow Data`,
+  //         start_time: startTime ? startTime.toISOString() : new Date().toISOString(),
+  //         end_time: endTime ? endTime.toISOString() : new Date().toISOString(),
+  //       });
+
+  //       workflowDataId = workflowData.id;
+  //     }
+
+  //     const fallbackPermitTypeId = permitTypeItems.length > 0 ? permitTypeItems[0].value : 1;
+  //     const fallbackLocationId = locationItems.length > 0 ? locationItems[0].value : 1;
+
+  //     const companyId = existingApp?.company_id ?? 1; // Default to 1 if not provided
+
+  //     // Validation for "SUBMITTED" — placeholders not allowed
+  //     if (status === "SUBMITTED") {
+  //       if (
+  //         !permitName.trim() ||
+  //         !permitType ||
+  //         !location ||
+  //         !jobAssigner ||
+  //         !startTime ||
+  //         !endTime
+  //       ) {
+  //         Alert.alert("Error", "Please complete all required fields before submitting.");
+  //         return;
+  //       }
+  //     }
+
+  //     const payload: any = {
+  //       company_id: companyId,
+  //       permit_type_id: permitType ?? existingApp?.permitTypeId ?? fallbackPermitTypeId,
+  //       workflow_data_id: workflowDataId!,
+  //       location_id: location ?? existingApp?.locationId ?? fallbackLocationId,
+  //       applicant_id: userId ?? 0,
+  //       name: permitName || "Unnamed Permit",
+  //       document_id: documentId ?? existingApp?.documentId ?? null,
+  //       status,
+  //     };
+
+  //     if (documentId ?? existingApp?.documentId) {
+  //       payload.document_id = documentId ?? existingApp?.documentId;
+  //     }
+
+  //     if (jobAssigner) {
+  //       payload.job_assigner_id = jobAssigner;
+  //     }
+
+  //     const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
+
+  //     // Create approval and approval data when submitting
+  //     if (status === "SUBMITTED" && jobAssigner) {
+  //       const selectedAssigner = jobAssignerItems.find(item => item.value === jobAssigner);
+
+  //       console.log("Creating approval with payload:", {
+  //         company_id: existingApp?.company_id ?? 1,
+  //         workflow_id: workflowDataId!,
+  //         user_group_id: null,
+  //         user_id: jobAssigner,
+  //         name: "Job Assigner",
+  //         role_name: "Job Assigner",
+  //         level: 1,
+  //       });
+
+
+  //       const approval = await createApproval({
+  //         company_id: existingApp?.company_id ?? 1,
+  //         workflow_id: workflow?.id ?? existingApp?.workflow_id ?? 0,
+  //         user_group_id: null,
+  //         user_id: jobAssigner,
+  //         name: "Job Assigner",
+  //         role_name: "Job Assigner",
+  //         level: 1,
+  //       });
+
+  //       console.log("Approval payload being sent:", approval);
+
+  //       await createApprovalData({
+  //         company_id: existingApp?.company_id ?? 1,
+  //         approval_id: approval.id,
+  //         document_id: payload.document_id ?? 0,
+  //         workflow_data_id: workflowDataId!,
+  //         status: PermitStatus.PENDING,
+  //         approver_name: selectedAssigner?.label || "Approver",
+  //         role_name: "Job Assigner",
+  //         level: 1,
+  //         time: new Date().toISOString(),
+  //       });
+  //     }
+
+  //     Alert.alert(
+  //       "Success",
+  //       status === "DRAFT"
+  //         ? "Application saved as draft."
+  //         : "Application submitted successfully."
+  //     );
+
+  //     router.push("/(tabs)/mypermit");
+  //     } catch (err: any) {
+  //       console.error("Error in submitApplication full details:", JSON.stringify(err, null, 2));
+  //       if (err.response) {
+  //         console.error("Response error data:", err.response.data);
+  //         console.error("Response status:", err.response.status);
+  //       }
+  //       Alert.alert("Error", err.message || "Something went wrong");
+  //     }
+  // };
+
   const submitApplication = async (status: "DRAFT" | "SUBMITTED") => {
     try {
-      console.log("STEP 1: Starting submitApplication");
-
       let workflow: any = null;
       let workflowDataId: number | null = existingApp?.workflowDataId ?? null;
 
-      // Create workflow and workflow data if not already existing
       if (!workflowDataId) {
         const companyId = existingApp?.company_id ?? 1;
         const permitTypeIdForWorkflow =
           permitType ??
           existingApp?.permitTypeId ??
-          (permitTypeItems.length > 0 ? permitTypeItems[0].value : 1);
-
-        console.log("STEP 2: Starting createWorkflow and createWorkflowData");
+          PLACEHOLDER_ID; // 🔸 changed from fallback logic
 
         workflow = await createWorkflow(
           `${permitName || "Untitled"} - ${applicantName} - Workflow`,
@@ -135,56 +299,45 @@ export function useApplicationForm(existingApp: any, router: any) {
         workflowDataId = workflowData.id;
       }
 
-      const fallbackPermitTypeId = permitTypeItems.length > 0 ? permitTypeItems[0].value : 1;
-      const fallbackLocationId = locationItems.length > 0 ? locationItems[0].value : 1;
+      const companyId = existingApp?.company_id ?? 1;
 
-      const companyId = existingApp?.company_id ?? 1; // Default to 1 if not provided
+      // 🔸 Keep this validation — placeholders not allowed for submitted apps
+      if (status === "SUBMITTED") {
+        if (
+          !permitName.trim() ||
+          !permitType ||
+          !location ||
+          !jobAssigner ||
+          !startTime ||
+          !endTime
+        ) {
+          Alert.alert("Error", "Please complete all required fields before submitting.");
+          return;
+        }
+      }
 
+      // 🔸 New payload mapping (use id=1 if field empty, for draft safety)
       const payload: any = {
         company_id: companyId,
-        permit_type_id: permitType ?? existingApp?.permitTypeId ?? fallbackPermitTypeId,
+        permit_type_id: permitType || PLACEHOLDER_ID,
         workflow_data_id: workflowDataId!,
-        location_id: location ?? existingApp?.locationId ?? fallbackLocationId,
-        applicant_id: userId ?? 0,
+        location_id: location || PLACEHOLDER_ID,
+        job_assigner_id: jobAssigner || PLACEHOLDER_ID,
+        applicant_id: userId || PLACEHOLDER_ID,
         name: permitName || "Unnamed Permit",
         document_id: documentId ?? existingApp?.documentId ?? null,
         status,
       };
 
-      if (documentId ?? existingApp?.documentId) {
-        payload.document_id = documentId ?? existingApp?.documentId;
-      }
-
-      if (jobAssigner) {
-        payload.job_assigner_id = jobAssigner;
-      }
-
-      console.log("STEP 2.5: Application payload:", payload);
-
       const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
 
-      console.log("STEP 2.6: Application save result:", applicationId);
-
-      console.log("STEP 3: Starting createApproval if SUBMITTED");
-
-      // Create approval and approval data when submitting
+      // Create approval chain only for submitted apps
       if (status === "SUBMITTED" && jobAssigner) {
-        const selectedAssigner = jobAssignerItems.find(item => item.value === jobAssigner);
-
-        console.log("Creating approval with payload:", {
-          company_id: existingApp?.company_id ?? 1,
-          workflow_id: workflowDataId!,
-          user_group_id: null,
-          user_id: jobAssigner,
-          name: "Job Assigner",
-          role_name: "Job Assigner",
-          level: 1,
-        });
-
+        const selectedAssigner = jobAssignerItems.find((item) => item.value === jobAssigner);
 
         const approval = await createApproval({
-          company_id: existingApp?.company_id ?? 1,
-          workflow_id: workflow?.id ?? existingApp?.workflow_id ?? 0, // Fixed: use workflow ID
+          company_id: companyId,
+          workflow_id: workflow?.id ?? existingApp?.workflow_id ?? 0,
           user_group_id: null,
           user_id: jobAssigner,
           name: "Job Assigner",
@@ -192,13 +345,11 @@ export function useApplicationForm(existingApp: any, router: any) {
           level: 1,
         });
 
-        console.log("Approval payload being sent:", approval);
-
         await createApprovalData({
-          company_id: existingApp?.company_id ?? 1,
+          company_id: companyId,
           approval_id: approval.id,
           document_id: payload.document_id ?? 0,
-          workflow_data_id: workflowDataId!, // Fixed: correct mapping
+          workflow_data_id: workflowDataId!,
           status: PermitStatus.PENDING,
           approver_name: selectedAssigner?.label || "Approver",
           role_name: "Job Assigner",
@@ -215,14 +366,14 @@ export function useApplicationForm(existingApp: any, router: any) {
       );
 
       router.push("/(tabs)/mypermit");
-      } catch (err: any) {
-        console.error("Error in submitApplication full details:", JSON.stringify(err, null, 2));
-        if (err.response) {
-          console.error("Response error data:", err.response.data);
-          console.error("Response status:", err.response.status);
-        }
-        Alert.alert("Error", err.message || "Something went wrong");
+    } catch (err: any) {
+      console.error("Error in submitApplication full details:", JSON.stringify(err, null, 2));
+      if (err.response) {
+        console.error("Response error data:", err.response.data);
+        console.error("Response status:", err.response.status);
       }
+      Alert.alert("Error", err.message || "Something went wrong");
+    }
   };
 
   return {
