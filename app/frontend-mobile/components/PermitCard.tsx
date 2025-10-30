@@ -5,10 +5,12 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Link } from "expo-router";
 import { formatDate } from "@/utils/date";
 import { getStatusClass } from "@/utils/class";
+import PermitData from "@/interfaces/interfaces";
 
 // Keep the PermitData type as defined in your project (this file uses Partial)
 type PermitCardProps = Partial<PermitData> & {
   onEdit?: () => void;
+  onDelete?: (id: number | undefined) => void;
 };
 
 const ICON_COLOR_PRIMARY = "#535252"; // fallback color that matches theme primary
@@ -25,6 +27,7 @@ export default function PermitCard({
   workStartTime,
   workEndTime,
   onEdit,
+  onDelete,
 }: PermitCardProps) {
   const statusKey = (status ?? "").toString().toUpperCase();
 
@@ -39,6 +42,14 @@ export default function PermitCard({
 
         <View className="flex-row items-center">
           {statusKey === "DRAFT" && onEdit && (
+            <>
+            <TouchableOpacity
+              onPress={() => onDelete?.(id)}
+              className="flex-row items-center mr-4"
+            >
+              <Text className="text-red-600 mr-2">Delete</Text>
+              <IconSymbol name="trash" size={18} color="#dc2626" />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={onEdit}
               className="flex-row items-center mr-4"
@@ -47,6 +58,7 @@ export default function PermitCard({
               <Text className="text-primary mr-2">Edit</Text>
               <IconSymbol name="pencil" size={18} color={ICON_COLOR_PRIMARY} />
             </TouchableOpacity>
+            </>
           )}
 
           <Link href={`/permits/${id}`} asChild>
