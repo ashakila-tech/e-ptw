@@ -3,6 +3,7 @@ import Constants from "expo-constants";
 import { PermitStatus } from "@/constants/Status";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+const PLACEHOLDER_THRESHOLD = 3; // Constants.expoConfig?.extra?.PLACEHOLDER_THRESHOLD;
 
 export function usePermitDetails(id?: string) {
   const [permit, setPermit] = useState<any | null>(null);
@@ -98,14 +99,31 @@ export function usePermitDetails(id?: string) {
       // Final permit data object
       setPermit({
         id: permitData.id,
-        name: permitData.name,
+        name: permitData.name && permitData.name.trim() !== "" ? permitData.name : "-",
         status: permitData.status,
-        document: document?.name || "-",
-        documentUrl: document ? `${API_BASE_URL}api/documents/${document?.id}/download` : undefined,
-        location: location?.name || "-",
-        permitType: permitType?.name || "-",
+
+        document:
+          permitData.document_id && permitData.document_id <= PLACEHOLDER_THRESHOLD
+            ? "-"
+            : document?.name || "-",
+        documentUrl:
+          permitData.document_id && permitData.document_id <= PLACEHOLDER_THRESHOLD
+            ? undefined
+            : document
+            ? `${API_BASE_URL}api/documents/${document?.id}/download`
+            : undefined,
+
+        location:
+          permitData.location_id && permitData.location_id <= PLACEHOLDER_THRESHOLD
+            ? "-"
+            : location?.name || "-",
+        permitType:
+          permitData.permit_type_id && permitData.permit_type_id <= PLACEHOLDER_THRESHOLD
+            ? "-"
+            : permitType?.name || "-",
+
         workflowData: workflowData?.name || "-",
-        createdBy: permitData.created_by ?? "",
+        createdBy: permitData.created_by ?? "-",
         createdTime: permitData.created_time,
         workStartTime: workflowData?.start_time ?? undefined,
         workEndTime: workflowData?.end_time ?? undefined,

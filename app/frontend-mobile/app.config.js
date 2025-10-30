@@ -6,6 +6,7 @@ export default ({ config }) => {
     extra: {
       API_BASE_URL: process.env.API_BASE_URL,
       APPROVER_GROUP_NAME: process.env.APPROVER_GROUP_NAME,
+      PLACEHOLDER_THRESHOLD: process.env.PLACEHOLDER_THRESHOLD,
     },
   };
 };

@@ -6,6 +6,7 @@ import { PermitStatus } from "@/constants/Status";
 import PermitData from "@/interfaces/interfaces";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+const PLACEHOLDER_THRESHOLD = 3; // Constants.expoConfig?.extra?.PLACEHOLDER_THRESHOLD;
 
 export function usePermitTab() {
   const { userId, isApproval } = useUser();
@@ -61,15 +62,53 @@ export function usePermitTab() {
       });
 
       // Enrich permit data with related details
+      // const enrichedPermits: PermitData[] = await Promise.all(
+      //   permitsData.map(async (p) => {
+      //     const [
+      //       docRes,
+      //       locRes,
+      //       typeRes,
+      //       applicantRes,
+      //       workflowRes,
+      //     ] = await Promise.all([
+      //       p.document_id ? fetch(`${API_BASE_URL}api/documents/${p.document_id}`) : null,
+      //       p.location_id ? fetch(`${API_BASE_URL}api/locations/${p.location_id}`) : null,
+      //       p.permit_type_id ? fetch(`${API_BASE_URL}api/permit-types/${p.permit_type_id}`) : null,
+      //       p.applicant_id ? fetch(`${API_BASE_URL}api/users/${p.applicant_id}`) : null,
+      //       p.workflow_data_id ? fetch(`${API_BASE_URL}api/workflow-data/${p.workflow_data_id}`) : null,
+      //     ]);
+
+      //     const document = docRes ? await docRes.json() : null;
+      //     const location = locRes ? await locRes.json() : null;
+      //     const permitType = typeRes ? await typeRes.json() : null;
+      //     const applicant = applicantRes ? await applicantRes.json() : null;
+      //     const workflowData = workflowRes ? await workflowRes.json() : null;
+
+      //     return {
+      //       id: p.id,
+      //       name: p.name,
+      //       status: p.status,
+      //       approvalStatus: permitApprovalMap[p.workflow_data_id] ?? "-",
+      //       location: location?.name || "-",
+      //       document: document?.name || "-",
+      //       permitType: permitType?.name || "-",
+      //       workflowData: workflowData?.name || "-",
+      //       createdBy: applicant?.name || "Unknown",
+      //       createdTime: p.created_time,
+      //       workStartTime: workflowData?.start_time,
+      //       workEndTime: workflowData?.end_time,
+      //       applicantId: p.applicant_id,
+      //       documentId: p.document_id,
+      //       locationId: p.location_id,
+      //       permitTypeId: p.permit_type_id,
+      //       workflowDataId: p.workflow_data_id,
+      //     };
+      //   })
+      // );
+
       const enrichedPermits: PermitData[] = await Promise.all(
         permitsData.map(async (p) => {
-          const [
-            docRes,
-            locRes,
-            typeRes,
-            applicantRes,
-            workflowRes,
-          ] = await Promise.all([
+          const [docRes, locRes, typeRes, applicantRes, workflowRes] = await Promise.all([
             p.document_id ? fetch(`${API_BASE_URL}api/documents/${p.document_id}`) : null,
             p.location_id ? fetch(`${API_BASE_URL}api/locations/${p.location_id}`) : null,
             p.permit_type_id ? fetch(`${API_BASE_URL}api/permit-types/${p.permit_type_id}`) : null,
@@ -85,14 +124,23 @@ export function usePermitTab() {
 
           return {
             id: p.id,
-            name: p.name,
+            name: p.name && p.name.trim() !== "" ? p.name : "-",
             status: p.status,
             approvalStatus: permitApprovalMap[p.workflow_data_id] ?? "-",
-            location: location?.name || "-",
-            document: document?.name || "-",
-            permitType: permitType?.name || "-",
+            location:
+              p.location_id && p.location_id <= PLACEHOLDER_THRESHOLD
+                ? "-"
+                : location?.name || "-",
+            document:
+              p.document_id && p.document_id <= PLACEHOLDER_THRESHOLD
+                ? "-"
+                : document?.name || "-",
+            permitType:
+              p.permit_type_id && p.permit_type_id <= PLACEHOLDER_THRESHOLD
+                ? "-"
+                : permitType?.name || "-",
             workflowData: workflowData?.name || "-",
-            createdBy: applicant?.name || "Unknown",
+            createdBy: applicant?.name || "-",
             createdTime: p.created_time,
             workStartTime: workflowData?.start_time,
             workEndTime: workflowData?.end_time,
