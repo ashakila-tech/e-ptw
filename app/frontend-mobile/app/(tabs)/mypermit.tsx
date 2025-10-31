@@ -103,6 +103,7 @@ export default function MyPermitTab() {
                   params: { application: JSON.stringify(permit) },
                 })
               }
+              onDeleted={refetch}
             />
           ))}
         </ScrollView>

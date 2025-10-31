@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import DocumentUpload from "@/components/DocumentUpload";
 import DropdownField from "@/components/DropdownField";
@@ -22,50 +22,33 @@ export default function ApplicationForm() {
     submitApplication,
   } = useApplicationForm(existingApp, router);
 
-  const [dateError, setDateError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Validate only for SUBMIT, not for DRAFT
+  // ✅ Validation
   useEffect(() => {
     if (!permitName.trim()) setFormError("Permit name is required.");
-    // else if (!documentId) setFormError("Please upload a document.");
     else if (!permitType) setFormError("Please select a permit type.");
     else if (!location) setFormError("Please select a location.");
     else if (!startTime || !endTime) setFormError("Please select both start and end times.");
-    else if (!jobAssigner) setFormError("Please select a job assigner.");
     else if (startTime && endTime && endTime <= startTime) setFormError("End time must be after start time.");
+    else if (!documentId) setFormError("Please upload a document.");
     else setFormError(null);
-  }, [permitName, permitType, location, startTime, endTime, jobAssigner]);
+  }, [permitName, permitType, location, startTime, endTime, documentId]);
 
-  // Determine if dropdown data is still loading
-  const loading = permitTypeItems.length === 0 || locationItems.length === 0 || jobAssignerItems.length === 0;
+  const loading =
+    permitTypeItems.length === 0 || locationItems.length === 0 || jobAssignerItems.length === 0;
 
-  // Pre-fill dropdowns after items are loaded
-  useEffect(() => {
-    if (existingApp) {
-      if (existingApp.permitTypeId && permitTypeItems.length > 0) {
-        setPermitType(Number(existingApp.permitTypeId));
-      }
-      if (existingApp.locationId && locationItems.length > 0) {
-        setLocation(Number(existingApp.locationId));
-      }
-      if (existingApp.jobAssignerId && jobAssignerItems.length > 0) {
-        setJobAssigner(Number(existingApp.jobAssignerId));
-      }
-    }
-  }, [existingApp, permitTypeItems, locationItems, jobAssignerItems]);
-
-  if (loading) {
-    return <LoadingScreen message="Fetching data..." />;
-  }
+  if (loading) return <LoadingScreen message="Fetching data..." />;
 
   return (
     <ScrollView className="flex-1 bg-white p-4">
-      <Stack.Screen options={{
-        title: existingApp ? "Edit Permit Application" : "New Permit Application",
-        headerTitleAlign: "center",
-        headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
-      }} />
+      <Stack.Screen
+        options={{
+          title: existingApp ? "Edit Permit Application" : "New Permit Application",
+          headerTitleAlign: "center",
+          headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+        }}
+      />
 
       {/* Permit Name */}
       <Text className="text-base text-gray-700 mb-2">Permit Name</Text>
@@ -105,7 +88,7 @@ export default function ApplicationForm() {
       />
 
       {/* Job Assigner */}
-      <Text className="text-base text-gray-700 mt-4 mb-2">Job Assigner</Text>
+      <Text className="text-base text-gray-700 mt-4 mb-2">Job Assigner (optional)</Text>
       <DropdownField
         label="Job Assigner"
         open={jobAssignerOpen}
@@ -133,36 +116,28 @@ export default function ApplicationForm() {
         onPress={pickAndUploadDocument}
       />
 
-      <View className="m-10" />
-
-      {dateError && <Text className="text-red-600 mt-2">{dateError}</Text>}
-      {formError && <Text className="text-red-600 mt-2">{formError}</Text>}
+      {formError && <Text className="text-red-600 mt-4">{formError}</Text>}
 
       {/* Action Buttons */}
       <View className="flex-row mt-8 space-x-4">
-        {/* Save as Draft */}
         <Pressable
           onPress={() => submitApplication("DRAFT")}
-          className="flex-[0.4] rounded-xl py-4 mr-3 items-center bg-primary"
+          disabled={!!formError}
+          className={`flex-[0.4] rounded-xl py-4 mr-3 items-center ${
+            formError ? "bg-gray-400" : "bg-primary"
+          }`}
         >
-          <Text className="text-white font-semibold text-base">
-            Save as Draft
-          </Text>
+          <Text className="text-white font-semibold text-base">Save as Draft</Text>
         </Pressable>
 
-        {/* Submit Application */}
         <Pressable
-          onPress={() => {
-            if (!formError) submitApplication("SUBMITTED");
-          }}
+          onPress={() => !formError && submitApplication("SUBMITTED")}
           disabled={!!formError}
           className={`flex-[0.6] rounded-xl py-4 items-center ${
             formError ? "bg-gray-400" : "bg-approved"
           }`}
         >
-          <Text className="text-white font-semibold text-base">
-            Submit Application
-          </Text>
+          <Text className="text-white font-semibold text-base">Submit Application</Text>
         </Pressable>
       </View>
     </ScrollView>

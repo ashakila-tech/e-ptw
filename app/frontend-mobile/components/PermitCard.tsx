@@ -6,14 +6,14 @@ import { Link } from "expo-router";
 import { formatDate } from "@/utils/date";
 import { getStatusClass } from "@/utils/class";
 import PermitData from "@/interfaces/interfaces";
+import { useDeletePermit } from "@/hooks/useDeletePermit"; // ✅ import hook
 
-// Keep the PermitData type as defined in your project (this file uses Partial)
 type PermitCardProps = Partial<PermitData> & {
   onEdit?: () => void;
-  onDelete?: (id: number | undefined) => void;
+  onDeleted?: () => void; // ✅ new callback to refresh list after delete
 };
 
-const ICON_COLOR_PRIMARY = "#535252"; // fallback color that matches theme primary
+const ICON_COLOR_PRIMARY = "#535252";
 
 export default function PermitCard({
   id,
@@ -27,42 +27,48 @@ export default function PermitCard({
   workStartTime,
   workEndTime,
   onEdit,
-  onDelete,
+  onDeleted, // ✅ refresh callback
 }: PermitCardProps) {
   const statusKey = (status ?? "").toString().toUpperCase();
+  const { deletePermit } = useDeletePermit(onDeleted); // ✅ use hook
 
   return (
     <View className="bg-white rounded-lg w-full p-4 mb-4 shadow-sm">
       {/* Header: status + actions */}
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-primary text-lg">
-          {/* Status: <Text className={getStatusClass(status)}>{status ?? "-"}</Text> */}
           Status: <Text className={getStatusClass(status)}>{status}</Text>
         </Text>
 
         <View className="flex-row items-center">
-          {statusKey === "DRAFT" && onEdit && (
+          {statusKey === "DRAFT" && (
             <>
-            <TouchableOpacity
-              onPress={() => onDelete?.(id)}
-              className="flex-row items-center mr-4"
-            >
-              <Text className="text-red-600 mr-2">Delete</Text>
-              <IconSymbol name="trash" size={18} color="#dc2626" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={onEdit}
-              className="flex-row items-center mr-4"
-              accessibilityRole="button"
-            >
-              <Text className="text-primary mr-2">Edit</Text>
-              <IconSymbol name="pencil" size={18} color={ICON_COLOR_PRIMARY} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => deletePermit(id, status)} // ✅ use hook here
+                className="flex-row items-center mr-4"
+              >
+                <Text className="text-red-600 mr-2">Delete</Text>
+                <IconSymbol name="trash" size={18} color="#dc2626" />
+              </TouchableOpacity>
+
+              {onEdit && (
+                <TouchableOpacity
+                  onPress={onEdit}
+                  className="flex-row items-center mr-4"
+                  accessibilityRole="button"
+                >
+                  <Text className="text-primary mr-2">Edit</Text>
+                  <IconSymbol name="pencil" size={18} color={ICON_COLOR_PRIMARY} />
+                </TouchableOpacity>
+              )}
             </>
           )}
 
           <Link href={`/permits/${id}`} asChild>
-            <TouchableOpacity className="flex-row items-center" accessibilityRole="link">
+            <TouchableOpacity
+              className="flex-row items-center"
+              accessibilityRole="link"
+            >
               <Text className="text-primary mr-2">Details</Text>
               <IconSymbol name="chevron.right" size={20} color={ICON_COLOR_PRIMARY} />
             </TouchableOpacity>
@@ -72,7 +78,7 @@ export default function PermitCard({
 
       <View className="border-b border-gray-200 mb-3" />
 
-      {/* Row 1: permit name / applicant name */}
+      {/* Row 1 */}
       <View className="w-full flex-row mb-2">
         <View className="w-1/2 pr-2">
           <Text className="text-primary">Permit Name:</Text>
@@ -84,7 +90,7 @@ export default function PermitCard({
         </View>
       </View>
 
-      {/* Row 2: location / permit type */}
+      {/* Row 2 */}
       <View className="w-full flex-row mb-2">
         <View className="w-1/2 pr-2">
           <Text className="text-primary">Location:</Text>
@@ -96,7 +102,7 @@ export default function PermitCard({
         </View>
       </View>
 
-      {/* Row 3: work start / work end */}
+      {/* Row 3 */}
       <View className="w-full flex-row mb-2">
         <View className="w-1/2 pr-2">
           <Text className="text-primary">Work Start:</Text>
@@ -108,7 +114,7 @@ export default function PermitCard({
         </View>
       </View>
 
-      {/* Row 4: application date / approval status */}
+      {/* Row 4 */}
       <View className="w-full flex-row mb-2">
         <View className="w-1/2 pr-2">
           <Text className="text-primary">Application Date:</Text>

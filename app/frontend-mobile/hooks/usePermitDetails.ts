@@ -3,7 +3,7 @@ import Constants from "expo-constants";
 import { PermitStatus } from "@/constants/Status";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
-const PLACEHOLDER_THRESHOLD = 3; // Constants.expoConfig?.extra?.PLACEHOLDER_THRESHOLD;
+const PLACEHOLDER_THRESHOLD = 3;
 
 export function usePermitDetails(id?: string) {
   const [permit, setPermit] = useState<any | null>(null);
@@ -17,13 +17,19 @@ export function usePermitDetails(id?: string) {
     setError(null);
 
     try {
-      // Fetch base permit
+      // Base application
       const res = await fetch(`${API_BASE_URL}api/applications/${id}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`Failed to fetch permit (${res.status})`);
       const permitData = await res.json();
 
-      // Fetch related entities
-      const [apNameRes, docRes, locRes, typeRes, workflowRes, assignerRes] = await Promise.all([
+      const [
+        apNameRes,
+        docRes,
+        locRes,
+        typeRes,
+        workflowRes,
+        assignerRes,
+      ] = await Promise.all([
         fetch(`${API_BASE_URL}api/users/${permitData.applicant_id}`, { cache: "no-store" }),
         fetch(`${API_BASE_URL}api/documents/${permitData.document_id}`, { cache: "no-store" }),
         fetch(`${API_BASE_URL}api/locations/${permitData.location_id}`, { cache: "no-store" }),
@@ -44,31 +50,34 @@ export function usePermitDetails(id?: string) {
           assignerRes ? assignerRes.json() : null,
         ]);
 
-      // Fetch approvals and their current statuses
+      console.log("Fetched workflowData:", workflowData);
+
+      // --- Approvals ---
       let approvalsList: any[] = [];
+
       if (workflowData?.workflow_id && workflowData?.id) {
-        // Get workflow roles
+        console.log("Fetching approvals for workflow_id:", workflowData.workflow_id);
+
         const approvalsRes = await fetch(
           `${API_BASE_URL}api/approvals/filter?workflow_id=${workflowData.workflow_id}`,
           { cache: "no-store" }
         );
-        if (approvalsRes.ok) {
-          approvalsList = await approvalsRes.json();
-        }
-
-        // Get approval data (actual actions)
         const approvalDataRes = await fetch(
           `${API_BASE_URL}api/approval-data/filter?workflow_data_id=${workflowData.id}`,
           { cache: "no-store" }
         );
+
+        const approvalsRaw = approvalsRes.ok ? await approvalsRes.json() : [];
         const approvalData = approvalDataRes.ok ? await approvalDataRes.json() : [];
 
-        // Merge approval roles with actual approval data
-        approvalsList = approvalsList.map((a) => {
+        console.log("Approvals raw:", approvalsRaw);
+        console.log("Approval data raw:", approvalData);
+
+        approvalsList = approvalsRaw.map((a: any) => {
           const match = approvalData.find(
             (d: any) =>
-              String(d.approval_id) === String(a.id) &&
-              String(d.workflow_data_id) === String(workflowData.id)
+              Number(d.approval_id) === Number(a.id) &&
+              Number(d.workflow_data_id) === Number(workflowData.id)
           );
 
           return {
@@ -80,9 +89,22 @@ export function usePermitDetails(id?: string) {
             company_id: match?.company_id || permitData.company_id || 1,
           };
         });
+
+        // 🔄 Fallback: if no match, try to merge using just approval_id
+        if (approvalsList.length === 0 && approvalData.length > 0) {
+          approvalsList = approvalData.map((d: any) => ({
+            id: d.approval_id,
+            user_id: d.user_id,
+            role_name: d.role_name || "Job Assigner",
+            approver_name: d.approver_name || "Unknown",
+            status: d.status || PermitStatus.PENDING,
+            time: d.time,
+            company_id: d.company_id,
+          }));
+        }
       }
 
-      // Enrich approvals with actual user names
+      // Enrich user names
       const enrichedApprovals = await Promise.all(
         approvalsList.map(async (a) => {
           if (a.user_id) {
@@ -96,12 +118,10 @@ export function usePermitDetails(id?: string) {
         })
       );
 
-      // Final permit data object
       setPermit({
         id: permitData.id,
-        name: permitData.name && permitData.name.trim() !== "" ? permitData.name : "-",
+        name: permitData.name?.trim() || "-",
         status: permitData.status,
-
         document:
           permitData.document_id && permitData.document_id <= PLACEHOLDER_THRESHOLD
             ? "-"
@@ -112,7 +132,6 @@ export function usePermitDetails(id?: string) {
             : document
             ? `${API_BASE_URL}api/documents/${document?.id}/download`
             : undefined,
-
         location:
           permitData.location_id && permitData.location_id <= PLACEHOLDER_THRESHOLD
             ? "-"
@@ -121,7 +140,6 @@ export function usePermitDetails(id?: string) {
           permitData.permit_type_id && permitData.permit_type_id <= PLACEHOLDER_THRESHOLD
             ? "-"
             : permitType?.name || "-",
-
         workflowData: workflowData?.name || "-",
         createdBy: permitData.created_by ?? "-",
         createdTime: permitData.created_time,
@@ -136,7 +154,6 @@ export function usePermitDetails(id?: string) {
         jobAssigner: jobAssigner?.name || "-",
       });
 
-      // Set updated approval statuses
       setApprovals(enrichedApprovals);
     } catch (err: any) {
       console.error("Error fetching permit details:", err);
