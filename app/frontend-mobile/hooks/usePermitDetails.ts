@@ -50,14 +50,10 @@ export function usePermitDetails(id?: string) {
           assignerRes ? assignerRes.json() : null,
         ]);
 
-      console.log("Fetched workflowData:", workflowData);
-
       // --- Approvals ---
       let approvalsList: any[] = [];
 
       if (workflowData?.workflow_id && workflowData?.id) {
-        console.log("Fetching approvals for workflow_id:", workflowData.workflow_id);
-
         const approvalsRes = await fetch(
           `${API_BASE_URL}api/approvals/filter?workflow_id=${workflowData.workflow_id}`,
           { cache: "no-store" }
@@ -69,9 +65,6 @@ export function usePermitDetails(id?: string) {
 
         const approvalsRaw = approvalsRes.ok ? await approvalsRes.json() : [];
         const approvalData = approvalDataRes.ok ? await approvalDataRes.json() : [];
-
-        console.log("Approvals raw:", approvalsRaw);
-        console.log("Approval data raw:", approvalData);
 
         approvalsList = approvalsRaw.map((a: any) => {
           const match = approvalData.find(
@@ -90,7 +83,7 @@ export function usePermitDetails(id?: string) {
           };
         });
 
-        // 🔄 Fallback: if no match, try to merge using just approval_id
+        // Fallback: if no match, try to merge using just approval_id
         if (approvalsList.length === 0 && approvalData.length > 0) {
           approvalsList = approvalData.map((d: any) => ({
             id: d.approval_id,

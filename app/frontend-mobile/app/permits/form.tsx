@@ -24,7 +24,7 @@ export default function ApplicationForm() {
 
   const [formError, setFormError] = useState<string | null>(null);
 
-  // ✅ Validation
+  // Validation
   useEffect(() => {
     if (!permitName.trim()) setFormError("Permit name is required.");
     else if (!permitType) setFormError("Please select a permit type.");
@@ -88,7 +88,7 @@ export default function ApplicationForm() {
       />
 
       {/* Job Assigner */}
-      <Text className="text-base text-gray-700 mt-4 mb-2">Job Assigner (optional)</Text>
+      <Text className="text-base text-gray-700 mt-4 mb-2">Job Assigner</Text>
       <DropdownField
         label="Job Assigner"
         open={jobAssignerOpen}
