@@ -6,7 +6,8 @@ from .routers import (
     authentication,               # /auth/*
     companies, permit_types, users, locations, documents,
     workflows, approvals, groups, user_groups,
-    workflow_data, approval_data, applications
+    workflow_data, approval_data, applications,
+    location_managers, permit_officers,
 )
 
 app = FastAPI(title=settings.APP_NAME)
@@ -26,7 +27,9 @@ app.include_router(groups.router, prefix="/api")
 app.include_router(user_groups.crud_router, prefix="/api")
 app.include_router(workflow_data.crud_router, prefix="/api")
 app.include_router(approval_data.router, prefix="/api")
-app.include_router(applications.router, prefix="/api")  # <<< only once
+app.include_router(applications.router, prefix="/api")
+app.include_router(location_managers.crud_router, prefix="/api")
+app.include_router(permit_officers.crud_router, prefix="/api")
 
 @app.get("/")
 def root():

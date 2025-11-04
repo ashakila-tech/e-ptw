@@ -226,3 +226,31 @@ class ApplicationUpdate(BaseModel):
     status: Optional[str] = None
     created_by: Optional[int] = None
     updated_by: Optional[int] = None
+
+# ---------- LocationManager ----------
+class LocationManagerBase(BaseModel):
+    location_id: int
+    user_id: int
+
+class LocationManagerIn(LocationManagerBase):
+    pass
+
+class LocationManagerOut(LocationManagerBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+# ---------- PermitOfficer ----------
+class PermitOfficerBase(BaseModel):
+    permit_type_id: int
+    user_id: int
+
+class PermitOfficerIn(PermitOfficerBase):
+    pass
+
+class PermitOfficerOut(PermitOfficerBase):
+    id: int
+
+    class Config:
+        orm_mode = True

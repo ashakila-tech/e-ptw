@@ -113,3 +113,15 @@ class ApprovalData(Base):
     time = Column(DateTime, nullable=True)
     role_name = Column(String, nullable=True)
     level = Column(Integer, nullable=True)
+
+class LocationManager(Base):
+    __tablename__ = "location_manager"
+    id = Column(Integer, primary_key=True, index=True)
+    location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+
+class PermitOfficer(Base):
+    __tablename__ = "permit_officer"
+    id = Column(Integer, primary_key=True, index=True)
+    permit_type_id = Column(Integer, ForeignKey("permit_type.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
