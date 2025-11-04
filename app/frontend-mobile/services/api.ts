@@ -74,16 +74,16 @@ export async function fetchJobAssigners() {
   }
 }
 
-export const fetchPermitOfficers = async (permitTypeId: number) => {
+export async function fetchPermitOfficersByPermitType(permitTypeId: number) {
   const res = await fetch(`${API_BASE_URL}api/permit-officers/filter?permit_type_id=${permitTypeId}`);
-  if (!res.ok) throw new Error("Failed to fetch permit officers");
-  return await res.json();
+  if (!res.ok) throw new Error(`Failed to fetch permit officers: ${res.statusText}`);
+  return res.json();
 };
 
-export const fetchLocationManagers = async (locationId: number) => {
+export async function fetchLocationManagersByLocation(locationId: number) {
   const res = await fetch(`${API_BASE_URL}api/location-managers/filter?location_id=${locationId}`);
-  if (!res.ok) throw new Error("Failed to fetch location managers");
-  return await res.json();
+  if (!res.ok) throw new Error(`Failed to fetch location managers: ${res.statusText}`);
+  return res.json();
 };
 
 // -------------------- Document Upload --------------------

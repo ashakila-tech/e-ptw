@@ -11,8 +11,8 @@ import {
   fetchUsersByGroupName,
   createApproval,
   createApprovalData,
-  fetchPermitOfficers,
-  fetchLocationManagers,
+  fetchPermitOfficersByPermitType,
+  fetchLocationManagersByLocation,
 } from "@/services/api";
 import Constants from "expo-constants";
 import { useUser } from "@/contexts/UserContext";
@@ -305,8 +305,7 @@ export function useApplicationForm(existingApp: any, router: any) {
 
         // LEVEL 2 — SAFETY OFFICER (based on permit type)
         try {
-          const officers = await fetch(`${API_BASE_URL}/api/permit-officers/filter?permit_type_id=${permitType}`);
-          const officerData = await officers.json();
+          const officerData = await fetchPermitOfficersByPermitType(permitType!);
           const selectedOfficer = officerData && officerData.length > 0 ? officerData[0] : null;
 
           console.log("Officer filter result:", officerData);
@@ -340,8 +339,7 @@ export function useApplicationForm(existingApp: any, router: any) {
 
         // LEVEL 3 — SITE MANAGER (based on location)
         try {
-          const managers = await fetch(`${API_BASE_URL}/api/location-managers/filter?location_id=${location}`);
-          const managerData = await managers.json();
+          const managerData = await fetchLocationManagersByLocation(location!);
           const selectedManager = managerData && managerData.length > 0 ? managerData[0] : null;
 
           console.log("Manager filter result:", managerData);

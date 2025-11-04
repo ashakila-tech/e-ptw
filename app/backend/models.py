@@ -115,13 +115,17 @@ class ApprovalData(Base):
     level = Column(Integer, nullable=True)
 
 class LocationManager(Base):
-    __tablename__ = "location_manager"
+    __tablename__ = "location_managers"
     id = Column(Integer, primary_key=True, index=True)
-    location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    location_id = Column(Integer, ForeignKey("locations.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+
+    user = relationship("User", backref="location_managers")
 
 class PermitOfficer(Base):
-    __tablename__ = "permit_officer"
+    __tablename__ = "permit_officers"
     id = Column(Integer, primary_key=True, index=True)
-    permit_type_id = Column(Integer, ForeignKey("permit_type.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    permit_type_id = Column(Integer, ForeignKey("permit_types.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    
+    user = relationship("User", backref="permit_officers")
