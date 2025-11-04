@@ -280,7 +280,7 @@ export function useApplicationForm(existingApp: any, router: any) {
       if (status === "SUBMITTED" && jobAssigner) {
         const selectedAssigner = jobAssignerItems.find((item) => item.value === jobAssigner);
 
-        // 🔹 LEVEL 1 — SUPERVISOR
+        // LEVEL 1 — SUPERVISOR
         const approval1 = await createApproval({
           company_id: companyId,
           workflow_id: workflowId,
@@ -303,60 +303,74 @@ export function useApplicationForm(existingApp: any, router: any) {
           time: new Date().toISOString(),
         });
 
-        // 🔹 LEVEL 2 — SAFETY OFFICER (based on permit type)
-        const officers = await fetchPermitOfficers({ permit_type_id: permitType! });
-        const selectedOfficer = officers && officers.length > 0 ? officers[0] : null;
+        // LEVEL 2 — SAFETY OFFICER (based on permit type)
+        try {
+          const officers = await fetch(`${API_BASE_URL}/api/permit-officers/filter?permit_type_id=${permitType}`);
+          const officerData = await officers.json();
+          const selectedOfficer = officerData && officerData.length > 0 ? officerData[0] : null;
 
-        if (selectedOfficer) {
-          const approval2 = await createApproval({
-            company_id: companyId,
-            workflow_id: workflowId,
-            user_group_id: null,
-            user_id: selectedOfficer.user_id,
-            name: "Safety Officer",
-            role_name: "Safety Officer",
-            level: 2,
-          });
+          console.log("Officer filter result:", officerData);
 
-          await createApprovalData({
-            company_id: companyId,
-            approval_id: approval2.id,
-            document_id: payload.document_id ?? 0,
-            workflow_data_id: workflowDataId!,
-            status: PermitStatus.PENDING,
-            approver_name: "Safety Officer",
-            role_name: "Safety Officer",
-            level: 2,
-            time: new Date().toISOString(),
-          });
+          if (selectedOfficer) {
+            const approval2 = await createApproval({
+              company_id: companyId,
+              workflow_id: workflowId,
+              user_group_id: null,
+              user_id: selectedOfficer.user_id,
+              name: "Safety Officer",
+              role_name: "Safety Officer",
+              level: 2,
+            });
+
+            await createApprovalData({
+              company_id: companyId,
+              approval_id: approval2.id,
+              document_id: payload.document_id ?? 0,
+              workflow_data_id: workflowDataId!,
+              status: PermitStatus.PENDING,
+              approver_name: selectedOfficer.user?.name || "Safety Officer",
+              role_name: "Safety Officer",
+              level: 2,
+              time: new Date().toISOString(),
+            });
+          }
+        } catch (err) {
+          console.error("Error fetching safety officer:", err);
         }
 
-        // 🔹 LEVEL 3 — SITE MANAGER (based on location)
-        const managers = await fetchLocationManagers({ location_id: location! });
-        const selectedManager = managers && managers.length > 0 ? managers[0] : null;
+        // LEVEL 3 — SITE MANAGER (based on location)
+        try {
+          const managers = await fetch(`${API_BASE_URL}/api/location-managers/filter?location_id=${location}`);
+          const managerData = await managers.json();
+          const selectedManager = managerData && managerData.length > 0 ? managerData[0] : null;
 
-        if (selectedManager) {
-          const approval3 = await createApproval({
-            company_id: companyId,
-            workflow_id: workflowId,
-            user_group_id: null,
-            user_id: selectedManager.user_id,
-            name: "Site Manager",
-            role_name: "Site Manager",
-            level: 3,
-          });
+          console.log("Manager filter result:", managerData);
 
-          await createApprovalData({
-            company_id: companyId,
-            approval_id: approval3.id,
-            document_id: payload.document_id ?? 0,
-            workflow_data_id: workflowDataId!,
-            status: PermitStatus.PENDING,
-            approver_name: "Site Manager",
-            role_name: "Site Manager",
-            level: 3,
-            time: new Date().toISOString(),
-          });
+          if (selectedManager) {
+            const approval3 = await createApproval({
+              company_id: companyId,
+              workflow_id: workflowId,
+              user_group_id: null,
+              user_id: selectedManager.user_id,
+              name: "Site Manager",
+              role_name: "Site Manager",
+              level: 3,
+            });
+
+            await createApprovalData({
+              company_id: companyId,
+              approval_id: approval3.id,
+              document_id: payload.document_id ?? 0,
+              workflow_data_id: workflowDataId!,
+              status: PermitStatus.PENDING,
+              approver_name: selectedManager.user?.name || "Site Manager",
+              role_name: "Site Manager",
+              level: 3,
+              time: new Date().toISOString(),
+            });
+          }
+        } catch (err) {
+          console.error("Error fetching site manager:", err);
         }
       }
 
