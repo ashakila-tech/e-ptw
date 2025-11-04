@@ -28,8 +28,8 @@ app.include_router(user_groups.crud_router, prefix="/api")
 app.include_router(workflow_data.crud_router, prefix="/api")
 app.include_router(approval_data.router, prefix="/api")
 app.include_router(applications.router, prefix="/api")
-app.include_router(location_managers.crud_router, prefix="/api")
-app.include_router(permit_officers.crud_router, prefix="/api")
+app.include_router(location_managers.router, prefix="/api")
+app.include_router(permit_officers.router, prefix="/api")
 
 @app.get("/")
 def root():

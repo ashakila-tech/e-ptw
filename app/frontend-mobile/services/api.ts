@@ -74,6 +74,22 @@ export async function fetchJobAssigners() {
   }
 }
 
+export const fetchPermitOfficers = async (params?: { permit_type_id?: number }) => {
+  const url = params?.permit_type_id
+    ? `api/permit-officers?permit_type_id=${params.permit_type_id}`
+    : `api/permit-officers`;
+  const response = await fetch(`${API_BASE_URL}${url}`);
+  return response.json();
+};
+
+export const fetchLocationManagers = async (params?: { location_id?: number }) => {
+  const url = params?.location_id
+    ? `api/location-managers?location_id=${params.location_id}`
+    : `api/location-managers`;
+  const response = await fetch(`${API_BASE_URL}${url}`);
+  return response.json();
+};
+
 // -------------------- Document Upload --------------------
 export async function uploadDocument(file: any, companyId: number = 1) {
   const formData = new FormData();

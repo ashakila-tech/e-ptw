@@ -11,6 +11,8 @@ import {
   fetchUsersByGroupName,
   createApproval,
   createApprovalData,
+  fetchPermitOfficers,
+  fetchLocationManagers,
 } from "@/services/api";
 import Constants from "expo-constants";
 import { useUser } from "@/contexts/UserContext";
@@ -246,32 +248,116 @@ export function useApplicationForm(existingApp: any, router: any) {
       }
 
       // Create approval (only if submitted)
-      if (status === "SUBMITTED" && jobAssigner) {
-        const selectedAssigner = jobAssignerItems.find(
-          (item) => item.value === jobAssigner
-        );
+      // if (status === "SUBMITTED" && jobAssigner) {
+      //   const selectedAssigner = jobAssignerItems.find(
+      //     (item) => item.value === jobAssigner
+      //   );
         
-        const approval = await createApproval({
+      //   const approval = await createApproval({
+      //     company_id: companyId,
+      //     workflow_id: workflowId,
+      //     user_group_id: null,
+      //     user_id: jobAssigner,
+      //     name: "Job Assigner",
+      //     role_name: "Job Assigner",
+      //     level: 1,
+      //   });
+
+      //   await createApprovalData({
+      //     company_id: companyId,
+      //     approval_id: approval.id,
+      //     document_id: payload.document_id ?? 0,
+      //     workflow_data_id: workflowDataId!,
+      //     status: PermitStatus.PENDING,
+      //     approver_name: selectedAssigner?.label || "Approver",
+      //     role_name: "Job Assigner",
+      //     level: 1,
+      //     time: new Date().toISOString(),
+      //   });
+      // }
+
+      // Create approvals (only if submitted)
+      if (status === "SUBMITTED" && jobAssigner) {
+        const selectedAssigner = jobAssignerItems.find((item) => item.value === jobAssigner);
+
+        // 🔹 LEVEL 1 — SUPERVISOR
+        const approval1 = await createApproval({
           company_id: companyId,
           workflow_id: workflowId,
           user_group_id: null,
           user_id: jobAssigner,
-          name: "Job Assigner",
-          role_name: "Job Assigner",
+          name: "Supervisor",
+          role_name: "Supervisor",
           level: 1,
         });
 
         await createApprovalData({
           company_id: companyId,
-          approval_id: approval.id,
+          approval_id: approval1.id,
           document_id: payload.document_id ?? 0,
           workflow_data_id: workflowDataId!,
           status: PermitStatus.PENDING,
-          approver_name: selectedAssigner?.label || "Approver",
-          role_name: "Job Assigner",
+          approver_name: selectedAssigner?.label || "Supervisor",
+          role_name: "Supervisor",
           level: 1,
           time: new Date().toISOString(),
         });
+
+        // 🔹 LEVEL 2 — SAFETY OFFICER (based on permit type)
+        const officers = await fetchPermitOfficers({ permit_type_id: permitType! });
+        const selectedOfficer = officers && officers.length > 0 ? officers[0] : null;
+
+        if (selectedOfficer) {
+          const approval2 = await createApproval({
+            company_id: companyId,
+            workflow_id: workflowId,
+            user_group_id: null,
+            user_id: selectedOfficer.user_id,
+            name: "Safety Officer",
+            role_name: "Safety Officer",
+            level: 2,
+          });
+
+          await createApprovalData({
+            company_id: companyId,
+            approval_id: approval2.id,
+            document_id: payload.document_id ?? 0,
+            workflow_data_id: workflowDataId!,
+            status: PermitStatus.PENDING,
+            approver_name: "Safety Officer",
+            role_name: "Safety Officer",
+            level: 2,
+            time: new Date().toISOString(),
+          });
+        }
+
+        // 🔹 LEVEL 3 — SITE MANAGER (based on location)
+        const managers = await fetchLocationManagers({ location_id: location! });
+        const selectedManager = managers && managers.length > 0 ? managers[0] : null;
+
+        if (selectedManager) {
+          const approval3 = await createApproval({
+            company_id: companyId,
+            workflow_id: workflowId,
+            user_group_id: null,
+            user_id: selectedManager.user_id,
+            name: "Site Manager",
+            role_name: "Site Manager",
+            level: 3,
+          });
+
+          await createApprovalData({
+            company_id: companyId,
+            approval_id: approval3.id,
+            document_id: payload.document_id ?? 0,
+            workflow_data_id: workflowDataId!,
+            status: PermitStatus.PENDING,
+            approver_name: "Site Manager",
+            role_name: "Site Manager",
+            level: 3,
+            time: new Date().toISOString(),
+          });
+        }
       }
 
       Alert.alert(
