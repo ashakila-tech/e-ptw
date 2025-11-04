@@ -37,7 +37,10 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=True)
     user_type = Column(Integer, nullable=True)    # NEW: align with ERD
     password_hash = Column(String, nullable=False)
+    
     company = relationship("Company")
+    location_managers = relationship("LocationManager", back_populates="user")
+    permit_officers = relationship("PermitOfficer", back_populates="user")
 
 class UserGroup(Base):
     __tablename__ = "user_group"
@@ -116,16 +119,23 @@ class ApprovalData(Base):
 
 class LocationManager(Base):
     __tablename__ = "location_managers"
-    id = Column(Integer, primary_key=True, index=True)
-    location_id = Column(Integer, ForeignKey("locations.id"))
-    user_id = Column(Integer, ForeignKey("users.id"))
 
-    user = relationship("User", backref="location_managers")
+    id = Column(Integer, primary_key=True, index=True)
+    location_id = Column(Integer, ForeignKey("locations.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    # Explicit bidirectional relationship
+    user = relationship("User", back_populates="location_managers")
+    location = relationship("Location", back_populates="location_managers")  # optional if you use Location model
+
 
 class PermitOfficer(Base):
     __tablename__ = "permit_officers"
+
     id = Column(Integer, primary_key=True, index=True)
-    permit_type_id = Column(Integer, ForeignKey("permit_types.id"))
-    user_id = Column(Integer, ForeignKey("users.id"))
-    
-    user = relationship("User", backref="permit_officers")
+    permit_type_id = Column(Integer, ForeignKey("permit_types.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    # Explicit bidirectional relationship
+    user = relationship("User", back_populates="permit_officers")
+    permit_type = relationship("PermitType", back_populates="permit_officers")  # optional
