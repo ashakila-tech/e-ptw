@@ -43,12 +43,16 @@ class User(Base):
     company = relationship("Company")
     location_managers = relationship("LocationManager", back_populates="user")
     permit_officers = relationship("PermitOfficer", back_populates="user")
+    user_groups = relationship("UserGroup", back_populates="user")
 
 class UserGroup(Base):
     __tablename__ = "user_group"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     group_id = Column(Integer, ForeignKey("group.id"), nullable=False)
+    
+    user = relationship("User", back_populates="user_groups")
+    group = relationship("Group")
 
 class Approval(Base):
     __tablename__ = "approval"
