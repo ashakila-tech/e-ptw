@@ -199,7 +199,7 @@ export async function createApprovalData(approvalData: {
   approval_id: number;
   document_id: number;
   workflow_data_id: number;
-  status: PermitStatus.PENDING | PermitStatus.APPROVED | PermitStatus.REJECTED;
+  status: PermitStatus.PENDING | PermitStatus.APPROVED | PermitStatus.REJECTED | PermitStatus.WAITING;
   approver_name: string;
   time: string;
   role_name: string;

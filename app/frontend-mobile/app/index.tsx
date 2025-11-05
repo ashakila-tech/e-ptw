@@ -15,7 +15,7 @@ export default function Landing() {
 
   const handleSignInApprover = () => {
     // Hardcode sign-in user id
-    setUserId(5);
+    setUserId(7);
     setIsApproval(true);
     router.replace("/home"); // go to home after "sign in"
   };

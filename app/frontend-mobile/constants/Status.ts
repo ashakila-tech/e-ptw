@@ -3,6 +3,7 @@ export enum PermitStatus {
   SUBMITTED = "SUBMITTED",
   APPROVED = "APPROVED",
   PENDING = "PENDING",
+  WAITING = "WAITING",
   REJECTED = "REJECTED",
 }
 

@@ -247,35 +247,6 @@ export function useApplicationForm(existingApp: any, router: any) {
         workflowId = newWorkflow.id;
       }
 
-      // Create approval (only if submitted)
-      // if (status === "SUBMITTED" && jobAssigner) {
-      //   const selectedAssigner = jobAssignerItems.find(
-      //     (item) => item.value === jobAssigner
-      //   );
-        
-      //   const approval = await createApproval({
-      //     company_id: companyId,
-      //     workflow_id: workflowId,
-      //     user_group_id: null,
-      //     user_id: jobAssigner,
-      //     name: "Job Assigner",
-      //     role_name: "Job Assigner",
-      //     level: 1,
-      //   });
-
-      //   await createApprovalData({
-      //     company_id: companyId,
-      //     approval_id: approval.id,
-      //     document_id: payload.document_id ?? 0,
-      //     workflow_data_id: workflowDataId!,
-      //     status: PermitStatus.PENDING,
-      //     approver_name: selectedAssigner?.label || "Approver",
-      //     role_name: "Job Assigner",
-      //     level: 1,
-      //     time: new Date().toISOString(),
-      //   });
-      // }
-
       // Create approvals (only if submitted)
       if (status === "SUBMITTED" && jobAssigner) {
         const selectedAssigner = jobAssignerItems.find((item) => item.value === jobAssigner);
@@ -326,7 +297,7 @@ export function useApplicationForm(existingApp: any, router: any) {
               approval_id: approval2.id,
               document_id: payload.document_id ?? 0,
               workflow_data_id: workflowDataId!,
-              status: PermitStatus.PENDING,
+              status: PermitStatus.WAITING,
               approver_name: selectedOfficer.user?.name || "Safety Officer",
               role_name: "Safety Officer",
               level: 2,
@@ -360,7 +331,7 @@ export function useApplicationForm(existingApp: any, router: any) {
               approval_id: approval3.id,
               document_id: payload.document_id ?? 0,
               workflow_data_id: workflowDataId!,
-              status: PermitStatus.PENDING,
+              status: PermitStatus.WAITING,
               approver_name: selectedManager.user?.name || "Site Manager",
               role_name: "Site Manager",
               level: 3,

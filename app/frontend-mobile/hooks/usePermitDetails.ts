@@ -8,6 +8,7 @@ const PLACEHOLDER_THRESHOLD = 3;
 export function usePermitDetails(id?: string) {
   const [permit, setPermit] = useState<any | null>(null);
   const [approvals, setApprovals] = useState<any[]>([]);
+  const [approvalData, setApprovalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,16 +59,21 @@ export function usePermitDetails(id?: string) {
           `${API_BASE_URL}api/approvals/filter?workflow_id=${workflowData.workflow_id}`,
           { cache: "no-store" }
         );
+
+        console.log("workflowData.id:", workflowData?.id);
+
         const approvalDataRes = await fetch(
           `${API_BASE_URL}api/approval-data/filter?workflow_data_id=${workflowData.id}`,
           { cache: "no-store" }
         );
 
         const approvalsRaw = approvalsRes.ok ? await approvalsRes.json() : [];
-        const approvalData = approvalDataRes.ok ? await approvalDataRes.json() : [];
+        const approvalDataFetched = approvalDataRes.ok ? await approvalDataRes.json() : [];
+
+        console.log("approvalData checkpoint 1:", approvalDataFetched);
 
         approvalsList = approvalsRaw.map((a: any) => {
-          const match = approvalData.find(
+          const match = approvalDataFetched.find(
             (d: any) =>
               Number(d.approval_id) === Number(a.id) &&
               Number(d.workflow_data_id) === Number(workflowData.id)
@@ -83,9 +89,8 @@ export function usePermitDetails(id?: string) {
           };
         });
 
-        // Fallback: if no match, try to merge using just approval_id
-        if (approvalsList.length === 0 && approvalData.length > 0) {
-          approvalsList = approvalData.map((d: any) => ({
+        if (approvalsList.length === 0 && approvalDataFetched.length > 0) {
+          approvalsList = approvalDataFetched.map((d: any) => ({
             id: d.approval_id,
             user_id: d.user_id,
             role_name: d.role_name || "Job Assigner",
@@ -95,6 +100,11 @@ export function usePermitDetails(id?: string) {
             company_id: d.company_id,
           }));
         }
+
+        // ✅ This now updates the hook's React state properly
+        setApprovalData(approvalDataFetched);
+
+        console.log("approvalData checkpoint 2:", approvalDataFetched);
       }
 
       // Enrich user names
@@ -148,6 +158,9 @@ export function usePermitDetails(id?: string) {
       });
 
       setApprovals(enrichedApprovals);
+      // setApprovalData(approvalData);
+
+      // console.log("approvalData checkpoint 2:", approvalData);
     } catch (err: any) {
       console.error("Error fetching permit details:", err);
       setError(err.message || "Failed to fetch permit details");
@@ -160,5 +173,5 @@ export function usePermitDetails(id?: string) {
     fetchPermit();
   }, [id]);
 
-  return { permit, approvals, loading, error, refetch: fetchPermit };
+  return { permit, approvals, approvalData, loading, error, refetch: fetchPermit };
 }

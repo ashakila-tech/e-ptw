@@ -42,6 +42,7 @@ const STATUS_CLASSES = {
   [PermitStatus.PENDING]: "text-pending font-bold",
   [PermitStatus.SUBMITTED]: "text-submitted font-bold",
   [PermitStatus.DRAFT]: "text-primary font-bold",
+  [PermitStatus.WAITING]: "text-waiting font-bold",
 } as const;
 
 export function getStatusClass(status?: string): string {
