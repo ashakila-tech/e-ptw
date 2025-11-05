@@ -13,6 +13,8 @@ class PermitType(Base):
     company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
     name = Column(String, nullable=False)
     company = relationship("Company")
+    permit_officers = relationship("PermitOfficer", back_populates="permit_type")
+
 
 class Workflow(Base):
     __tablename__ = "workflow"
@@ -81,6 +83,7 @@ class Location(Base):
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
     name = Column(String, nullable=False)
+    location_managers = relationship("LocationManager", back_populates="location")
 
 class Application(Base):
     __tablename__ = "application"
