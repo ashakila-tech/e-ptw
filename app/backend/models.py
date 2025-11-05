@@ -122,11 +122,10 @@ class LocationManager(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     location_id = Column(Integer, ForeignKey("locations.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
-    # Explicit bidirectional relationship
     user = relationship("User", back_populates="location_managers")
-    location = relationship("Location", back_populates="location_managers")  # optional if you use Location model
+    location = relationship("Location", back_populates="location_managers")
 
 
 class PermitOfficer(Base):
@@ -134,8 +133,7 @@ class PermitOfficer(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     permit_type_id = Column(Integer, ForeignKey("permit_types.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
-    # Explicit bidirectional relationship
     user = relationship("User", back_populates="permit_officers")
-    permit_type = relationship("PermitType", back_populates="permit_officers")  # optional
+    permit_type = relationship("PermitType", back_populates="permit_officers")
