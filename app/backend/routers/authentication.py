@@ -8,7 +8,7 @@ from ..deps import get_db, get_current_user
 from ..security import hashing, token
 from ..config import settings
 
-from utils.roles import is_user_approver  # import helper
+from ..utils import roles  # import helper
 
 # Create the base router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -71,7 +71,7 @@ def get_me(
     group_names = [g.Group.name for g in user_groups]
 
     # use the centralized role helper
-    is_approver = is_user_approver(group_ids, group_names)
+    is_approver = roles.is_user_approver(group_ids, group_names)
 
     return {
         "id": current_user.id,
