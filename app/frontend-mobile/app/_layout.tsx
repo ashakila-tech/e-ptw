@@ -4,6 +4,8 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "./global.css";
 import { UserProvider } from "@/contexts/UserContext"; // import context provider
+import { HeaderTitle } from "@react-navigation/elements";
+import { Header } from "react-native/Libraries/NewAppScreen";
 
 export default function RootLayout() {
   // const colorScheme = useColorScheme(); // original dynamic theme

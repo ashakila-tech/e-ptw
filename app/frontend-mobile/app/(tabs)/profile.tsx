@@ -20,7 +20,7 @@ export default function ProfileTab() {
     <View className="flex-1 justify-center items-center bg-secondary">
       <Pressable
         onPress={handleSignOut}
-        className="bg-rejected px-6 py-3 rounded-xl"
+        className="bg-primary px-6 py-3 rounded-xl"
       >
         <Text className="text-white font-semibold">Sign Out</Text>
       </Pressable>

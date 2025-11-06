@@ -10,6 +10,8 @@ from ..config import settings
 
 from ..utils import roles  # import helper
 
+CONTRACTOR_GROUP_ID = 4 # Assuming 4 is the ID for 'Contractor' group
+
 # Create the base router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -52,6 +54,35 @@ def create(request: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+@router.post("/register-applicant")
+def register_applicant(request: schemas.UserCreate, db: Session = Depends(get_db)):
+    new_user = models.User(
+        company_id=request.company_id,
+        name=request.name,
+        email=request.email,
+        user_type=request.user_type,
+        password_hash=hashing.Hash.make(request.password),
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # Assign default group (Contractor)
+    user_group = models.UserGroup(
+        user_id=new_user.id,
+        group_id=CONTRACTOR_GROUP_ID,
+    )
+    db.add(user_group)
+    db.commit()
+    db.refresh(user_group)
+
+    return {
+        "user": new_user,
+        "group": user_group,
+        "message": "User registered successfully as Contractor.",
+    }
+
 
 @router.get("/me")
 def get_me(

@@ -137,8 +137,9 @@ export default function PermitDetails() {
     <>
       <Stack.Screen
         options={{
-          title: permit.name || "Permit Details",
+          title: "Permit Details",
           headerTitleAlign: "left",
+          headerShown: true,
           headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
         }}
       />
@@ -149,6 +150,11 @@ export default function PermitDetails() {
           <Text className="text-xl font-bold text-primary mb-3">Details</Text>
 
           {/* Permit internal status */}
+          <Text className="text-base text-primary mb-2">
+            Permit Name:{" "}
+            <Text className="font-semibold">{permit.name || "-"}</Text>
+          </Text>
+
           <Text className="text-base text-primary mb-2">
             Permit Status:{" "}
             <Text className={getStatusClass(permit.status)}>

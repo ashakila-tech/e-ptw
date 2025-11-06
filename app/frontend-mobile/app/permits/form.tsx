@@ -46,6 +46,7 @@ export default function ApplicationForm() {
         options={{
           title: existingApp ? "Edit Permit Application" : "New Permit Application",
           headerTitleAlign: "center",
+          headerShown: true,
           headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
         }}
       />

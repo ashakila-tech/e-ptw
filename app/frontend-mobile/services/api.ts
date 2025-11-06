@@ -48,6 +48,27 @@ export async function registerUser(payload: {
   return res.json();
 }
 
+export async function registerApplicant(payload: {
+  company_id: number;
+  name: string;
+  email: string;
+  user_type: number;
+  password: string;
+}) {
+  const res = await fetch(`${API_BASE_URL}auth/register-applicant`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Failed to register applicant: ${err}`);
+  }
+
+  return res.json();
+}
+
 export async function getCurrentUser() {
   const token = await AsyncStorage.getItem("access_token");
   if (!token) throw new Error("No token found");

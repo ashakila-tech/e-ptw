@@ -3,17 +3,27 @@ import { Link } from "expo-router";
 import { useUser } from "@/contexts/UserContext";
 
 export default function Home() {
-  const { userId } = useUser();
+  const { userId, userName } = useUser(); // 👈 add userName in context if not already
 
   return (
-    <View className="flex-1 items-center justify-center bg-secondary">
-      <Text className="text-lg font-bold mb-6 text-primary">
-        Logged in as User ID: {userId}
+    <View className="flex-1 justify-center items-center bg-secondary px-6">
+      <Text className="text-center text-5xl font-bold text-primary mb-10">
+        Senior Aerospace Upeca Aerotech
+      </Text>
+
+      <Text className="text-lg text-gray-700 mb-2">
+        Name: {userName || "User"}
+      </Text>
+
+      <Text className="text-lg text-gray-700 mb-8">
+        ID No: {userId}
       </Text>
 
       <Link href="/permits/form" asChild>
-        <Pressable className="bg-approved px-6 py-3 rounded-xl">
-          <Text className="text-white font-semibold">Apply Permit</Text>
+        <Pressable className="bg-primary w-full py-4 rounded-xl">
+          <Text className="text-white text-center font-semibold text-lg">
+            Apply Permit
+          </Text>
         </Pressable>
       </Link>
     </View>

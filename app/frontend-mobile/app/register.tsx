@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, Alert, ScrollView } from "react-native";
+import { View, Text, TextInput, Pressable, Alert, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/hooks/useAuth";
+import { Eye, EyeOff } from "lucide-react-native";
 
 export default function Register() {
   const router = useRouter();
@@ -11,8 +12,9 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [userType, setUserType] = useState("contractor"); // or "approver"
-  const [companyId] = useState(1); // example default company
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [companyId] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -32,7 +34,7 @@ export default function Register() {
         company_id: companyId,
         name,
         email,
-        user_type: userType,
+        user_type: 1, // contractor only (integer)
         password,
       });
 
@@ -52,6 +54,7 @@ export default function Register() {
           Create an Account
         </Text>
 
+        {/* Name */}
         <TextInput
           className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 text-base"
           placeholder="Full Name"
@@ -59,6 +62,7 @@ export default function Register() {
           onChangeText={setName}
         />
 
+        {/* Email */}
         <TextInput
           className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 text-base"
           placeholder="Email"
@@ -68,35 +72,43 @@ export default function Register() {
           autoCapitalize="none"
         />
 
-        <TextInput
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 text-base"
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        {/* Password Field */}
+        <View className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 flex-row items-center">
+          <TextInput
+            className="flex-1 text-base py-0"
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            {showPassword ? (
+              <EyeOff size={22} color="#6b7280" />
+            ) : (
+              <Eye size={22} color="#6b7280" />
+            )}
+          </TouchableOpacity>
+        </View>
 
-        <TextInput
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 text-base"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-        />
+        {/* Confirm Password Field */}
+        <View className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 flex-row items-center">
+          <TextInput
+            className="flex-1 text-base py-0"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+          />
+          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+            {showConfirmPassword ? (
+              <EyeOff size={22} color="#6b7280" />
+            ) : (
+              <Eye size={22} color="#6b7280" />
+            )}
+          </TouchableOpacity>
+        </View>
 
-        {/* Optionally let user pick role */}
-        {/* You can replace this with a dropdown later */}
-        <Pressable
-          className="border border-gray-300 rounded-xl px-4 py-3 mb-6"
-          onPress={() =>
-            setUserType(userType === "contractor" ? "approver" : "contractor")
-          }
-        >
-          <Text className="text-base text-gray-700 text-center">
-            Role: {userType === "contractor" ? "Contractor" : "Approver"} (tap to change)
-          </Text>
-        </Pressable>
-
+        {/* Register Button */}
         <Pressable
           className={`w-full py-3 rounded-xl mb-4 ${
             loading ? "bg-gray-400" : "bg-primary"
@@ -109,6 +121,7 @@ export default function Register() {
           </Text>
         </Pressable>
 
+        {/* Go to Login */}
         <Pressable onPress={() => router.push("/login")}>
           <Text className="text-primary text-center text-base">
             Already have an account? Log in
