@@ -1,15 +1,19 @@
 import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ProfileTab() {
   const router = useRouter();
   const { setUserId, setIsApproval } = useUser();
+  const { logout } = useAuth();
 
-  const handleSignOut = () => {
-    setUserId(null);
-    setIsApproval(false);
+  const handleSignOut = async () => {
+    await logout();
     router.replace("/"); // navigate back to landing page
+    // setUserId(null);
+    // setIsApproval(false);
+    // router.replace("/"); // navigate back to landing page
   };
 
   return (

@@ -1,7 +1,68 @@
 import Constants from "expo-constants";
 import { PermitStatus } from "@/constants/Status";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+
+// -------------------- Auth --------------------
+export async function login(email: string, password: string) {
+  const formData = new FormData();
+  formData.append("username", email);
+  formData.append("password", password);
+
+  const res = await fetch(`${API_BASE_URL}auth/login`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Login failed");
+  }
+
+  const data = await res.json();
+  const token = data.access_token;
+
+  await AsyncStorage.setItem("access_token", token);
+  return token;
+}
+
+export async function registerUser(payload: {
+  company_id: number;
+  name: string;
+  email: string;
+  user_type: string;
+  password: string;
+}) {
+  const res = await fetch(`${API_BASE_URL}auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Registration failed: ${err}`);
+  }
+
+  return res.json();
+}
+
+export async function getCurrentUser() {
+  const token = await AsyncStorage.getItem("access_token");
+  if (!token) throw new Error("No token found");
+
+  const res = await fetch(`${API_BASE_URL}auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Failed to fetch user: ${err}`);
+  }
+
+  return res.json();
+}
 
 // -------------------- Permit Types --------------------
 export async function fetchPermitTypes() {

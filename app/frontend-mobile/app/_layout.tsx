@@ -22,10 +22,12 @@ export default function RootLayout() {
       {/* Original dynamic theme logic:
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}> */}
       <ThemeProvider value={DefaultTheme}>
-        <Stack>
+        <Stack screenOptions={{ headerShown: false }}>
           {/* Index (landing page) will load first */}
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="index"/>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />
