@@ -53,7 +53,7 @@ def create(request: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
-@router.get("/auth/me")
+@router.get("/me")
 def get_me(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
