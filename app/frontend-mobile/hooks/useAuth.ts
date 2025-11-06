@@ -1,20 +1,26 @@
 import { useUser } from "@/contexts/UserContext";
-import * as api from "@/services/api"; // adjust import path if needed
+import * as api from "@/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function useAuth() {
   const { setUserId, setIsApproval } = useUser();
 
   const login = async (email: string, password: string) => {
-    const token = await api.login(email, password);
-    const user = await api.getCurrentUser();
+    try {
+      const token = await api.login(email, password);
+      // Store token first — getCurrentUser() will read it from AsyncStorage
+      await AsyncStorage.setItem("access_token", token);
 
-    console.log("Logged in user:", user);
+      const user = await api.getCurrentUser();
 
-    setUserId(user.id);
-    setIsApproval(user.user_type === "approver");
+      setUserId(user.id);
+      setIsApproval(user.is_approver);
 
-    return user;
+      return user;
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      throw new Error(err.message || "Invalid credentials");
+    }
   };
 
   const register = async (payload: {

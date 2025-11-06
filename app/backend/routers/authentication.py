@@ -8,6 +8,8 @@ from ..deps import get_db, get_current_user
 from ..security import hashing, token
 from ..config import settings
 
+from utils.roles import is_user_approver  # import helper
+
 # Create the base router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -51,7 +53,35 @@ def create(request: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
-@router.get("/me", response_model=schemas.UserOut)
-def me(current_user: models.User = Depends(get_current_user)):
-    # get_current_user returns the ORM user; FastAPI will serialize via UserOut
-    return current_user
+@router.get("/auth/me")
+def get_me(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    # Query user’s groups with join
+    user_groups = (
+        db.query(models.UserGroup, models.Group)
+        .join(models.Group, models.UserGroup.group_id == models.Group.id)
+        .filter(models.UserGroup.user_id == current_user.id)
+        .all()
+    )
+
+    # Extract IDs and names
+    group_ids = [g.Group.id for g in user_groups]
+    group_names = [g.Group.name for g in user_groups]
+
+    # use the centralized role helper
+    is_approver = is_user_approver(group_ids, group_names)
+
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "name": current_user.name,
+        "groups": [{"id": gid, "name": gname} for gid, gname in zip(group_ids, group_names)],
+        "is_approver": is_approver,
+    }
+
+# @router.get("/me", response_model=schemas.UserOut)
+# def me(current_user: models.User = Depends(get_current_user)):
+#     # get_current_user returns the ORM user; FastAPI will serialize via UserOut
+#     return current_user
