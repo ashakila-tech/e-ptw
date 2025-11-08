@@ -5,12 +5,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export function useAuth() {
   const { setUserId, setUserName, setIsApproval } = useUser();
 
+  // useAuth.ts
   const login = async (email: string, password: string) => {
     try {
       const token = await api.login(email, password);
-      // Store token first — getCurrentUser() will read it from AsyncStorage
       await AsyncStorage.setItem("access_token", token);
-
       const user = await api.getCurrentUser();
 
       setUserId(user.id);
@@ -20,7 +19,12 @@ export function useAuth() {
       return user;
     } catch (err: any) {
       console.error("Login failed:", err);
-      throw new Error(err.message || "Invalid credentials");
+      // Extract useful message if available
+      const message =
+        err.message?.includes("Failed to fetch user") || err.message?.includes("Invalid")
+          ? "Invalid email or password."
+          : err.message || "Login failed.";
+      throw new Error(message);
     }
   };
 
@@ -31,7 +35,16 @@ export function useAuth() {
     user_type: number;
     password: string;
   }) => {
-    return await api.registerApplicant(payload);
+    try {
+      return await api.registerApplicant(payload);
+    } catch (err: any) {
+      console.error("Register failed:", err);
+      const message =
+        err.message?.includes("already exists") || err.message?.includes("duplicate")
+          ? "An account with this email already exists."
+          : err.message || "Registration failed.";
+      throw new Error(message);
+    }
   };
 
   const logout = async () => {

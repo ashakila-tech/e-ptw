@@ -1,35 +1,36 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, Text, ScrollView, Pressable, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { usePermitTab } from "@/hooks/usePermitTab";
 import { useUser } from "@/contexts/UserContext";
 import PermitCard from "@/components/PermitCard";
 import LoadingScreen from "@/components/LoadingScreen";
 import { PermitStatus } from "@/constants/Status";
-import { useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
 
 export default function MyPermitTab() {
   const router = useRouter();
   const { isApproval } = useUser();
   const { permits, loading, refetch } = usePermitTab();
-  const [activeTab, setActiveTab] = useState("all");
-  const [refreshing, setRefreshing] = useState(false);
 
+  const [activeTab, setActiveTab] = useState<string>("all");
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  // 🔄 Refresh handler
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetch(); // use the hook’s refetch
+    await refetch();
     setRefreshing(false);
   };
 
-  // Automatically refetch when tab/screen gains focus
+  // 🔁 Auto-refresh whenever this screen gains focus
   useFocusEffect(
     useCallback(() => {
       refetch();
     }, [refetch])
   );
 
-  // Tab setup with global constants
+  // 🧭 Tabs for applicant vs approver
   const applicantTabs = [
     { key: "all", label: "All" },
     { key: PermitStatus.APPROVED, label: "Approved" },
@@ -44,23 +45,26 @@ export default function MyPermitTab() {
     { key: PermitStatus.REJECTED, label: "Rejected" },
   ];
 
+  // 🔍 Filter permits based on selected tab
   const filteredPermits = permits.filter((p) => {
     if (activeTab === "all") return true;
-
     if (isApproval) {
-      // Approver filters by their approvalData.status
+      // Approver filters by their approval status
       return p.approvalStatus === activeTab;
     } else {
-      // Applicant filters by application.status
+      // Applicant filters by permit status
       return p.status === activeTab;
     }
   });
 
-  if (loading) return <LoadingScreen message="Fetching data..." />;
+  // ⏳ Show loading screen while fetching data
+  if (loading) {
+    return <LoadingScreen message="Fetching permits..." />;
+  }
 
   return (
     <View className="flex-1 bg-secondary">
-      {/* Tabs */}
+      {/* 🧭 Tabs */}
       <View className="flex-row justify-around p-2 bg-secondary">
         {(isApproval ? approverTabs : applicantTabs).map((tab) => {
           const isActive = activeTab === tab.key;
@@ -73,7 +77,7 @@ export default function MyPermitTab() {
               }`}
             >
               <Text
-                className={`text-center ${
+                className={`text-center font-semibold ${
                   isActive ? "text-white" : "text-primary"
                 }`}
               >
@@ -84,15 +88,20 @@ export default function MyPermitTab() {
         })}
       </View>
 
-      {/* Permit list */}
+      {/* 📋 Permit List */}
       {filteredPermits.length === 0 ? (
         <View className="flex-1 justify-center items-center">
-          <Text className="text-primary">
+          <Text className="text-primary text-base">
             {isApproval ? "No approvals found" : "No permits found"}
           </Text>
         </View>
       ) : (
-        <ScrollView className="p-4">
+        <ScrollView
+          className="p-4"
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           {filteredPermits.map((permit) => (
             <PermitCard
               key={permit.id}

@@ -301,3 +301,68 @@ export async function createApprovalData(approvalData: {
 
   return JSON.parse(text);
 }
+
+// Fetch paginated data helpers
+
+export const fetchAllApprovalData = () => fetchPaginatedData("api/approval-data/");
+export const fetchAllApprovals = () => fetchPaginatedData("api/approvals/");
+export const fetchAllWorkflowData = () => fetchPaginatedData("api/workflow-data/");
+
+export async function fetchApplicationsByApplicant(applicantId: number) {
+  const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+  const res = await fetch(`${API_BASE_URL}api/applications/filter?applicant_id=${applicantId}`);
+  return res.ok ? res.json() : [];
+}
+
+export async function fetchApplicationsByWorkflowData(workflowDataId: number) {
+  const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+  const res = await fetch(`${API_BASE_URL}api/applications/filter?workflow_data_id=${workflowDataId}`);
+  return res.ok ? res.json() : [];
+}
+
+export async function fetchPaginatedData<T = any>(endpoint: string): Promise<T[]> {
+    const results: T[] = [];
+    let nextUrl: string | null = `${API_BASE_URL}${endpoint}?page=1&page_size=100`;
+
+    while (nextUrl) {
+      try {
+        const res: Response = await fetch(nextUrl);
+        if (!res.ok) {
+          console.warn(`[fetchPaginatedData] Non-OK response from ${nextUrl}:`, res.status);
+          break;
+        }
+
+        const data: unknown = await res.json();
+
+        // Case 1: Plain array (non-paginated)
+        if (Array.isArray(data)) {
+          results.push(...(data as T[]));
+          break;
+        }
+
+        // Case 2: Paginated (object with results + next)
+        if (
+          typeof data === "object" &&
+          data !== null &&
+          Array.isArray((data as any).results)
+        ) {
+          const paginated = data as { results: T[]; next: string | null };
+          results.push(...paginated.results);
+
+          nextUrl = paginated.next
+            ? paginated.next.startsWith("http")
+              ? paginated.next
+              : `${API_BASE_URL}${paginated.next}`
+            : null;
+        } else {
+          console.warn(`[fetchPaginatedData] Unknown response shape for ${nextUrl}`);
+          break;
+        }
+      } catch (err) {
+        console.error(`[fetchPaginatedData] Failed to fetch ${nextUrl}:`, err);
+        break;
+      }
+    }
+
+    return results;
+  }
