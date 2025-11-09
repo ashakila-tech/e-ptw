@@ -16,21 +16,21 @@ export default function MyPermitTab() {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  // 🔄 Refresh handler
+  // Refresh handler
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
   };
 
-  // 🔁 Auto-refresh whenever this screen gains focus
+  // Auto-refresh whenever this screen gains focus
   useFocusEffect(
     useCallback(() => {
       refetch();
     }, [refetch])
   );
 
-  // 🧭 Tabs for applicant vs approver
+  // Tabs for applicant vs approver
   const applicantTabs = [
     { key: "all", label: "All" },
     { key: PermitStatus.APPROVED, label: "Approved" },
@@ -45,7 +45,7 @@ export default function MyPermitTab() {
     { key: PermitStatus.REJECTED, label: "Rejected" },
   ];
 
-  // 🔍 Filter permits based on selected tab
+  // Filter permits based on selected tab
   const filteredPermits = permits.filter((p) => {
     if (activeTab === "all") return true;
     if (isApproval) {
@@ -57,14 +57,14 @@ export default function MyPermitTab() {
     }
   });
 
-  // ⏳ Show loading screen while fetching data
+  // Show loading screen while fetching data
   if (loading) {
     return <LoadingScreen message="Fetching permits..." />;
   }
 
   return (
     <View className="flex-1 bg-secondary">
-      {/* 🧭 Tabs */}
+      {/* Tabs */}
       <View className="flex-row justify-around p-2 bg-secondary">
         {(isApproval ? approverTabs : applicantTabs).map((tab) => {
           const isActive = activeTab === tab.key;
@@ -77,7 +77,7 @@ export default function MyPermitTab() {
               }`}
             >
               <Text
-                className={`text-center font-semibold ${
+                className={`text-center ${
                   isActive ? "text-white" : "text-primary"
                 }`}
               >
@@ -88,7 +88,7 @@ export default function MyPermitTab() {
         })}
       </View>
 
-      {/* 📋 Permit List */}
+      {/* Permit List */}
       {filteredPermits.length === 0 ? (
         <View className="flex-1 justify-center items-center">
           <Text className="text-primary text-base">

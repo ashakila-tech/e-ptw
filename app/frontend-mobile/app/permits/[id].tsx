@@ -45,11 +45,6 @@ export default function PermitDetails() {
       </View>
     );
 
-  // const myApproval = approvals?.find((a) => a.user_id === userId);
-  // const isAlreadyHandled =
-  //   myApproval?.status === PermitStatus.APPROVED ||
-  //   myApproval?.status === PermitStatus.REJECTED;
-
   // Find the current user's approval record
   const myApproval = approvals?.find(
     (a) => a.user_id === userId && a.status === PermitStatus.PENDING
@@ -66,6 +61,62 @@ export default function PermitDetails() {
     myApproval?.status === PermitStatus.REJECTED;
 
   // --- Approval Actions ---
+  // async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
+  //   try {
+  //     if (!approvals || approvals.length === 0) {
+  //       Alert.alert("Error", "No approval record found.");
+  //       return;
+  //     }
+
+      
+  //     console.log("approvalData:", approvalData);
+  //     console.log("workflowDataId:", permit.workflowDataId);
+
+  //     // Find the current approver (from approvals)
+  //     const myApproval = approvals.find(a => a.status === PermitStatus.PENDING);
+
+  //     if (!myApproval) {
+  //       Alert.alert("Error", "No pending approval found for you.");
+  //       return;
+  //     }
+
+  //     // Find the corresponding approval-data record
+  //     const myApprovalData = approvalData.find(
+  //       ad => ad.approval_id === myApproval.id &&
+  //             ad.workflow_data_id === permit.workflowDataId
+  //     );
+
+  //     if (!myApprovalData) {
+  //       Alert.alert("Error", "ApprovalData record not found for this approver.");
+  //       return;
+  //     }
+
+  //     // Use approvalData.id for PATCH
+  //     const payload = {
+  //       ...myApprovalData,
+  //       status: action,
+  //       time: new Date().toISOString(),
+  //     };
+
+  //     const res = await fetch(`${API_BASE_URL}api/approval-data/${myApprovalData.id}/`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     if (!res.ok) {
+  //       const text = await res.text();
+  //       throw new Error(text);
+  //     }
+
+  //     Alert.alert("Success", `Permit ${action.toLowerCase()} successfully!`);
+  //     refetch();
+  //   } catch (err: any) {
+  //     console.error("Approval update failed:", err);
+  //     Alert.alert("Error", err.message || "Failed to update status");
+  //   }
+  // }
+
   async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
     try {
       if (!approvals || approvals.length === 0) {
@@ -73,11 +124,10 @@ export default function PermitDetails() {
         return;
       }
 
-      
       console.log("approvalData:", approvalData);
       console.log("workflowDataId:", permit.workflowDataId);
 
-      // Find the current approver (from approvals)
+      // Find the current approver (the one who is pending)
       const myApproval = approvals.find(a => a.status === PermitStatus.PENDING);
 
       if (!myApproval) {
@@ -85,7 +135,7 @@ export default function PermitDetails() {
         return;
       }
 
-      // Find the corresponding approval-data record
+      // Find this approver's ApprovalData entry
       const myApprovalData = approvalData.find(
         ad => ad.approval_id === myApproval.id &&
               ad.workflow_data_id === permit.workflowDataId
@@ -96,7 +146,7 @@ export default function PermitDetails() {
         return;
       }
 
-      // Use approvalData.id for PATCH
+      // Update current approver’s status
       const payload = {
         ...myApprovalData,
         status: action,
@@ -112,6 +162,45 @@ export default function PermitDetails() {
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text);
+      }
+
+      // If approved, promote next approver
+      if (action === "APPROVED") {
+        const nextApproval = approvals.find(
+          a => a.level === myApproval.level + 1
+        );
+
+        if (nextApproval) {
+          const nextApprovalData = approvalData.find(
+            ad => ad.approval_id === nextApproval.id &&
+                  ad.workflow_data_id === permit.workflowDataId
+          );
+
+          if (nextApprovalData && nextApprovalData.status === "WAITING") {
+            const nextPayload = {
+              ...nextApprovalData,
+              status: "PENDING",
+              time: new Date().toISOString(),
+            };
+
+            const nextRes = await fetch(`${API_BASE_URL}api/approval-data/${nextApprovalData.id}/`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(nextPayload),
+            });
+
+            if (!nextRes.ok) {
+              console.warn("Failed to promote next approver");
+            }
+          }
+        } else {
+          console.log("Final approval completed (no next approver).");
+        }
+      }
+
+      // If rejected, you could stop workflow (optional)
+      if (action === "REJECTED") {
+        console.log("Permit rejected. Workflow will not proceed.");
       }
 
       Alert.alert("Success", `Permit ${action.toLowerCase()} successfully!`);
