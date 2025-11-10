@@ -271,6 +271,20 @@ export async function fetchApplicationsByWorkflowData(workflowDataId: number) {
   return res.ok ? res.json() : [];
 }
 
+// api.ts
+
+export async function fetchPermitOfficersByPermitType(permitTypeId: number) {
+  const res = await fetch(`${API_BASE_URL}api/permit-officers/filter?permit_type_id=${permitTypeId}`);
+  if (!res.ok) throw new Error(`Failed to fetch permit officers: ${res.statusText}`);
+  return res.json();
+}
+
+export async function fetchLocationManagersByLocation(locationId: number) {
+  const res = await fetch(`${API_BASE_URL}api/location-managers/filter?location_id=${locationId}`);
+  if (!res.ok) throw new Error(`Failed to fetch location managers: ${res.statusText}`);
+  return res.json();
+}
+
 export async function fetchPaginatedData<T = any>(endpoint: string): Promise<T[]> {
   const results: T[] = [];
   let nextUrl: string | null = `${API_BASE_URL}${endpoint}?page=1&page_size=100`;

@@ -278,7 +278,6 @@ export function useApplicationForm(existingApp: any, router: any) {
             approver_name: approverName,
             role_name: roleName,
             level,
-            time: new Date().toISOString(),
           });
         };
 
