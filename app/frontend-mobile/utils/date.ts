@@ -14,7 +14,7 @@ function formatDate(dateValue: string | number | Date | null | undefined): strin
     // dayjs accepts Date | number | string
     const d = dayjs.utc(dateValue as any).tz(dayjs.tz.guess());
     if (!d.isValid()) return "-";
-    return d.format("DD-MM-YYYY hh:mm A");
+    return d.format("DD MMM YYYY hh:mm A");
   } catch (e) {
     // be defensive — if dayjs throws for any input, return fallback
     return "-";

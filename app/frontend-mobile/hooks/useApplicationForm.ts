@@ -165,7 +165,7 @@ export function useApplicationForm(existingApp: any, router: any) {
       // -------------------- Create workflow + workflowData if not existing --------------------
       if (!workflowDataId) {
         workflow = await createWorkflow(
-          `${permitName || "Untitled"} - ${applicantName} - Workflow`,
+          `${permitName || "Untitled"} - ${userName} - Workflow`,
           companyId,
           permitType ?? PLACEHOLDER_ID
         );
@@ -173,7 +173,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         const workflowData = await createWorkflowData({
           company_id: companyId,
           workflow_id: workflow.id,
-          name: `${permitName || "Untitled"} - ${applicantName} - Workflow Data`,
+          name: `${permitName || "Untitled"} - ${userName} - Workflow Data`,
           start_time:
             status === "DRAFT"
               ? null
