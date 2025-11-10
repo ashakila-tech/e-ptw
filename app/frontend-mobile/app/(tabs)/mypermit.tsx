@@ -1,5 +1,12 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, ScrollView, Pressable, RefreshControl } from "react-native";
+import React, { useState, useCallback, useMemo } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  RefreshControl,
+  TextInput,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { usePermitTab } from "@/hooks/usePermitTab";
@@ -15,6 +22,8 @@ export default function MyPermitTab() {
 
   const [activeTab, setActiveTab] = useState<string>("all");
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [search, setSearch] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   // Refresh handler
   const onRefresh = async () => {
@@ -45,19 +54,27 @@ export default function MyPermitTab() {
     { key: PermitStatus.REJECTED, label: "Rejected" },
   ];
 
-  // Filter permits based on selected tab
-  const filteredPermits = permits.filter((p) => {
-    if (activeTab === "all") return true;
-    if (isApproval) {
-      // Approver filters by their approval status
-      return p.approvalStatus === activeTab;
-    } else {
-      // Applicant filters by permit status
-      return p.status === activeTab;
-    }
-  });
+  // Filter + search + sort
+  const filteredPermits = useMemo(() => {
+    let list = permits.filter((p) => {
+      if (activeTab === "all") return true;
+      return isApproval ? p.approvalStatus === activeTab : p.status === activeTab;
+    });
 
-  // Show loading screen while fetching data
+    // Apply search filter
+    if (search.trim()) {
+      const term = search.toLowerCase();
+      list = list.filter((p) => (p.name || "").toLowerCase().includes(term));
+    }
+
+    // Apply ascending/descending sort
+    if (sortOrder === "desc") {
+      list = [...list].reverse();
+    }
+
+    return list;
+  }, [permits, activeTab, search, sortOrder, isApproval]);
+
   if (loading) {
     return <LoadingScreen message="Fetching permits..." />;
   }
@@ -65,7 +82,7 @@ export default function MyPermitTab() {
   return (
     <View className="flex-1 bg-secondary">
       {/* Tabs */}
-      <View className="flex-row justify-around p-2 bg-secondary">
+      <View className="flex-row justify-around p-2 bg-white">
         {(isApproval ? approverTabs : applicantTabs).map((tab) => {
           const isActive = activeTab === tab.key;
           return (
@@ -88,6 +105,26 @@ export default function MyPermitTab() {
         })}
       </View>
 
+      {/* Search + Sort Controls */}
+      <View className="flex-row items-center justify-between px-4 py-2 bg-white">
+        <TextInput
+          placeholder="Search permits..."
+          value={search}
+          onChangeText={setSearch}
+          className="flex-1 bg-gray-100 p-2 rounded-lg mr-2 text-primary"
+        />
+        <Pressable
+          onPress={() =>
+            setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+          }
+          className="bg-primary px-3 py-2 rounded-lg"
+        >
+          <Text className="text-white font-medium">
+            {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
+          </Text>
+        </Pressable>
+      </View>
+
       {/* Permit List */}
       {filteredPermits.length === 0 ? (
         <View className="flex-1 justify-center items-center">
@@ -97,7 +134,7 @@ export default function MyPermitTab() {
         </View>
       ) : (
         <ScrollView
-          className="p-4"
+          contentContainerStyle={{ padding: 16, gap: 16 }} // Use this padding otherwise ScrollView gets cut off
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -106,6 +143,7 @@ export default function MyPermitTab() {
             <PermitCard
               key={permit.id}
               {...permit}
+              isApproval={isApproval}
               onEdit={() =>
                 router.push({
                   pathname: "/permits/form",

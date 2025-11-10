@@ -6,11 +6,13 @@ import { Link } from "expo-router";
 import { formatDate } from "@/utils/date";
 import { getStatusClass } from "@/utils/class";
 import PermitData from "@/interfaces/interfaces";
-import { useDeletePermit } from "@/hooks/useDeletePermit"; // ✅ import hook
+import { useDeletePermit } from "@/hooks/useDeletePermit"; // import hook
 
 type PermitCardProps = Partial<PermitData> & {
   onEdit?: () => void;
-  onDeleted?: () => void; // ✅ new callback to refresh list after delete
+  onDeleted?: () => void; // new callback to refresh list after delete
+  isApproval?: boolean;
+  latestApprovalStatus?: string;
 };
 
 const ICON_COLOR_PRIMARY = "#535252";
@@ -26,18 +28,21 @@ export default function PermitCard({
   createdTime,
   workStartTime,
   workEndTime,
+  isApproval,
+  latestApprovalStatus,
   onEdit,
-  onDeleted, // ✅ refresh callback
+  onDeleted, // refresh callback
 }: PermitCardProps) {
   const statusKey = (status ?? "").toString().toUpperCase();
-  const { deletePermit } = useDeletePermit(onDeleted); // ✅ use hook
+  const { deletePermit } = useDeletePermit(onDeleted); // use hook
 
   return (
-    <View className="bg-white rounded-lg w-full p-4 mb-4 shadow-sm">
+    <View className="bg-white rounded-lg w-full p-4 shadow-sm">
       {/* Header: status + actions */}
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-primary text-lg">
-          Status: <Text className={getStatusClass(status)}>{status}</Text>
+          Status: <Text className={getStatusClass(status)}>{status}</Text> | 
+                  <Text className={getStatusClass(latestApprovalStatus)}> {latestApprovalStatus}</Text>
         </Text>
 
         <View className="flex-row items-center">
@@ -121,8 +126,14 @@ export default function PermitCard({
           <Text className="text-primary font-bold">{formatDate(createdTime)}</Text>
         </View>
         <View className="w-1/2 pl-2">
-          <Text className="text-primary">Approval Status:</Text>
-          <Text className={getStatusClass(approvalStatus)}>{approvalStatus}</Text>
+          {isApproval && approvalStatus ? (
+            <>
+              <Text className="text-primary">My Approval:</Text>
+              <Text className={getStatusClass(approvalStatus)}>{approvalStatus}</Text>
+            </>
+          ) : (
+            <Text className="text-primary"></Text>
+          )}
         </View>
       </View>
     </View>
