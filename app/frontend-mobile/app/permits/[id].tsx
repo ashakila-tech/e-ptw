@@ -17,15 +17,6 @@ export default function PermitDetails() {
   const { permit, approvals, approvalData, loading, error, refetch } = usePermitDetails(id as string);
   const { userId, isApproval } = useUser();
 
-  console.log(
-    "approvalData:",
-    approvalData.map(d => ({
-      id: d.id,
-      approval_id: d.approval_id,
-      status: d.status,
-    }))
-  );
-
   if (loading) return <LoadingScreen message="Fetching data..." />;
 
   if (error)
@@ -50,8 +41,6 @@ export default function PermitDetails() {
     (a) => a.user_id === userId && a.status === PermitStatus.PENDING
   );
 
-  console.log("myApproval:", myApproval);
-
   // Only show the buttons if the logged-in user has a pending approval
   const canTakeAction = isApproval && myApproval;
 
@@ -60,72 +49,12 @@ export default function PermitDetails() {
     myApproval?.status === PermitStatus.APPROVED ||
     myApproval?.status === PermitStatus.REJECTED;
 
-  // --- Approval Actions ---
-  // async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
-  //   try {
-  //     if (!approvals || approvals.length === 0) {
-  //       Alert.alert("Error", "No approval record found.");
-  //       return;
-  //     }
-
-      
-  //     console.log("approvalData:", approvalData);
-  //     console.log("workflowDataId:", permit.workflowDataId);
-
-  //     // Find the current approver (from approvals)
-  //     const myApproval = approvals.find(a => a.status === PermitStatus.PENDING);
-
-  //     if (!myApproval) {
-  //       Alert.alert("Error", "No pending approval found for you.");
-  //       return;
-  //     }
-
-  //     // Find the corresponding approval-data record
-  //     const myApprovalData = approvalData.find(
-  //       ad => ad.approval_id === myApproval.id &&
-  //             ad.workflow_data_id === permit.workflowDataId
-  //     );
-
-  //     if (!myApprovalData) {
-  //       Alert.alert("Error", "ApprovalData record not found for this approver.");
-  //       return;
-  //     }
-
-  //     // Use approvalData.id for PATCH
-  //     const payload = {
-  //       ...myApprovalData,
-  //       status: action,
-  //       time: new Date().toISOString(),
-  //     };
-
-  //     const res = await fetch(`${API_BASE_URL}api/approval-data/${myApprovalData.id}/`, {
-  //       method: "PUT",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify(payload),
-  //     });
-
-  //     if (!res.ok) {
-  //       const text = await res.text();
-  //       throw new Error(text);
-  //     }
-
-  //     Alert.alert("Success", `Permit ${action.toLowerCase()} successfully!`);
-  //     refetch();
-  //   } catch (err: any) {
-  //     console.error("Approval update failed:", err);
-  //     Alert.alert("Error", err.message || "Failed to update status");
-  //   }
-  // }
-
   async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
     try {
       if (!approvals || approvals.length === 0) {
         Alert.alert("Error", "No approval record found.");
         return;
       }
-
-      console.log("approvalData:", approvalData);
-      console.log("workflowDataId:", permit.workflowDataId);
 
       // Find the current approver (the one who is pending)
       const myApproval = approvals.find(a => a.status === PermitStatus.PENDING);
@@ -198,7 +127,7 @@ export default function PermitDetails() {
         }
       }
 
-      // If rejected, you could stop workflow (optional)
+      // Stop the workflow if rejected
       if (action === "REJECTED") {
         console.log("Permit rejected. Workflow will not proceed.");
       }
@@ -229,7 +158,7 @@ export default function PermitDetails() {
           title: "Permit Details",
           headerTitleAlign: "left",
           headerShown: true,
-          headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+          headerTitleStyle: { fontWeight: "bold", fontSize: 18},
         }}
       />
 

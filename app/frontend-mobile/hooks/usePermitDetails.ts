@@ -51,7 +51,7 @@ export function usePermitDetails(id?: string) {
           assignerRes ? assignerRes.json() : null,
         ]);
 
-      // --- Approvals ---
+      // Approvals
       let approvalsList: any[] = [];
 
       if (workflowData?.workflow_id && workflowData?.id) {
@@ -60,8 +60,6 @@ export function usePermitDetails(id?: string) {
           { cache: "no-store" }
         );
 
-        console.log("workflowData.id:", workflowData?.id);
-
         const approvalDataRes = await fetch(
           `${API_BASE_URL}api/approval-data/filter?workflow_data_id=${workflowData.id}`,
           { cache: "no-store" }
@@ -69,8 +67,6 @@ export function usePermitDetails(id?: string) {
 
         const approvalsRaw = approvalsRes.ok ? await approvalsRes.json() : [];
         const approvalDataFetched = approvalDataRes.ok ? await approvalDataRes.json() : [];
-
-        console.log("approvalData checkpoint 1:", approvalDataFetched);
 
         approvalsList = approvalsRaw.map((a: any) => {
           const match = approvalDataFetched.find(
@@ -101,10 +97,7 @@ export function usePermitDetails(id?: string) {
           }));
         }
 
-        // ✅ This now updates the hook's React state properly
         setApprovalData(approvalDataFetched);
-
-        console.log("approvalData checkpoint 2:", approvalDataFetched);
       }
 
       // Enrich user names
@@ -158,9 +151,6 @@ export function usePermitDetails(id?: string) {
       });
 
       setApprovals(enrichedApprovals);
-      // setApprovalData(approvalData);
-
-      // console.log("approvalData checkpoint 2:", approvalData);
     } catch (err: any) {
       console.error("Error fetching permit details:", err);
       setError(err.message || "Failed to fetch permit details");

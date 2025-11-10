@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import os, shutil, mimetypes
+from datetime import datetime
 
 from ._crud_factory import make_crud_router
 from .. import models, schemas
@@ -39,9 +40,49 @@ def upload_document(
     with open(path, "wb") as buf:
         shutil.copyfileobj(file.file, buf)
 
-    doc = models.Document(company_id=company_id, name=name, path=path)
-    db.add(doc); db.commit(); db.refresh(doc)
+    # Set server time
+    doc = models.Document(
+        company_id=company_id,
+        name=name,
+        path=path,
+        time=datetime.utcnow()   # store current UTC time
+    )
+
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
     return doc
+
+# @router.post("/upload", response_model=schemas.DocumentOut)
+# def upload_document(
+#     company_id: int,
+#     name: str,
+#     file: UploadFile = File(...),
+#     db: Session = Depends(get_db),
+# ):
+#     """
+#     Upload a document and store it in the server.
+#     """
+#     allowed = {
+#         "application/pdf",
+#         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+#         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+#         "image/jpeg",
+#         "image/png",
+#     }
+#     if file.content_type not in allowed:
+#         raise HTTPException(400, detail=f"Unsupported file type: {file.content_type}")
+
+#     os.makedirs(UPLOAD_DIR, exist_ok=True)
+#     safe_name = file.filename.replace("/", "_").replace("\\", "_")
+#     path = os.path.join(UPLOAD_DIR, safe_name)
+
+#     with open(path, "wb") as buf:
+#         shutil.copyfileobj(file.file, buf)
+
+#     doc = models.Document(company_id=company_id, name=name, path=path)
+#     db.add(doc); db.commit(); db.refresh(doc)
+#     return doc
 
 @router.get("/{doc_id}/download")
 def download_document(doc_id: int, db: Session = Depends(get_db)):

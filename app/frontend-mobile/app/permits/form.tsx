@@ -24,6 +24,14 @@ export default function ApplicationForm() {
 
   const [formError, setFormError] = useState<string | null>(null);
 
+  const formatDate = (date: Date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   // Validation
   useEffect(() => {
     if (!permitName.trim()) setFormError("Permit name is required.");
@@ -103,7 +111,7 @@ export default function ApplicationForm() {
 
       {/* Start / End Date */}
       <Text className="text-base text-gray-700 mt-4 mb-2">Start Date and Time</Text>
-      <DatePickerField value={startTime} onChange={setStartTime} />
+      <DatePickerField value={startTime} onChange={setStartTime}/>
 
       <Text className="text-base text-gray-700 mt-4 mb-2">End Date and Time</Text>
       <DatePickerField value={endTime} onChange={setEndTime} />

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List
+from datetime import datetime
 
 from ._crud_factory import make_crud_router
 from .. import models, schemas
@@ -18,7 +19,12 @@ def create_application(
     """
     Create a new application without authentication.
     """
-    obj = models.Application(**payload.model_dump())
+    # Override timestamps with server UTC time
+    payload_dict = payload.model_dump()
+    payload_dict["created_time"] = datetime.utcnow()
+    payload_dict["updated_time"] = None  # new record
+
+    obj = models.Application(**payload_dict)
     db.add(obj)
     db.commit()
     db.refresh(obj)
@@ -44,9 +50,12 @@ def update_application(
     if not doc:
         raise HTTPException(status_code=400, detail="Invalid document_id")
 
+    # Update fields
     for k, v in payload.model_dump().items():
         setattr(obj, k, v)
+
     obj.updated_by = me.id
+    obj.updated_time = datetime.utcnow()  # server timestamp
     db.commit()
     db.refresh(obj)
     return obj

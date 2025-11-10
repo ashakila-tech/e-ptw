@@ -12,6 +12,13 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setEmailError(emailRegex.test(text) ? "" : "Please insert a proper email address");
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -31,22 +38,27 @@ export default function Login() {
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-white px-6">
-      <Text className="text-3xl font-bold mb-8 text-primary">
+    <View className="flex-1 justify-center bg-white px-6">
+      <Text className="text-3xl font-bold mb-8 text-primary text-center">
         Enter Your Credentials
       </Text>
 
       {/* Email Field */}
+      <View className="flex-row justify-between items-center px-4 py-3">
+        <Text className="text-primary font-semibold">Email address</Text>
+        {emailError ? <Text className="text-red-500 text-sm">{emailError}</Text> : null}
+      </View>
       <TextInput
         className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 text-base"
         placeholder="Email"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={handleEmailChange}
         keyboardType="email-address"
         autoCapitalize="none"
       />
 
       {/* Password Field with Toggle */}
+      <Text className="text-primary font-semibold px-4 py-3">Password</Text>
       <View className="w-full relative mb-6">
         <TextInput
           className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base pr-12"
@@ -82,7 +94,7 @@ export default function Login() {
 
       {/* Register Link */}
       <Pressable onPress={() => router.push("/register")}>
-        <Text className="text-primary text-base">
+        <Text className="text-primary text-center text-base">
           Don't have an account? Register
         </Text>
       </Pressable>

@@ -124,50 +124,6 @@ export async function fetchUserGroups() {
   return res.json();
 }
 
-export async function fetchJobAssigners() {
-  try {
-    const usersRes = await fetch(`${API_BASE_URL}api/users`);
-    const groupsRes = await fetch(`${API_BASE_URL}api/groups`);
-    const userGroupsRes = await fetch(`${API_BASE_URL}api/user-groups`);
-
-    if (!usersRes.ok) console.error("Users fetch failed:", usersRes.status);
-    if (!groupsRes.ok) console.error("Groups fetch failed:", groupsRes.status);
-    if (!userGroupsRes.ok) console.error("UserGroups fetch failed:", userGroupsRes.status);
-
-    if (!usersRes.ok || !groupsRes.ok || !userGroupsRes.ok) {
-      throw new Error("Failed to fetch assigners data");
-    }
-
-    const users = await usersRes.json();
-    const groups = await groupsRes.json();
-    const userGroups = await userGroupsRes.json();
-
-    const managerGroupId = 3;
-    const managerUserIds = userGroups
-      .filter((ug: any) => ug.group_id === managerGroupId)
-      .map((ug: any) => ug.user_id);
-
-    const managers = users.filter((u: any) => managerUserIds.includes(u.id));
-
-    return managers.map((u: any) => ({ label: u.name, value: u.id }));
-  } catch (err) {
-    console.error("Error fetching job assigners:", err);
-    return [];
-  }
-}
-
-export async function fetchPermitOfficersByPermitType(permitTypeId: number) {
-  const res = await fetch(`${API_BASE_URL}api/permit-officers/filter?permit_type_id=${permitTypeId}`);
-  if (!res.ok) throw new Error(`Failed to fetch permit officers: ${res.statusText}`);
-  return res.json();
-};
-
-export async function fetchLocationManagersByLocation(locationId: number) {
-  const res = await fetch(`${API_BASE_URL}api/location-managers/filter?location_id=${locationId}`);
-  if (!res.ok) throw new Error(`Failed to fetch location managers: ${res.statusText}`);
-  return res.json();
-};
-
 // -------------------- Document Upload --------------------
 export async function uploadDocument(file: any, companyId: number = 1) {
   const formData = new FormData();
@@ -177,7 +133,6 @@ export async function uploadDocument(file: any, companyId: number = 1) {
     name: file.name,
   } as any);
 
-  // Attach company_id and name as query parameters instead of form data
   const query = `?company_id=${encodeURIComponent(companyId)}&name=${encodeURIComponent(file.name)}`;
 
   const res = await fetch(`${API_BASE_URL}api/documents/upload${query}`, {
@@ -196,7 +151,6 @@ export async function uploadDocument(file: any, companyId: number = 1) {
 
   return res.json();
 }
-
 
 // -------------------- Workflow --------------------
 export async function createWorkflow(name: string, company_id: number, permit_type_id: number) {
@@ -234,10 +188,13 @@ export async function saveApplication(id: number | null, payload: any, isUpdate:
   const url = id && isUpdate ? `${API_BASE_URL}api/applications/${id}` : `${API_BASE_URL}api/applications/`;
   const method = id && isUpdate ? "PUT" : "POST";
 
+  // Remove created_time / updated_time from payload
+  const { created_time, updated_time, ...cleanPayload } = payload;
+
   const res = await fetch(url, {
     method,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(cleanPayload),
   });
 
   const text = await res.text();
@@ -249,8 +206,6 @@ export async function saveApplication(id: number | null, payload: any, isUpdate:
 }
 
 // -------------------- Approvals --------------------
-
-// Create Approval
 export async function createApproval(approval: {
   company_id: number;
   workflow_id: number;
@@ -275,7 +230,6 @@ export async function createApproval(approval: {
   return JSON.parse(text);
 }
 
-// Create Approval Data
 export async function createApprovalData(approvalData: {
   company_id: number;
   approval_id: number;
@@ -283,10 +237,10 @@ export async function createApprovalData(approvalData: {
   workflow_data_id: number;
   status: PermitStatus.PENDING | PermitStatus.APPROVED | PermitStatus.REJECTED | PermitStatus.WAITING;
   approver_name: string;
-  time: string;
   role_name: string;
   level: number;
 }) {
+  // send directly, no 'time' removal needed
   const res = await fetch(`${API_BASE_URL}api/approval-data/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -302,67 +256,58 @@ export async function createApprovalData(approvalData: {
   return JSON.parse(text);
 }
 
-// Fetch paginated data helpers
-
+// -------------------- Fetch Paginated / Filtered Data --------------------
 export const fetchAllApprovalData = () => fetchPaginatedData("api/approval-data/");
 export const fetchAllApprovals = () => fetchPaginatedData("api/approvals/");
 export const fetchAllWorkflowData = () => fetchPaginatedData("api/workflow-data/");
 
 export async function fetchApplicationsByApplicant(applicantId: number) {
-  const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
   const res = await fetch(`${API_BASE_URL}api/applications/filter?applicant_id=${applicantId}`);
   return res.ok ? res.json() : [];
 }
 
 export async function fetchApplicationsByWorkflowData(workflowDataId: number) {
-  const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
   const res = await fetch(`${API_BASE_URL}api/applications/filter?workflow_data_id=${workflowDataId}`);
   return res.ok ? res.json() : [];
 }
 
 export async function fetchPaginatedData<T = any>(endpoint: string): Promise<T[]> {
-    const results: T[] = [];
-    let nextUrl: string | null = `${API_BASE_URL}${endpoint}?page=1&page_size=100`;
+  const results: T[] = [];
+  let nextUrl: string | null = `${API_BASE_URL}${endpoint}?page=1&page_size=100`;
 
-    while (nextUrl) {
-      try {
-        const res: Response = await fetch(nextUrl);
-        if (!res.ok) {
-          console.warn(`[fetchPaginatedData] Non-OK response from ${nextUrl}:`, res.status);
-          break;
-        }
-
-        const data: unknown = await res.json();
-
-        // Case 1: Plain array (non-paginated)
-        if (Array.isArray(data)) {
-          results.push(...(data as T[]));
-          break;
-        }
-
-        // Case 2: Paginated (object with results + next)
-        if (
-          typeof data === "object" &&
-          data !== null &&
-          Array.isArray((data as any).results)
-        ) {
-          const paginated = data as { results: T[]; next: string | null };
-          results.push(...paginated.results);
-
-          nextUrl = paginated.next
-            ? paginated.next.startsWith("http")
-              ? paginated.next
-              : `${API_BASE_URL}${paginated.next}`
-            : null;
-        } else {
-          console.warn(`[fetchPaginatedData] Unknown response shape for ${nextUrl}`);
-          break;
-        }
-      } catch (err) {
-        console.error(`[fetchPaginatedData] Failed to fetch ${nextUrl}:`, err);
+  while (nextUrl) {
+    try {
+      const res: Response = await fetch(nextUrl);
+      if (!res.ok) {
+        console.warn(`[fetchPaginatedData] Non-OK response from ${nextUrl}:`, res.status);
         break;
       }
-    }
 
-    return results;
+      const data: unknown = await res.json();
+
+      if (Array.isArray(data)) {
+        results.push(...(data as T[]));
+        break;
+      }
+
+      if (typeof data === "object" && data !== null && Array.isArray((data as any).results)) {
+        const paginated = data as { results: T[]; next: string | null };
+        results.push(...paginated.results);
+
+        nextUrl = paginated.next
+          ? paginated.next.startsWith("http")
+            ? paginated.next
+            : `${API_BASE_URL}${paginated.next}`
+          : null;
+      } else {
+        console.warn(`[fetchPaginatedData] Unknown response shape for ${nextUrl}`);
+        break;
+      }
+    } catch (err) {
+      console.error(`[fetchPaginatedData] Failed to fetch ${nextUrl}:`, err);
+      break;
+    }
   }
+
+  return results;
+}

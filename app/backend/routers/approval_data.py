@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional, List
+from datetime import datetime
+
 from ._crud_factory import make_crud_router
 from ..deps import get_db
 from .. import models, schemas
@@ -8,6 +10,19 @@ from .. import models, schemas
 # Create the base router
 router = APIRouter(prefix="/approval-data", tags=["Approval Data"])
 
+@router.post("/", response_model=schemas.ApprovalDataOut)
+def create_approval_data(payload: schemas.ApprovalDataIn, db: Session = Depends(get_db)):
+    """
+    Create approval data with server UTC timestamp.
+    """
+    payload_dict = payload.model_dump()
+    payload_dict["time"] = datetime.utcnow()  # override client-provided time
+
+    obj = models.ApprovalData(**payload_dict)
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    return obj
 
 # --- Custom filter endpoint ---
 @router.get("/filter", response_model=List[schemas.ApprovalDataOut])

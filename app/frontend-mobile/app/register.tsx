@@ -16,6 +16,24 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [companyId] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setEmailError(emailRegex.test(text) ? "" : "Please insert a proper email address");
+  };
+
+  const handleConfirmPasswordChange = (text: string) => {
+    setConfirmPassword(text);
+
+    if (password && text !== password) {
+      setConfirmPasswordError("Passwords do not match");
+    } else {
+      setConfirmPasswordError("");
+    }
+  };
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -55,6 +73,7 @@ export default function Register() {
         </Text>
 
         {/* Name */}
+        <Text className="text-primary font-semibold px-4 py-3">Full name</Text>
         <TextInput
           className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 text-base"
           placeholder="Full Name"
@@ -63,49 +82,64 @@ export default function Register() {
         />
 
         {/* Email */}
+        <View className="flex-row justify-between items-center px-4 py-3">
+          <Text className="text-primary font-semibold">Email address</Text>
+          {emailError ? <Text className="text-red-500 text-sm">{emailError}</Text> : null}
+        </View>
         <TextInput
           className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 text-base"
           placeholder="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={handleEmailChange}
           keyboardType="email-address"
           autoCapitalize="none"
         />
 
         {/* Password Field */}
+        <Text className="text-primary font-semibold px-4 py-3">Password</Text>
         <View className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 flex-row items-center">
           <TextInput
             className="flex-1 text-base py-0"
             placeholder="Password"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(text) => {
+              setPassword(text);
+
+              // Recheck confirm password in case user edits original password
+              if (confirmPassword && text !== confirmPassword) {
+                setConfirmPasswordError("Passwords do not match");
+              } else {
+                setConfirmPasswordError("");
+              }
+            }}
             secureTextEntry={!showPassword}
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            {showPassword ? (
-              <EyeOff size={22} color="#6b7280" />
-            ) : (
-              <Eye size={22} color="#6b7280" />
-            )}
+            {showPassword ? <EyeOff size={22} color="#6b7280" /> : <Eye size={22} color="#6b7280" />}
           </TouchableOpacity>
         </View>
 
         {/* Confirm Password Field */}
-        <View className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 flex-row items-center">
-          <TextInput
-            className="flex-1 text-base py-0"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!showConfirmPassword}
-          />
-          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-            {showConfirmPassword ? (
-              <EyeOff size={22} color="#6b7280" />
-            ) : (
-              <Eye size={22} color="#6b7280" />
-            )}
-          </TouchableOpacity>
+        <View className="mb-6">
+          <View className="flex-row justify-between items-center px-4 py-1">
+            <Text className="text-primary font-semibold">Confirm Password</Text>
+            {confirmPasswordError ? (
+              <Text className="text-red-500 text-sm">{confirmPasswordError}</Text>
+            ) : null}
+          </View>
+
+          <View className="w-full border border-gray-300 rounded-xl px-4 py-3 flex-row items-center">
+            <TextInput
+              className="flex-1 text-base py-0"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChangeText={handleConfirmPasswordChange}
+              secureTextEntry={!showConfirmPassword}
+            />
+            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              {showConfirmPassword ? <EyeOff size={22} color="#6b7280" /> : <Eye size={22} color="#6b7280" />}
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Register Button */}
