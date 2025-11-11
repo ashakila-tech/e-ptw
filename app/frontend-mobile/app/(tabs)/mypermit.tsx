@@ -57,8 +57,8 @@ export default function MyPermitTab() {
   const tabs = [
     { key: "all", label: "All" },
     { key: PermitStatus.APPROVED, label: "Approved" },
-    { key: "ACTIVE", label: "Active" },
-    { key: "COMPLETED", label: "Completed" },
+    { key: PermitStatus.ACTIVE, label: "Active" },
+    { key: PermitStatus.COMPLETED, label: "Completed" },
   ];
 
   // Filter + search + sort
@@ -102,16 +102,21 @@ export default function MyPermitTab() {
   return (
     <View className="flex-1 bg-secondary">
       {/* Tabs */}
-      <View className="flex-row justify-around p-2 bg-white">
+      <View className="flex-row justify-start p-2 bg-white flex-wrap-0">
         {tabs.map(tab => {
           const isActive = activeTab === tab.key;
           return (
             <Pressable
               key={tab.key}
               onPress={() => setActiveTab(tab.key)}
-              className={`flex-1 mx-1 px-4 py-2 rounded-lg ${isActive ? "bg-primary" : "bg-gray-300"}`}
+              className={`mx-1 px-4 py-2 rounded-lg ${isActive ? "bg-primary" : "bg-gray-300"}`}
+              style={{ maxWidth: 100 }} // limit tab width
             >
-              <Text className={`text-center ${isActive ? "text-white" : "text-primary"}`}>
+              <Text
+                className={`text-center ${isActive ? "text-white" : "text-primary"}`}
+                numberOfLines={1} // prevent wrapping
+                ellipsizeMode="tail" // show "..." if text is too long
+              >
                 {tab.label}
               </Text>
             </Pressable>

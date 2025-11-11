@@ -10,6 +10,7 @@ import {
   fetchApplicationsByWorkflowData,
 } from "@/services/api";
 import Constants from "expo-constants";
+import { PermitStatus } from "@/constants/Status";
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 const PLACEHOLDER_THRESHOLD = 3;
@@ -75,7 +76,7 @@ export function usePermitTab() {
         // Security sees all APPROVED or ACTIVE permits
         // You can create a new API endpoint or fetch all and filter locally
         const allPermits = await fetchApplicationsByWorkflowData(0); // or fetch all permits
-        permitsData = allPermits.filter((p: PermitData) => ["APPROVED", "ACTIVE"].includes(p.status));
+        permitsData = allPermits.filter((p: PermitData) => [PermitStatus.APPROVED, PermitStatus.ACTIVE, PermitStatus.COMPLETED].includes(p.status as PermitStatus));
       } else if (!isApproval) {
         // Applicant — fetch their own permits
         permitsData = await fetchApplicationsByApplicant(numericUserId);

@@ -41,15 +41,15 @@ export default function PermitCard({
       {/* Header: status + actions */}
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-primary text-lg">
-          Status: <Text className={getStatusClass(status)}>{status}</Text> | 
-                  <Text className={getStatusClass(latestApprovalStatus)}> {latestApprovalStatus}</Text>
+          Status: <Text className={getStatusClass(status)}>{status}</Text>
+                  {/* <Text className={getStatusClass(latestApprovalStatus)}> {latestApprovalStatus}</Text> */}
         </Text>
 
         <View className="flex-row items-center">
           {statusKey === "DRAFT" && (
             <>
               <TouchableOpacity
-                onPress={() => deletePermit(id, status)} // ✅ use hook here
+                onPress={() => deletePermit(id, status)} // use hook here
                 className="flex-row items-center mr-4"
               >
                 <Text className="text-red-600 mr-2">Delete</Text>

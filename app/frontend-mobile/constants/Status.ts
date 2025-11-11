@@ -5,6 +5,8 @@ export enum PermitStatus {
   PENDING = "PENDING",
   WAITING = "WAITING",
   REJECTED = "REJECTED",
+  ACTIVE = "ACTIVE",
+  COMPLETED = "COMPLETED",
 }
 
 export const PERMIT_STATUS_LIST = Object.values(PermitStatus);

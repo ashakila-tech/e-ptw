@@ -335,10 +335,10 @@ export default function PermitDetails() {
           <View className="my-6">
             <Pressable
               onPress={handleSecurityConfirm}
-              className="py-3 rounded-xl items-center bg-blue-600"
+              className="py-3 rounded-xl items-center bg-primary"
             >
-              <Text className="text-white font-semibold text-base">
-                Confirm Security
+              <Text className="text-white font-medium">
+                {permit.status === PermitStatus.ACTIVE ? "Confirm Exit" : "Confirm Entry"}
               </Text>
             </Pressable>
           </View>
