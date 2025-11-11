@@ -104,8 +104,9 @@ def get_me(
     group_ids = [g.Group.id for g in user_groups]
     group_names = [g.Group.name for g in user_groups]
 
-    # use the centralized role helper
+    # Centralized role helper
     is_approver = roles.is_user_approver(group_ids, group_names)
+    is_security = roles.is_user_security(group_ids, group_names)
 
     return {
         "id": current_user.id,
@@ -113,6 +114,7 @@ def get_me(
         "name": current_user.name,
         "groups": [{"id": gid, "name": gname} for gid, gname in zip(group_ids, group_names)],
         "is_approver": is_approver,
+        "is_security": is_security,
     }
 
 # @router.get("/me", response_model=schemas.UserOut)

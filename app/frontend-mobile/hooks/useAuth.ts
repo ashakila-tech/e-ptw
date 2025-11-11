@@ -3,7 +3,7 @@ import * as api from "@/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function useAuth() {
-  const { setUserId, setUserName, setIsApproval } = useUser();
+  const { setUserId, setUserName, setIsApproval, setIsSecurity } = useUser();
 
   // useAuth.ts
   const login = async (email: string, password: string) => {
@@ -15,6 +15,7 @@ export function useAuth() {
       setUserId(user.id);
       setUserName(user.name);
       setIsApproval(user.is_approver);
+      setIsSecurity(user.is_security);
 
       return user;
     } catch (err: any) {

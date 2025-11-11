@@ -5,11 +5,14 @@ Central place to manage role/group-based permissions.
 Later, this can evolve into a DB-driven or configuration-based role manager.
 """
 
-# Group IDs that count as approvers
+# --- APPROVER ROLES ---
 APPROVER_GROUP_IDS = {5, 6, 7}  # Supervisor, Safety Officer, Site Manager
-
-# Optional redundancy: names that count as approvers
 # APPROVER_GROUP_NAMES = {"Supervisor", "Safety Officer", "Site Manager"}
+
+# --- SECURITY ROLES ---
+SECURITY_GROUP_IDS = {8}  # Area Owner
+# SECURITY_GROUP_NAMES = {"Area Owner"}
+
 
 
 def is_user_approver(group_ids: list[int], group_names: list[str]) -> bool:
@@ -18,6 +21,15 @@ def is_user_approver(group_ids: list[int], group_names: list[str]) -> bool:
     """
     return any(
         gid in APPROVER_GROUP_IDS
+        for gid, gname in zip(group_ids, group_names)
+    )
+
+def is_user_security(group_ids: list[int], group_names: list[str]) -> bool:
+    """
+    Determine if a user should be considered a security (area owner) based on their group IDs or names.
+    """
+    return any(
+        gid in SECURITY_GROUP_IDS
         for gid, gname in zip(group_ids, group_names)
     )
 
