@@ -15,7 +15,7 @@ const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
   const { permit, approvals, approvalData, loading, error, refetch } = usePermitDetails(id as string);
-  const { userId, isApproval } = useUser();
+  const { userId, isApproval, isSecurity } = useUser();
 
   if (loading) return <LoadingScreen message="Fetching data..." />;
 
@@ -36,18 +36,44 @@ export default function PermitDetails() {
       </View>
     );
 
-  // Find the current user's approval record
+  // Find current user's approval record
   const myApproval = approvals?.find(
     (a) => a.user_id === userId && a.status === PermitStatus.PENDING
   );
 
-  // Only show the buttons if the logged-in user has a pending approval
+  // Approver logic
   const canTakeAction = isApproval && myApproval;
-
-  // Check if this approval has already been handled (approved/rejected)
   const isAlreadyHandled =
     myApproval?.status === PermitStatus.APPROVED ||
     myApproval?.status === PermitStatus.REJECTED;
+
+  // Security Logic
+  // const canConfirmSecurity = isSecurity && permit.status === PermitStatus.APPROVED;
+  const canConfirmSecurity = isSecurity;
+
+  async function handleSecurityConfirm() {
+    try {
+      const res = await fetch(`${API_BASE_URL}api/permits/${permit.id}/confirm-security/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confirmed_by: userId,
+          confirmed_at: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+
+      Alert.alert("Success", "Security confirmed successfully!");
+      refetch();
+    } catch (err: any) {
+      console.error("Security confirmation failed:", err);
+      Alert.alert("Error", err.message || "Failed to confirm security.");
+    }
+  }
 
   async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
     try {
@@ -56,15 +82,12 @@ export default function PermitDetails() {
         return;
       }
 
-      // Find the current approver (the one who is pending)
       const myApproval = approvals.find(a => a.status === PermitStatus.PENDING);
-
       if (!myApproval) {
         Alert.alert("Error", "No pending approval found for you.");
         return;
       }
 
-      // Find this approver's ApprovalData entry
       const myApprovalData = approvalData.find(
         ad => ad.approval_id === myApproval.id &&
               ad.workflow_data_id === permit.workflowDataId
@@ -75,7 +98,7 @@ export default function PermitDetails() {
         return;
       }
 
-      // Update current approver’s status
+      // Update current approver's status
       const payload = {
         ...myApprovalData,
         status: action,
@@ -93,43 +116,27 @@ export default function PermitDetails() {
         throw new Error(text);
       }
 
-      // If approved, promote next approver
+      // Promote next approver if approved
       if (action === "APPROVED") {
-        const nextApproval = approvals.find(
-          a => a.level === myApproval.level + 1
-        );
-
+        const nextApproval = approvals.find(a => a.level === myApproval.level + 1);
         if (nextApproval) {
           const nextApprovalData = approvalData.find(
             ad => ad.approval_id === nextApproval.id &&
                   ad.workflow_data_id === permit.workflowDataId
           );
-
           if (nextApprovalData && nextApprovalData.status === "WAITING") {
             const nextPayload = {
               ...nextApprovalData,
               status: "PENDING",
               time: new Date().toISOString(),
             };
-
-            const nextRes = await fetch(`${API_BASE_URL}api/approval-data/${nextApprovalData.id}/`, {
+            await fetch(`${API_BASE_URL}api/approval-data/${nextApprovalData.id}/`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(nextPayload),
             });
-
-            if (!nextRes.ok) {
-              console.warn("Failed to promote next approver");
-            }
           }
-        } else {
-          console.log("Final approval completed (no next approver).");
         }
-      }
-
-      // Stop the workflow if rejected
-      if (action === "REJECTED") {
-        console.log("Permit rejected. Workflow will not proceed.");
       }
 
       Alert.alert("Success", `Permit ${action.toLowerCase()} successfully!`);
@@ -318,8 +325,21 @@ export default function PermitDetails() {
               </Text>
             </Pressable>
           </View>
-          
           </>
+        )}
+
+        {/* Security button */}
+        {canConfirmSecurity && (
+          <View className="my-6">
+            <Pressable
+              onPress={null} // change null to handleSecurityConfirm later
+              className="py-3 rounded-xl items-center bg-blue-600"
+            >
+              <Text className="text-white font-semibold text-base">
+                Confirm Security
+              </Text>
+            </Pressable>
+          </View>
         )}
         <View className="p-5" />
       </ScrollView>
