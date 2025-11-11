@@ -93,6 +93,49 @@ def filter_applications(
 
     return query.all()
 
+@router.post("/{app_id}/confirm-security")
+def confirm_security_action(
+    app_id: int,
+    db: Session = Depends(get_db),
+    me: models.User = Depends(get_current_user),
+):
+    """
+    Security confirmation endpoint.
+    - First press = mark as ACTIVE (entry)
+    - Second press = mark as COMPLETED (exit)
+    """
+
+    # Fetch user and check if they are in 'Area Owner' group
+    user_groups = [g.Group.name for g in me.groups]
+    if "Area Owner" not in user_groups:
+        raise HTTPException(status_code=403, detail="Only security can perform this action.")
+
+    # Fetch the application
+    app = db.get(models.Application, app_id)
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found.")
+
+    # Toggle the status based on current state
+    if app.status == "SUBMITTED":
+        app.status = "ACTIVE"
+        app.updated_time = datetime.utcnow()
+        message = "Permit activated successfully (entry confirmed)."
+
+    elif app.status == "ACTIVE":
+        app.status = "COMPLETED"
+        app.updated_time = datetime.utcnow()
+        message = "Permit completed successfully (exit confirmed)."
+
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot confirm security action for status: {app.status}"
+        )
+
+    db.commit()
+    db.refresh(app)
+    return {"message": message, "status": app.status}
+
 # Attach the CRUD routes, GET/POST/PUT/DELETE
 crud_router = make_crud_router(
     Model=models.Application,

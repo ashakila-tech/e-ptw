@@ -61,6 +61,7 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
 
     # Only run logic when current approval is set to APPROVED
     if new_status == "APPROVED" and obj.status != "APPROVED":
+        # Promote next level if exists
         next_level = db.query(models.ApprovalData).filter(
             models.ApprovalData.workflow_data_id == obj.workflow_data_id,
             models.ApprovalData.level == obj.level + 1
@@ -69,14 +70,22 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
         if next_level and next_level.status == "WAITING":
             next_level.status = "PENDING"
 
-        # Optional: if this is the last level, mark something as fully approved
-        last_level = db.query(models.ApprovalData).filter(
+        # Check if all approvals for this workflow are approved
+        all_approval_data = db.query(models.ApprovalData).filter(
             models.ApprovalData.workflow_data_id == obj.workflow_data_id
-        ).order_by(models.ApprovalData.level.desc()).first()
+        ).all()
 
-        if last_level and obj.id == last_level.id:
-            print(f"Workflow {obj.workflow_data_id} fully approved!")
-            # Optionally: mark workflow or document as APPROVED here if needed
+        if all(a.status == "APPROVED" for a in all_approval_data):
+            # Update the corresponding Application status to APPROVED
+            application = db.query(models.Application).filter(
+                models.Application.workflow_data_id == obj.workflow_data_id
+            ).first()
+
+            if application:
+                application.status = "APPROVED"
+                application.updated_time = datetime.utcnow()
+                db.commit()
+                print(f"Application {application.id} fully approved!")
 
     return data
 

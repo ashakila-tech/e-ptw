@@ -53,25 +53,22 @@ export default function PermitDetails() {
 
   async function handleSecurityConfirm() {
     try {
-      const res = await fetch(`${API_BASE_URL}api/permits/${permit.id}/confirm-security/`, {
+      const res = await fetch(`${API_BASE_URL}applications/${permit.id}/confirm-security`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          confirmed_by: userId,
-          confirmed_at: new Date().toISOString(),
-        }),
+        headers: {
+          // Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text);
-      }
+      const data = await res.json();
 
-      Alert.alert("Success", "Security confirmed successfully!");
+      if (!res.ok) throw new Error(data.detail || "Failed to update permit status");
+
+      Alert.alert("Success", data.message);
       refetch();
     } catch (err: any) {
-      console.error("Security confirmation failed:", err);
-      Alert.alert("Error", err.message || "Failed to confirm security.");
+      Alert.alert("Error", err.message || "Security confirmation failed");
     }
   }
 
@@ -332,7 +329,7 @@ export default function PermitDetails() {
         {canConfirmSecurity && (
           <View className="my-6">
             <Pressable
-              onPress={null} // change null to handleSecurityConfirm later
+              onPress={handleSecurityConfirm}
               className="py-3 rounded-xl items-center bg-blue-600"
             >
               <Text className="text-white font-semibold text-base">
