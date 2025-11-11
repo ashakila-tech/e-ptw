@@ -56,14 +56,25 @@ export default function PermitDetails() {
       const res = await fetch(`${API_BASE_URL}api/applications/${permit.id}/confirm-security`, {
         method: "POST",
         headers: {
-          // Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
 
-      const data = await res.json();
+      // Check if the response is JSON
+      const contentType = res.headers.get("content-type") || "";
+      let data: any = {};
 
-      if (!res.ok) throw new Error(data.detail || "Failed to update permit status");
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        // fallback to text if not JSON
+        const text = await res.text();
+        data = { message: text };
+      }
+
+      if (!res.ok) {
+        throw new Error(data.message || `Failed to update permit status`);
+      }
 
       Alert.alert("Success", data.message);
       refetch();
