@@ -60,21 +60,15 @@ export default function PermitDetails() {
         },
       });
 
-      // Check if the response is JSON
-      const contentType = res.headers.get("content-type") || "";
       let data: any = {};
-
-      if (contentType.includes("application/json")) {
+      try {
         data = await res.json();
-      } else {
-        // fallback to text if not JSON
-        const text = await res.text();
-        data = { message: text };
+      } catch {
+        // Response is not JSON
+        data = { message: await res.text() };
       }
 
-      if (!res.ok) {
-        throw new Error(data.message || `Failed to update permit status`);
-      }
+      if (!res.ok) throw new Error(data.detail || data.message || "Failed to update permit status");
 
       Alert.alert("Success", data.message);
       refetch();

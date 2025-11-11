@@ -107,7 +107,7 @@ def confirm_security_action(
     if not app:
         raise HTTPException(status_code=404, detail="Application not found.")
 
-    if app.status == "SUBMITTED":
+    if app.status == "APPROVED":
         app.status = "ACTIVE"
         app.updated_time = datetime.utcnow()
         message = "Permit activated successfully (entry confirmed)."
