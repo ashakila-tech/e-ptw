@@ -17,7 +17,7 @@ import { PermitStatus } from "@/constants/Status";
 
 export default function MyPermitTab() {
   const router = useRouter();
-  const { isApproval } = useUser();
+  const { isApproval, isSecurity } = useUser();
   const { permits, loading, refetch } = usePermitTab();
 
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -54,26 +54,46 @@ export default function MyPermitTab() {
     { key: PermitStatus.REJECTED, label: "Rejected" },
   ];
 
+  const tabs = [
+    { key: "all", label: "All" },
+    { key: PermitStatus.APPROVED, label: "Approved" },
+    { key: "ACTIVE", label: "Active" },
+    { key: "COMPLETED", label: "Completed" },
+  ];
+
   // Filter + search + sort
   const filteredPermits = useMemo(() => {
-    let list = permits.filter((p) => {
-      if (activeTab === "all") return true;
-      return isApproval ? p.approvalStatus === activeTab : p.status === activeTab;
-    });
+    let list: typeof permits = [];
 
-    // Apply search filter
+    if (isSecurity) {
+      // Security sees only APPROVED, ACTIVE, COMPLETED
+      list = permits.filter(p =>
+        ["APPROVED", "ACTIVE", "COMPLETED"].includes(p.status)
+      );
+    } else if (isApproval) {
+      // Approvers see all
+      list = permits;
+    } else {
+      // Applicants see all their own
+      list = permits;
+    }
+
+    // Filter by active tab
+    if (activeTab !== "all") {
+      list = list.filter(p => p.status === activeTab);
+    }
+
+    // Search filter
     if (search.trim()) {
       const term = search.toLowerCase();
-      list = list.filter((p) => (p.name || "").toLowerCase().includes(term));
+      list = list.filter(p => (p.name || "").toLowerCase().includes(term));
     }
 
-    // Apply ascending/descending sort
-    if (sortOrder === "desc") {
-      list = [...list].reverse();
-    }
+    // Sort
+    if (sortOrder === "desc") list = [...list].reverse();
 
     return list;
-  }, [permits, activeTab, search, sortOrder, isApproval]);
+  }, [permits, activeTab, search, sortOrder, isApproval, isSecurity]);
 
   if (loading) {
     return <LoadingScreen message="Fetching permits..." />;
@@ -83,21 +103,15 @@ export default function MyPermitTab() {
     <View className="flex-1 bg-secondary">
       {/* Tabs */}
       <View className="flex-row justify-around p-2 bg-white">
-        {(isApproval ? approverTabs : applicantTabs).map((tab) => {
+        {tabs.map(tab => {
           const isActive = activeTab === tab.key;
           return (
             <Pressable
               key={tab.key}
               onPress={() => setActiveTab(tab.key)}
-              className={`flex-1 mx-1 px-4 py-2 rounded-lg ${
-                isActive ? "bg-primary" : "bg-gray-300"
-              }`}
+              className={`flex-1 mx-1 px-4 py-2 rounded-lg ${isActive ? "bg-primary" : "bg-gray-300"}`}
             >
-              <Text
-                className={`text-center ${
-                  isActive ? "text-white" : "text-primary"
-                }`}
-              >
+              <Text className={`text-center ${isActive ? "text-white" : "text-primary"}`}>
                 {tab.label}
               </Text>
             </Pressable>

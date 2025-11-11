@@ -53,7 +53,7 @@ export default function PermitDetails() {
 
   async function handleSecurityConfirm() {
     try {
-      const res = await fetch(`${API_BASE_URL}applications/${permit.id}/confirm-security`, {
+      const res = await fetch(`${API_BASE_URL}api/applications/${permit.id}/confirm-security`, {
         method: "POST",
         headers: {
           // Authorization: `Bearer ${token}`,

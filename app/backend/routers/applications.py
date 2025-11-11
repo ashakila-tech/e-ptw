@@ -97,7 +97,7 @@ def filter_applications(
 def confirm_security_action(
     app_id: int,
     db: Session = Depends(get_db),
-    me: models.User = Depends(get_current_user),
+    # me: models.User = Depends(get_current_user),
 ):
     """
     Security confirmation endpoint.

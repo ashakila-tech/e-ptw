@@ -15,7 +15,7 @@ const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 const PLACEHOLDER_THRESHOLD = 3;
 
 export function usePermitTab() {
-  const { userId, isApproval } = useUser();
+  const { userId, isApproval, isSecurity } = useUser();
   const [permits, setPermits] = useState<PermitData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,7 +71,12 @@ export function usePermitTab() {
       // Fetch permit applications
       let permitsData: any[] = [];
 
-      if (!isApproval) {
+      if (isSecurity) {
+        // Security sees all APPROVED or ACTIVE permits
+        // You can create a new API endpoint or fetch all and filter locally
+        const allPermits = await fetchApplicationsByWorkflowData(0); // or fetch all permits
+        permitsData = allPermits.filter((p: PermitData) => ["APPROVED", "ACTIVE"].includes(p.status));
+      } else if (!isApproval) {
         // Applicant — fetch their own permits
         permitsData = await fetchApplicationsByApplicant(numericUserId);
       } else {
@@ -86,7 +91,7 @@ export function usePermitTab() {
             }
           })
         );
-        permitsData = results.flat();
+      permitsData = results.flat();
       }
 
       // Map approval data per workflow_data_id
