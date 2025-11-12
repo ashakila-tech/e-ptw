@@ -3,7 +3,7 @@ import { Link } from "expo-router";
 import { useUser } from "@/contexts/UserContext";
 
 export default function Home() {
-  const { userId, userName } = useUser(); // add userName in context if not already
+  const { userId, userName } = useUser();
 
   return (
     <View className="flex-1 justify-center items-center bg-secondary px-6">

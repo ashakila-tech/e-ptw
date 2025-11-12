@@ -61,6 +61,10 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
 
     # Only run logic when current approval is set to APPROVED
     if new_status == "APPROVED" and obj.status != "APPROVED":
+        obj.status = "APPROVED"
+        obj.time = datetime.utcnow()
+        db.flush()
+
         # Promote next level if exists
         next_level = db.query(models.ApprovalData).filter(
             models.ApprovalData.workflow_data_id == obj.workflow_data_id,

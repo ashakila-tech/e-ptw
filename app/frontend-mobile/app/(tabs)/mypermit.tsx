@@ -42,58 +42,62 @@ export default function MyPermitTab() {
   // Tabs for applicant vs approver
   const applicantTabs = [
     { key: "all", label: "All" },
+    { key: PermitStatus.COMPLETED, label: "Completed" },
+    { key: PermitStatus.ACTIVE, label: "Active" },
     { key: PermitStatus.APPROVED, label: "Approved" },
+    { key: PermitStatus.REJECTED, label: "Rejected" },
     { key: PermitStatus.SUBMITTED, label: "Submitted" },
     { key: PermitStatus.DRAFT, label: "Draft" },
   ];
 
   const approverTabs = [
     { key: "all", label: "All" },
+    { key: PermitStatus.WAITING, label: "Waiting" },
     { key: PermitStatus.PENDING, label: "Pending" },
     { key: PermitStatus.APPROVED, label: "Approved" },
     { key: PermitStatus.REJECTED, label: "Rejected" },
   ];
 
-  const tabs = [
+  const securityTabs = [
     { key: "all", label: "All" },
     { key: PermitStatus.APPROVED, label: "Approved" },
     { key: PermitStatus.ACTIVE, label: "Active" },
     { key: PermitStatus.COMPLETED, label: "Completed" },
   ];
 
+  // Select which tab list to show based on role
+  const tabs = isSecurity
+    ? securityTabs
+    : isApproval
+    ? approverTabs
+    : applicantTabs;
+
   // Filter + search + sort
   const filteredPermits = useMemo(() => {
-    let list: typeof permits = [];
+    let list = permits;
 
-    if (isSecurity) {
-      // Security sees only APPROVED, ACTIVE, COMPLETED
-      list = permits.filter(p =>
-        ["APPROVED", "ACTIVE", "COMPLETED"].includes(p.status)
-      );
-    } else if (isApproval) {
-      // Approvers see all
-      list = permits;
-    } else {
-      // Applicants see all their own
-      list = permits;
-    }
-
-    // Filter by active tab
+    // Apply tab filter
     if (activeTab !== "all") {
-      list = list.filter(p => p.status === activeTab);
+      if (isApproval) {
+        // Approvers: filter by their own approval status
+        list = list.filter((p) => p.approvalStatus === activeTab);
+      } else {
+        // Applicants & Security: filter by permit status
+        list = list.filter((p) => p.status === activeTab);
+      }
     }
-
-    // Search filter
+    
+    // Apply search filter
     if (search.trim()) {
       const term = search.toLowerCase();
-      list = list.filter(p => (p.name || "").toLowerCase().includes(term));
+      list = list.filter((p) => (p.name || "").toLowerCase().includes(term));
     }
 
-    // Sort
+    // Sort order
     if (sortOrder === "desc") list = [...list].reverse();
 
     return list;
-  }, [permits, activeTab, search, sortOrder, isApproval, isSecurity]);
+  }, [permits, activeTab, search, sortOrder]);
 
   if (loading) {
     return <LoadingScreen message="Fetching permits..." />;
@@ -102,30 +106,38 @@ export default function MyPermitTab() {
   return (
     <View className="flex-1 bg-secondary">
       {/* Tabs */}
-      <View className="flex-row justify-start p-2 bg-white flex-wrap-0">
-        {tabs.map(tab => {
-          const isActive = activeTab === tab.key;
-          return (
-            <Pressable
-              key={tab.key}
-              onPress={() => setActiveTab(tab.key)}
-              className={`mx-1 px-4 py-2 rounded-lg ${isActive ? "bg-primary" : "bg-gray-300"}`}
-              style={{ maxWidth: 100 }} // limit tab width
-            >
-              <Text
-                className={`text-center ${isActive ? "text-white" : "text-primary"}`}
-                numberOfLines={1} // prevent wrapping
-                ellipsizeMode="tail" // show "..." if text is too long
+      <View className="bg-white pt-3 pb-2 justify-center">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ alignItems: "center", paddingHorizontal: 4 }}
+        >
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => setActiveTab(tab.key)}
+                className={`mx-1 px-3 rounded-md ${
+                  isActive ? "bg-primary" : "bg-gray-300"
+                }`}
+                style={{ height: 30, justifyContent: "center" }}
               >
-                {tab.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+                <Text
+                  className={`text-center text-sm ${
+                    isActive ? "text-white" : "text-primary"
+                  }`}
+                >
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
 
       {/* Search + Sort Controls */}
-      <View className="flex-row items-center justify-between px-4 py-2 bg-white">
+      <View className="flex-row items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
         <TextInput
           placeholder="Search permits..."
           value={search}
@@ -144,36 +156,38 @@ export default function MyPermitTab() {
         </Pressable>
       </View>
 
-      {/* Permit List */}
-      {filteredPermits.length === 0 ? (
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-primary text-base">
-            {isApproval ? "No approvals found" : "No permits found"}
-          </Text>
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={{ padding: 16, gap: 16 }} // Use this padding otherwise ScrollView gets cut off
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          {filteredPermits.map((permit) => (
-            <PermitCard
-              key={permit.id}
-              {...permit}
-              isApproval={isApproval}
-              onEdit={() =>
-                router.push({
-                  pathname: "/permits/form",
-                  params: { application: JSON.stringify(permit) },
-                })
-              }
-              onDeleted={refetch}
-            />
-          ))}
-        </ScrollView>
-      )}
+      {/* Scrollable Permit List */}
+      <View className="flex-1">
+        {filteredPermits.length === 0 ? (
+          <View className="flex-1 justify-center items-center">
+            <Text className="text-primary text-base">
+              {isApproval ? "No approvals found" : "No permits found"}
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            contentContainerStyle={{ padding: 16, gap: 16 }}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
+            {filteredPermits.map((permit) => (
+              <PermitCard
+                key={permit.id}
+                {...permit}
+                isApproval={isApproval}
+                onEdit={() =>
+                  router.push({
+                    pathname: "/permits/form",
+                    params: { application: JSON.stringify(permit) },
+                  })
+                }
+                onDeleted={refetch}
+              />
+            ))}
+          </ScrollView>
+        )}
+      </View>
     </View>
   );
 }
