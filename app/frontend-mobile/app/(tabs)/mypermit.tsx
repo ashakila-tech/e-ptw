@@ -106,11 +106,12 @@ export default function MyPermitTab() {
   return (
     <View className="flex-1 bg-secondary">
       {/* Tabs */}
-      <View className="bg-white pt-3 pb-2 justify-center">
+      <View className="bg-bg1 pt-3 pb-2 justify-center">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ alignItems: "center", paddingHorizontal: 4 }}
+          className="py-2"
         >
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
@@ -118,18 +119,17 @@ export default function MyPermitTab() {
               <Pressable
                 key={tab.key}
                 onPress={() => setActiveTab(tab.key)}
-                className={`mx-1 px-3 rounded-md ${
-                  isActive ? "bg-primary" : "bg-gray-300"
-                }`}
-                style={{ height: 30, justifyContent: "center" }}
+                className="mx-1 px-3 items-center"
               >
                 <Text
-                  className={`text-center text-sm ${
-                    isActive ? "text-white" : "text-primary"
+                  className={`text-center text-sm text-white ${
+                    isActive ? "font-bold" : "font-normal"
                   }`}
                 >
                   {tab.label}
                 </Text>
+                {/* Custom underline */}
+                {isActive && <View className="h-1 w-full bg-white mt-1 rounded-full" />}
               </Pressable>
             );
           })}

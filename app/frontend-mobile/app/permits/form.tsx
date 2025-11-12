@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, Platform, StatusBar } from "react-native";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import DocumentUpload from "@/components/DocumentUpload";
 import DropdownField from "@/components/DropdownField";
 import DatePickerField from "@/components/DatePickerField";
 import { useApplicationForm } from "@/hooks/useApplicationForm";
 import LoadingScreen from "@/components/LoadingScreen";
+import { Colors } from '@/constants/Colors';
 
 export default function ApplicationForm() {
   const router = useRouter();
@@ -44,10 +45,20 @@ export default function ApplicationForm() {
     <ScrollView className="flex-1 bg-white p-4">
       <Stack.Screen
         options={{
-          title: existingApp ? "Edit Permit Application" : "New Permit Application",
-          headerTitleAlign: "center",
+          title: existingApp
+            ? "Edit Permit Application"
+            : "New Permit Application",
           headerShown: true,
-          headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+          headerTitleAlign: "center",
+          headerStyle: {
+            backgroundColor: Colors.bg1,
+          },
+          headerTitleStyle: {
+            color: "#ffffff",
+            fontWeight: "bold",
+            fontSize: 18,
+          },
+          headerShadowVisible: false,
         }}
       />
 
@@ -135,7 +146,7 @@ export default function ApplicationForm() {
           onPress={() => !formError && submitApplication("SUBMITTED")}
           disabled={!!formError}
           className={`flex-[0.6] rounded-xl py-4 items-center ${
-            formError ? "bg-gray-400" : "bg-approved"
+            formError ? "bg-gray-400" : "bg-bg1"
           }`}
         >
           <Text className="text-white font-semibold text-base">Submit Application</Text>

@@ -26,6 +26,12 @@ module.exports = {
           light: "#ffffff",
           dark: "#dcdcdc",
         },
+        bg1: {
+          DEFAULT: "#00495cff",
+        },
+        accent1: {
+          DEFAULT: "#701a1aff",
+        },
         approved: "#249707",
         pending: "#b6b90a",
         rejected: "#be1c1cff",

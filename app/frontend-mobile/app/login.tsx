@@ -82,7 +82,7 @@ export default function Login() {
       {/* Login Button */}
       <Pressable
         className={`w-full py-3 rounded-xl mb-4 ${
-          loading ? "bg-gray-400" : "bg-primary"
+          loading ? "bg-gray-400" : "bg-bg1"
         }`}
         onPress={handleLogin}
         disabled={loading}
@@ -95,7 +95,7 @@ export default function Login() {
       {/* Register Link */}
       <Pressable onPress={() => router.push("/register")}>
         <Text className="text-primary text-center text-base">
-          Don't have an account? Register
+          Don't have an account? <Text className="font-bold">Register</Text>
         </Text>
       </Pressable>
     </View>

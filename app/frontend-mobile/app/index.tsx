@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { Bold } from "lucide-react-native";
 
 export default function Index() {
   const router = useRouter();
@@ -46,20 +47,35 @@ export default function Index() {
     );
   }
 
-  return (
-    <View className="flex-1 justify-center items-center bg-white px-6">
-      <Text className="text-center text-5xl font-bold text-primary mb-10">
-        Senior Aerospace Upeca Aerotech
-      </Text>
+return (
+  <View className="flex-1 bg-white">
+    {/* Top third */}
+    <View className="flex-1" />
 
+    {/* Middle third: title */}
+    <View className="flex-1 justify-center items-center">
+      <Text className="text-center text-5xl font-bold text-primary">
+        Senior Aerospace{"\n"}Upeca Aerotech
+      </Text>
+    </View>
+
+    {/* Bottom third: button container */}
+    <View className="flex-1 bg-bg1 shadow-lg rounded-t-xl p-6 pt-12 justify-start">
       <Pressable
         onPress={() => router.push("/login")}
-        className="bg-primary w-full py-3 rounded-xl"
+        className="bg-bg1 border border-white py-3 rounded w-full"
       >
         <Text className="text-white text-center font-semibold text-lg">
           Sign in
         </Text>
       </Pressable>
+      <Pressable onPress={() => router.push("/register")}>
+        <Text className="text-white text-center text-base mt-8">
+          Don't have an account? <Text className="font-bold">Register</Text>
+        </Text>
+      </Pressable>
     </View>
-  );
+  </View>
+);
+
 }

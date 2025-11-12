@@ -9,6 +9,7 @@ import { getStatusClass } from "@/utils/class";
 import { formatDate } from "@/utils/date";
 import { PermitStatus } from "@/constants/Status";
 import * as api from "@/services/api";
+import { Colors } from "@/constants/Colors";
 
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
@@ -92,9 +93,17 @@ export default function PermitDetails() {
       <Stack.Screen
         options={{
           title: "Permit Details",
-          headerTitleAlign: "left",
           headerShown: true,
-          headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+          headerTitleAlign: "center",
+          headerStyle: {
+            backgroundColor: Colors.bg1,
+          },
+          headerTitleStyle: {
+            color: "#ffffff",
+            fontWeight: "bold",
+            fontSize: 18,
+          },
+          headerShadowVisible: false,
         }}
       />
 

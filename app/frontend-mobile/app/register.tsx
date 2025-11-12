@@ -120,7 +120,7 @@ export default function Register() {
         </View>
 
         {/* Confirm Password Field */}
-        <View className="mb-6">
+        <View className="mb-6 mt-2">
           <View className="flex-row justify-between items-center px-4 py-1">
             <Text className="text-primary font-semibold">Confirm Password</Text>
             {confirmPasswordError ? (
@@ -145,7 +145,7 @@ export default function Register() {
         {/* Register Button */}
         <Pressable
           className={`w-full py-3 rounded-xl mb-4 ${
-            loading ? "bg-gray-400" : "bg-primary"
+            loading ? "bg-gray-400" : "bg-bg1"
           }`}
           onPress={handleRegister}
           disabled={loading}
@@ -158,7 +158,7 @@ export default function Register() {
         {/* Go to Login */}
         <Pressable onPress={() => router.push("/login")}>
           <Text className="text-primary text-center text-base">
-            Already have an account? Log in
+            Already have an account? <Text className="font-bold">Log in</Text>
           </Text>
         </Pressable>
       </View>

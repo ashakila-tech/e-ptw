@@ -10,15 +10,13 @@ import { Colors } from '@/constants/Colors';
 // import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
-  // const colorScheme = useColorScheme();
-  const colorScheme = 'light';
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Tabs
         screenOptions={{
           // tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-          tabBarActiveTintColor: Colors[colorScheme].tint,
+          tabBarActiveTintColor: Colors.accent1,
           headerShown: false,
           tabBarButton: HapticTab,
           tabBarBackground: TabBarBackground,
@@ -45,7 +43,18 @@ export default function TabLayout() {
           options={{
             title: 'My Permit',
             headerShown: true,
-            headerTitleAlign: "center",
+            headerTitleAlign: 'center',
+            headerStyle: {
+              backgroundColor: Colors.bg1, // bg-bg1
+              borderBottomWidth: 0, // remove bottom border
+              elevation: 0, // remove shadow on Android
+              shadowOpacity: 0, // remove shadow on iOS
+            },
+            headerTitleStyle: {
+              color: "#fff", // white text
+              fontWeight: 'bold',
+              fontSize: 20,
+            },
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="permit.fill" color={color} />
             ),

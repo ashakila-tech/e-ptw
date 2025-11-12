@@ -55,16 +55,38 @@ def filter_approval_data(
 def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Session):
     """
     Runs before saving during PUT update.
-    Used to trigger the next level approval once current level is approved.
+    Handles approval workflow logic:
+    - Promotes next level if current level approved
+    - Updates Application status to APPROVED if all approvers approved
+    - Updates Application status to REJECTED if any approver rejects
     """
     new_status = data.get("status")
 
-    # Only run logic when current approval is set to APPROVED
-    if new_status == "APPROVED" and obj.status != "APPROVED":
-        obj.status = "APPROVED"
+    # Update the ApprovalData object itself
+    if new_status in {"APPROVED", "REJECTED"} and obj.status != new_status:
+        obj.status = new_status
         obj.time = datetime.utcnow()
         db.flush()
 
+    # Fetch all approval data for this workflow
+    all_approval_data = db.query(models.ApprovalData).filter(
+        models.ApprovalData.workflow_data_id == obj.workflow_data_id
+    ).all()
+
+    # If any approver rejected, set application status to REJECTED
+    if any(a.status == "REJECTED" for a in all_approval_data):
+        application = db.query(models.Application).filter(
+            models.Application.workflow_data_id == obj.workflow_data_id
+        ).first()
+        if application and application.status != "REJECTED":
+            application.status = "REJECTED"
+            application.updated_time = datetime.utcnow()
+            db.commit()
+            print(f"Application {application.id} rejected due to an approver rejection!")
+        return data  # No need to process further
+
+    # Only run next-level promotion if current approval is APPROVED
+    if new_status == "APPROVED":
         # Promote next level if exists
         next_level = db.query(models.ApprovalData).filter(
             models.ApprovalData.workflow_data_id == obj.workflow_data_id,
@@ -74,18 +96,12 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
         if next_level and next_level.status == "WAITING":
             next_level.status = "PENDING"
 
-        # Check if all approvals for this workflow are approved
-        all_approval_data = db.query(models.ApprovalData).filter(
-            models.ApprovalData.workflow_data_id == obj.workflow_data_id
-        ).all()
-
+        # If all approvals are approved, update the application status
         if all(a.status == "APPROVED" for a in all_approval_data):
-            # Update the corresponding Application status to APPROVED
             application = db.query(models.Application).filter(
                 models.Application.workflow_data_id == obj.workflow_data_id
             ).first()
-
-            if application:
+            if application and application.status != "APPROVED":
                 application.status = "APPROVED"
                 application.updated_time = datetime.utcnow()
                 db.commit()
