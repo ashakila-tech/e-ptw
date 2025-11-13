@@ -1,6 +1,7 @@
 // components/LoadingScreen.tsx
 import React from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { Colors } from "@/constants/Colors";
 
 interface LoadingScreenProps {
   message?: string;
@@ -11,7 +12,7 @@ interface LoadingScreenProps {
 const LoadingScreen: React.FC<LoadingScreenProps> = ({
   message = "Loading...",
   size = "large",
-  color = "#1D4ED8",
+  color = Colors.bg1,
 }) => {
   return (
     <View style={styles.container}>
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
   text: {
     marginTop: 16,
     fontSize: 16,
-    color: "#374151", // gray-700
+    color: Colors.primary,
     textAlign: "center",
   },
 });

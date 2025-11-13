@@ -1,6 +1,15 @@
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Pressable, Alert } from "react-native";
-import { useLocalSearchParams, Stack } from "expo-router";
+import React, { useState, useCallback } from "react";
+import {
+  SafeAreaView,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Pressable,
+  Alert,
+  RefreshControl,
+} from "react-native";
+import { useLocalSearchParams, Stack, useRouter } from "expo-router";
 import LoadingScreen from "@/components/LoadingScreen";
 import { usePermitDetails } from "@/hooks/usePermitDetails";
 import { useUser } from "@/contexts/UserContext";
@@ -10,11 +19,21 @@ import { formatDate } from "@/utils/date";
 import { PermitStatus } from "@/constants/Status";
 import * as api from "@/services/api";
 import { Colors } from "@/constants/Colors";
+import CustomHeader from "@/components/CustomHeader";
 
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
   const { permit, approvals, approvalData, loading, error, refetch } = usePermitDetails(id as string);
   const { userId, isApproval, isSecurity } = useUser();
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   if (loading) return <LoadingScreen message="Fetching data..." />;
 
@@ -35,13 +54,11 @@ export default function PermitDetails() {
       </View>
     );
 
-  // Current user's approval record
   const myApproval = approvals?.find(a => a.user_id === userId && a.status === PermitStatus.PENDING);
   const canTakeAction = isApproval && myApproval;
   const isAlreadyHandled = myApproval?.status === PermitStatus.APPROVED || myApproval?.status === PermitStatus.REJECTED;
   const canConfirmSecurity = isSecurity;
 
-  // Approval action
   async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
     if (!myApproval) return Alert.alert("Error", "No pending approval found for you.");
     const myApprovalData = approvalData.find(ad => ad.approval_id === myApproval.id && ad.workflow_data_id === permit.workflowDataId);
@@ -50,7 +67,6 @@ export default function PermitDetails() {
     try {
       await api.updateApprovalData({ ...myApprovalData, status: action, time: new Date().toISOString() });
 
-      // Promote next approver if approved
       if (action === "APPROVED") {
         const nextApproval = approvals.find(a => a.level === myApproval.level + 1);
         if (nextApproval) {
@@ -77,7 +93,6 @@ export default function PermitDetails() {
     );
   }
 
-  // Security action
   async function handleSecurityConfirm() {
     try {
       await api.confirmSecurity(permit.id);
@@ -89,29 +104,21 @@ export default function PermitDetails() {
   }
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: "Permit Details",
-          headerShown: true,
-          headerTitleAlign: "center",
-          headerStyle: {
-            backgroundColor: Colors.bg1,
-          },
-          headerTitleStyle: {
-            color: "#ffffff",
-            fontWeight: "bold",
-            fontSize: 18,
-          },
-          headerShadowVisible: false,
-        }}
+    <SafeAreaView className="flex-1 bg-gray-100">
+      <CustomHeader
+        title="Permit Details"
+        onBack={() => router.back()}
       />
 
-      <ScrollView className="flex-1 p-4 bg-gray-100">
-        {/* Permit Summary */}
+      <ScrollView
+        className="flex-1 p-4"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+        }
+      >
+        {/* --- Permit Summary --- */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Details</Text>
-
           <Text className="text-base text-primary mb-2">Permit Name: <Text className="font-semibold">{permit.name || "-"}</Text></Text>
           <Text className="text-base text-primary mb-2">Permit Status: <Text className={getStatusClass(permit.status)}>{permit.status || "-"}</Text></Text>
           <Text className="text-base text-primary mb-2">Applicant Name: <Text className="font-semibold">{permit.applicantName || "-"}</Text></Text>
@@ -123,7 +130,7 @@ export default function PermitDetails() {
           <Text className="text-base text-primary mb-2">Workflow: <Text className="font-semibold">{permit.workflowData || "-"}</Text></Text>
         </View>
 
-        {/* Attachments */}
+        {/* --- Attachments --- */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Attachments</Text>
           <View className="flex-row items-center justify-between">
@@ -138,7 +145,7 @@ export default function PermitDetails() {
           </View>
         </View>
 
-        {/* Approvals */}
+        {/* --- Approvals --- */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Approvals</Text>
           {approvals.length > 0 ? (
@@ -153,7 +160,7 @@ export default function PermitDetails() {
           ) : <Text className="text-gray-500 italic">No approvals yet</Text>}
         </View>
 
-        {/* Approval Buttons */}
+        {/* --- Approval Buttons --- */}
         {canTakeAction && (
           <>
             {isAlreadyHandled && <Text className="text-gray-600 italic mt-3">You have already {myApproval?.status.toLowerCase()} this permit.</Text>}
@@ -168,7 +175,7 @@ export default function PermitDetails() {
           </>
         )}
 
-        {/* Security button */}
+        {/* --- Security button --- */}
         {canConfirmSecurity && (
           <View className="my-6">
             <Pressable onPress={handleSecurityConfirm} className="py-3 rounded-xl items-center bg-primary">
@@ -178,6 +185,6 @@ export default function PermitDetails() {
         )}
         <View className="p-5" />
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 }

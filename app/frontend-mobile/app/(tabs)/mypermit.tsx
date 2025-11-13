@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import {
+  SafeAreaView,
   View,
   Text,
   ScrollView,
@@ -8,7 +9,6 @@ import {
   TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
 import { usePermitTab } from "@/hooks/usePermitTab";
 import { useUser } from "@/contexts/UserContext";
 import PermitCard from "@/components/PermitCard";
@@ -25,19 +25,12 @@ export default function MyPermitTab() {
   const [search, setSearch] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // Refresh handler
-  const onRefresh = async () => {
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
-  };
-
-  // Auto-refresh whenever this screen gains focus
-  useFocusEffect(
-    useCallback(() => {
-      refetch();
-    }, [refetch])
-  );
+  }, [refetch]);
 
   // Tabs for applicant vs approver
   const applicantTabs = [
@@ -76,24 +69,19 @@ export default function MyPermitTab() {
   const filteredPermits = useMemo(() => {
     let list = permits;
 
-    // Apply tab filter
     if (activeTab !== "all") {
       if (isApproval) {
-        // Approvers: filter by their own approval status
         list = list.filter((p) => p.approvalStatus === activeTab);
       } else {
-        // Applicants & Security: filter by permit status
         list = list.filter((p) => p.status === activeTab);
       }
     }
-    
-    // Apply search filter
+
     if (search.trim()) {
       const term = search.toLowerCase();
       list = list.filter((p) => (p.name || "").toLowerCase().includes(term));
     }
 
-    // Sort order
     if (sortOrder === "desc") list = [...list].reverse();
 
     return list;
@@ -104,7 +92,7 @@ export default function MyPermitTab() {
   }
 
   return (
-    <View className="flex-1 bg-secondary">
+    <SafeAreaView className="flex-1 bg-secondary">
       {/* Tabs */}
       <View className="bg-bg1 pt-3 pb-2 justify-center">
         <ScrollView
@@ -128,8 +116,9 @@ export default function MyPermitTab() {
                 >
                   {tab.label}
                 </Text>
-                {/* Custom underline */}
-                {isActive && <View className="h-1 w-full bg-white mt-1 rounded-full" />}
+                {isActive && (
+                  <View className="h-1 w-full bg-white mt-1 rounded-full" />
+                )}
               </Pressable>
             );
           })}
@@ -142,13 +131,13 @@ export default function MyPermitTab() {
           placeholder="Search permits..."
           value={search}
           onChangeText={setSearch}
-          className="flex-1 bg-gray-100 p-2 rounded-lg mr-2 text-primary"
+          className="flex-1 bg-secondary p-2 rounded-lg mr-2 text-primary"
         />
         <Pressable
           onPress={() =>
             setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
           }
-          className="bg-primary px-3 py-2 rounded-lg"
+          className="bg-accent1 px-3 py-2 rounded-lg"
         >
           <Text className="text-white font-medium">
             {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
@@ -157,7 +146,13 @@ export default function MyPermitTab() {
       </View>
 
       {/* Scrollable Permit List */}
-      <View className="flex-1">
+      <ScrollView
+        contentContainerStyle={{ padding: 16, gap: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        className="flex-1"
+      >
         {filteredPermits.length === 0 ? (
           <View className="flex-1 justify-center items-center">
             <Text className="text-primary text-base">
@@ -165,29 +160,22 @@ export default function MyPermitTab() {
             </Text>
           </View>
         ) : (
-          <ScrollView
-            contentContainerStyle={{ padding: 16, gap: 16 }}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-          >
-            {filteredPermits.map((permit) => (
-              <PermitCard
-                key={permit.id}
-                {...permit}
-                isApproval={isApproval}
-                onEdit={() =>
-                  router.push({
-                    pathname: "/permits/form",
-                    params: { application: JSON.stringify(permit) },
-                  })
-                }
-                onDeleted={refetch}
-              />
-            ))}
-          </ScrollView>
+          filteredPermits.map((permit) => (
+            <PermitCard
+              key={permit.id}
+              {...permit}
+              isApproval={isApproval}
+              onEdit={() =>
+                router.push({
+                  pathname: "/permits/form",
+                  params: { application: JSON.stringify(permit) },
+                })
+              }
+              onDeleted={refetch}
+            />
+          ))
         )}
-      </View>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

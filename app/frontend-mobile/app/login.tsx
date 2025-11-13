@@ -81,7 +81,7 @@ export default function Login() {
 
       {/* Login Button */}
       <Pressable
-        className={`w-full py-3 rounded-xl mb-4 ${
+        className={`w-full py-3 rounded mb-4 ${
           loading ? "bg-gray-400" : "bg-bg1"
         }`}
         onPress={handleLogin}
