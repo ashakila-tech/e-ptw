@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { Bold } from "lucide-react-native";
 
 export default function Index() {
   const router = useRouter();

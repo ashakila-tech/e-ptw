@@ -1,4 +1,3 @@
-// components/PermitCard.tsx
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -6,11 +5,11 @@ import { Link } from "expo-router";
 import { formatDate } from "@/utils/date";
 import { getStatusClass } from "@/utils/class";
 import PermitData from "@/interfaces/interfaces";
-import { useDeletePermit } from "@/hooks/useDeletePermit"; // import hook
+import { useDeletePermit } from "@/hooks/useDeletePermit";
 
 type PermitCardProps = Partial<PermitData> & {
   onEdit?: () => void;
-  onDeleted?: () => void; // new callback to refresh list after delete
+  onDeleted?: () => void;
   isApproval?: boolean;
   latestApprovalStatus?: string;
 };
@@ -34,7 +33,7 @@ export default function PermitCard({
   onDeleted, // refresh callback
 }: PermitCardProps) {
   const statusKey = (status ?? "").toString().toUpperCase();
-  const { deletePermit } = useDeletePermit(onDeleted); // use hook
+  const { deletePermit } = useDeletePermit(onDeleted);
 
   return (
     <View className="bg-white rounded-lg w-full p-4 shadow-sm">
@@ -42,14 +41,13 @@ export default function PermitCard({
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-primary text-lg">
           Status: <Text className={getStatusClass(status)}>{status}</Text>
-                  {/* <Text className={getStatusClass(latestApprovalStatus)}> {latestApprovalStatus}</Text> */}
         </Text>
 
         <View className="flex-row items-center">
           {statusKey === "DRAFT" && (
             <>
               <TouchableOpacity
-                onPress={() => deletePermit(id, status)} // use hook here
+                onPress={() => deletePermit(id, status)}
                 className="flex-row items-center mr-4"
               >
                 <Text className="text-red-600 mr-2">Delete</Text>

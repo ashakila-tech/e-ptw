@@ -13,7 +13,6 @@ import DropdownField from "@/components/DropdownField";
 import DatePickerField from "@/components/DatePickerField";
 import { useApplicationForm } from "@/hooks/useApplicationForm";
 import LoadingScreen from "@/components/LoadingScreen";
-import { Colors } from "@/constants/Colors";
 import CustomHeader from "@/components/CustomHeader";
 
 export default function ApplicationForm() {
@@ -51,7 +50,7 @@ export default function ApplicationForm() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* --- Custom Header --- */}
+      {/* Custom Header */}
       <CustomHeader
         title={existingApp ? "Edit Permit Application" : "New Permit Application"}
         onBack={() => router.back()}

@@ -48,7 +48,7 @@ export default function Home() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-      {/* --- Top Section --- */}
+      {/* Top Section */}
       <View className="bg-bg1 justify-center items-center px-6 py-10">
         <Text className="text-center text-4xl font-bold text-white mt-10 mb-2">
           Senior Aerospace{"\n"}Upeca Aerotech
@@ -59,11 +59,11 @@ export default function Home() {
         </Text>
 
         <Text className="text-center text-lg text-white">
-          ID No: {userId}
+          ID No: {String(userId)}
         </Text>
       </View>
 
-        {/* --- Middle Section: Active Permits --- */}
+        {/* Middle Section: Active Permits */}
         <View className="px-4 pt-4 pb-6">
           <Text className="text-lg font-semibold text-primary mb-3">
             Featured Permits
@@ -89,12 +89,13 @@ export default function Home() {
           )}
         </View>
 
-        {/* --- Bottom Section: Apply Button --- */}
+        {/* Bottom Section: Apply Button */}
         <View className="justify-center items-center px-6 py-6">
           <Link href="/permits/form" asChild>
-            <Pressable className="bg-bg1 w-full py-4 rounded">
-              <Text className="text-white text-center font-semibold text-lg">
-                <Entypo name="squared-plus" size={18}></Entypo> {" "} Apply Permit
+            <Pressable className="bg-bg1 w-full py-4 rounded flex-row justify-center items-center">
+              <Entypo name="squared-plus" size={18} color="white" />
+              <Text className="text-white text-center font-semibold text-lg ml-2">
+                Apply Permit
               </Text>
             </Pressable>
           </Link>

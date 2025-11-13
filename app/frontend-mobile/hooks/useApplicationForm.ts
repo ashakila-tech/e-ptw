@@ -18,7 +18,6 @@ import Constants from "expo-constants";
 import { useUser } from "@/contexts/UserContext";
 import { PermitStatus } from "@/constants/Status";
 
-const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 const APPROVER_GROUP_NAME = Constants.expoConfig?.extra?.APPROVER_GROUP_NAME;
 const PLACEHOLDER_THRESHOLD = 3;
 const PLACEHOLDER_ID = 1;

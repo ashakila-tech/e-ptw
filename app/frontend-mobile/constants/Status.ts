@@ -1,3 +1,7 @@
+/*
+These are enum for permit statuses used throughout the app used to avoid inconsistency.
+*/
+
 export enum PermitStatus {
   DRAFT = "DRAFT",
   SUBMITTED = "SUBMITTED",

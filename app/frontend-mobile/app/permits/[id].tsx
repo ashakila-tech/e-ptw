@@ -116,7 +116,7 @@ export default function PermitDetails() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
         }
       >
-        {/* --- Permit Summary --- */}
+        {/* Permit Summary */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Details</Text>
           <Text className="text-base text-primary mb-2">Permit Name: <Text className="font-semibold">{permit.name || "-"}</Text></Text>
@@ -130,7 +130,7 @@ export default function PermitDetails() {
           <Text className="text-base text-primary mb-2">Workflow: <Text className="font-semibold">{permit.workflowData || "-"}</Text></Text>
         </View>
 
-        {/* --- Attachments --- */}
+        {/* Attachments */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Attachments</Text>
           <View className="flex-row items-center justify-between">
@@ -145,7 +145,7 @@ export default function PermitDetails() {
           </View>
         </View>
 
-        {/* --- Approvals --- */}
+        {/* Approvals */}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Approvals</Text>
           {approvals.length > 0 ? (
@@ -160,7 +160,7 @@ export default function PermitDetails() {
           ) : <Text className="text-gray-500 italic">No approvals yet</Text>}
         </View>
 
-        {/* --- Approval Buttons --- */}
+        {/* Approval Buttons */}
         {canTakeAction && (
           <>
             {isAlreadyHandled && <Text className="text-gray-600 italic mt-3">You have already {myApproval?.status.toLowerCase()} this permit.</Text>}
@@ -175,7 +175,7 @@ export default function PermitDetails() {
           </>
         )}
 
-        {/* --- Security button --- */}
+        {/* Security button */}
         {canConfirmSecurity && (
           <View className="my-6">
             <Pressable onPress={handleSecurityConfirm} className="py-3 rounded-xl items-center bg-primary">

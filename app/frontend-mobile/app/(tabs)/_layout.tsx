@@ -7,7 +7,6 @@ import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
-// import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
 
@@ -15,7 +14,6 @@ export default function TabLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Tabs
         screenOptions={{
-          // tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
           tabBarActiveTintColor: Colors.accent1,
           headerShown: false,
           tabBarButton: HapticTab,
@@ -45,10 +43,10 @@ export default function TabLayout() {
             headerShown: true,
             headerTitleAlign: 'center',
             headerStyle: {
-              backgroundColor: Colors.bg1, // bg-bg1
-              borderBottomWidth: 0, // remove bottom border
-              elevation: 0, // remove shadow on Android
-              shadowOpacity: 0, // remove shadow on iOS
+              backgroundColor: Colors.bg1,
+              borderBottomWidth: 0,
+              elevation: 0,
+              shadowOpacity: 0,
             },
             headerTitleStyle: {
               color: "#fff", // white text

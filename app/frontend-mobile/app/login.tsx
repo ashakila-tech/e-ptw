@@ -72,7 +72,7 @@ export default function Login() {
           className="absolute right-4 top-3"
         >
           {showPassword ? (
-            <EyeOff size={22} {...{ color: "#6b7280" }} /> // gray-500
+            <EyeOff size={22} {...{ color: "#6b7280" }} />
           ) : (
             <Eye size={22} {...{ color: "#6b7280" }} />
           )}

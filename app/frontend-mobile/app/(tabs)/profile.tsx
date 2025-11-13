@@ -11,9 +11,6 @@ export default function ProfileTab() {
   const handleSignOut = async () => {
     await logout();
     router.replace("/"); // navigate back to landing page
-    // setUserId(null);
-    // setIsApproval(false);
-    // router.replace("/"); // navigate back to landing page
   };
 
   return (

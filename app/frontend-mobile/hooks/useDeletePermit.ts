@@ -1,8 +1,6 @@
-import Constants from "expo-constants";
 import { Alert } from "react-native";
 import { router } from "expo-router";
-
-const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+import * as api from "@/services/api"; // import your API file
 
 export function useDeletePermit(onDeleted?: () => void) {
   async function deletePermit(id?: number, status?: string) {
@@ -26,22 +24,14 @@ export function useDeletePermit(onDeleted?: () => void) {
           style: "destructive",
           onPress: async () => {
             try {
-              const res = await fetch(`${API_BASE_URL}api/applications/${id}`, {
-                method: "DELETE",
-              });
-
-              if (!res.ok) {
-                const msg = await res.text();
-                throw new Error(msg || "Failed to delete permit");
-              }
-
+              await api.deleteApplication(id);
               Alert.alert("Success", "Draft permit deleted successfully!");
 
               // Refresh list or navigate away
               if (onDeleted) {
-                onDeleted(); // parent screen refresh callback
+                onDeleted();
               } else {
-                router.back(); // default fallback
+                router.back();
               }
             } catch (err: any) {
               console.error("Delete failed:", err);

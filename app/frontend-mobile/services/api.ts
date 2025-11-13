@@ -202,6 +202,19 @@ export async function fetchAllApplications() {
   return fetchPaginatedData("api/applications/");
 }
 
+export async function deleteApplication(id: number) {
+  if (!id) throw new Error("Permit ID is required");
+
+  const res = await fetch(`${API_BASE_URL}api/applications/${id}`, { method: "DELETE" });
+
+  if (!res.ok) {
+    const msg = await res.text();
+    throw new Error(msg || "Failed to delete permit");
+  }
+
+  return true; // success
+}
+
 // -------------------- Approvals --------------------
 export const fetchAllApprovals = () => fetchPaginatedData("api/approvals/");
 

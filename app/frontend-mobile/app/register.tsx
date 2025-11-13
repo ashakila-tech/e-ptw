@@ -52,7 +52,7 @@ export default function Register() {
         company_id: companyId,
         name,
         email,
-        user_type: 1, // contractor only (integer)
+        user_type: 1,
         password,
       });
 
