@@ -79,6 +79,13 @@ export async function fetchUserGroups() {
   return res.json();
 }
 
+// -------------------- Companies --------------------
+export async function fetchCompanyById(companyId: number) {
+  const res = await fetch(`${API_BASE_URL}api/companies/${companyId}`);
+  if (!res.ok) throw new Error(`Failed to fetch company (${res.status})`);
+  return res.json();
+}
+
 // -------------------- Locations --------------------
 export async function fetchLocations() {
   const res = await fetch(`${API_BASE_URL}api/locations/`);
@@ -98,6 +105,17 @@ export async function fetchLocationManagersByLocation(locationId: number) {
   return res.json();
 }
 
+export async function fetchLocationForSiteManager(userId: number) {
+  const res = await fetch(
+    `${API_BASE_URL}api/location-managers/filter?user_id=${userId}`
+  );
+
+  if (!res.ok) throw new Error("Failed to fetch location for Site Manager");
+
+  const data = await res.json();
+  return data[0] || null; // return first match
+}
+
 // -------------------- Permit Types --------------------
 export async function fetchPermitTypes() {
   const res = await fetch(`${API_BASE_URL}api/permit-types/`);
@@ -115,6 +133,17 @@ export async function fetchPermitOfficersByPermitType(permitTypeId: number) {
   const res = await fetch(`${API_BASE_URL}api/permit-officers/filter?permit_type_id=${permitTypeId}`);
   if (!res.ok) throw new Error(`Failed to fetch permit officers: ${res.statusText}`);
   return res.json();
+}
+
+export async function fetchPermitTypeForSafetyOfficer(userId: number) {
+  const res = await fetch(
+    `${API_BASE_URL}api/permit-officers/filter?user_id=${userId}`
+  );
+
+  if (!res.ok) throw new Error("Failed to fetch permit type for Safety Officer");
+
+  const data = await res.json();
+  return data[0] || null;  // same: take first result
 }
 
 // -------------------- Documents --------------------

@@ -112,6 +112,8 @@ def get_me(
         "id": current_user.id,
         "email": current_user.email,
         "name": current_user.name,
+        "company_id": current_user.company_id,
+        "user_type": current_user.user_type,
         "groups": [{"id": gid, "name": gname} for gid, gname in zip(group_ids, group_names)],
         "is_approver": is_approver,
         "is_security": is_security,

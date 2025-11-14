@@ -1,6 +1,6 @@
 import { Alert } from "react-native";
 import { router } from "expo-router";
-import * as api from "@/services/api"; // import your API file
+import * as api from "@/services/api";
 
 export function useDeletePermit(onDeleted?: () => void) {
   async function deletePermit(id?: number, status?: string) {
