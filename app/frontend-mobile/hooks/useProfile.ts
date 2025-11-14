@@ -6,6 +6,9 @@ import {
   fetchPermitTypeForSafetyOfficer 
 } from "@/services/api";
 
+const SAFETY_OFFICER = "Safety Officer";
+const SITE_MANAGER = "Site Manager";
+
 export function useProfile() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -16,12 +19,19 @@ export function useProfile() {
       setLoading(true);
       const currentUserData = await getCurrentUser();
       const companyById = await fetchCompanyById(currentUserData.company_id);
-      const locationForSiteManager = await fetchLocationForSiteManager(currentUserData.id);
-      const permitTypeForSafetyOfficer = await fetchPermitTypeForSafetyOfficer(currentUserData.id);
-      console.log("Current User Data:", currentUserData);
-      console.log("Company Data:", companyById);
-      console.log("Location Data for Site Manager:", locationForSiteManager);
-      console.log("Permit Type Data for Safety Officer:", permitTypeForSafetyOfficer);
+      currentUserData.company_name = companyById;
+      
+      if (currentUserData.groups[0].name === SITE_MANAGER) {
+        const locationForSiteManager = await fetchLocationForSiteManager(currentUserData.id);
+        currentUserData.locations = locationForSiteManager;
+      }
+
+      if (currentUserData.groups[0].name === SAFETY_OFFICER) {
+        const permitTypeForSafetyOfficer = await fetchPermitTypeForSafetyOfficer(currentUserData.id);
+        currentUserData.permit_types = permitTypeForSafetyOfficer;
+        console.log("Fetched permit types:", permitTypeForSafetyOfficer);
+      }
+
       setProfile(currentUserData);
     } catch (err: any) {
       setError(err.message || "Failed to load profile");

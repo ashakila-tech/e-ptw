@@ -113,7 +113,20 @@ export async function fetchLocationForSiteManager(userId: number) {
   if (!res.ok) throw new Error("Failed to fetch location for Site Manager");
 
   const data = await res.json();
-  return data[0] || null; // return first match
+
+  // Fetch location names for each manager
+  const enriched = await Promise.all(
+    data.map(async (item: any) => {
+      try {
+        const location = await fetchLocationById(item.location_id);
+        return { ...item, location_name: location.name };
+      } catch {
+        return { ...item, location_name: `Location ID: ${item.location_id}` };
+      }
+    })
+  );
+
+  return enriched;
 }
 
 // -------------------- Permit Types --------------------
@@ -143,7 +156,20 @@ export async function fetchPermitTypeForSafetyOfficer(userId: number) {
   if (!res.ok) throw new Error("Failed to fetch permit type for Safety Officer");
 
   const data = await res.json();
-  return data[0] || null;  // same: take first result
+
+  // Fetch permit type names for each officer
+  const enriched = await Promise.all(
+    data.map(async (item: any) => {
+      try {
+        const permitType = await fetchPermitTypeById(item.permit_type_id);
+        return { ...item, permit_type_name: permitType.name };
+      } catch {
+        return { ...item, permit_type_name: `Permit Type ID: ${item.permit_type_id}` };
+      }
+    })
+  );
+
+  return enriched;
 }
 
 // -------------------- Documents --------------------

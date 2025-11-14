@@ -70,7 +70,20 @@ export default function TabLayout() {
         <Tabs.Screen
           name="profile"
           options={{
-            title: 'Profile',
+            title: 'My Profile',
+            headerShown: true,
+            headerTitleAlign: 'center',
+            headerStyle: {
+              backgroundColor: Colors.bg1,
+              borderBottomWidth: 0,
+              elevation: 0,
+              shadowOpacity: 0,
+            },
+            headerTitleStyle: {
+              color: "#fff", // white text
+              fontWeight: 'bold',
+              fontSize: 20,
+            },
             tabBarIcon: ({ color }) => (
               <IconSymbol size={28} name="user.fill" color={color} />
             ),
