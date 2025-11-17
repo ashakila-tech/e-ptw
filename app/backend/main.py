@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from .config import settings
+from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers once
 from .routers import (
@@ -11,6 +12,20 @@ from .routers import (
 )
 
 app = FastAPI(title=settings.APP_NAME)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8081",  # Expo web
+        "http://localhost:19006", # Expo dev tools
+        "http://localhost:19007",
+        "http://localhost:3000",  # React web dev
+        "*",                      # allow all (OPTIONAL)
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Auth routes (keep outside /api so paths are /auth/login, /auth/me, etc)
 app.include_router(authentication.router)
