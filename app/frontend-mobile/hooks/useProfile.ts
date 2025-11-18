@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
 import { 
   getCurrentUser,
   fetchCompanyById,
@@ -11,6 +12,7 @@ const SAFETY_OFFICER = "Safety Officer";
 const SITE_MANAGER = "Site Manager";
 
 export function useProfile() {
+  const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,26 +1,75 @@
+import React, { useCallback, useState, useMemo } from "react";
 import { useRouter } from "expo-router";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, Alert, RefreshControl, TextInput } from "react-native";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Ionicons } from "@expo/vector-icons";
+import * as api from "@/services/api";
 
 export default function ProfileTab() {
   const router = useRouter();
   const { logout } = useAuth();
-  const { profile, loading, error, workers } = useProfile();
+  const { profile, loading, error, workers, refresh: refreshProfile } = useProfile();
+    
+  const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
+
+  // Memoized list for searching and sorting workers
+  const sortedAndFilteredWorkers = useMemo(() => {
+    let list = [...workers];
+
+    // Sort alphabetically by name
+    list.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Filter by search term (name, ic/passport, position)
+    if (search.trim()) {
+      const term = search.toLowerCase();
+      list = list.filter(worker => (worker.name || '').toLowerCase().includes(term) || (worker.ic_passport || '').toLowerCase().includes(term) || (worker.position || '').toLowerCase().includes(term));
+    }
+
+    return list;
+  }, [workers, search]);
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshProfile();
+    setRefreshing(false);
+  }, [refreshProfile]);
 
   const handleSignOut = async () => {
     await logout();
     router.replace("/");
   };
 
-  if (loading) {
-    return <LoadingScreen message="Fetching profile data..." />;
+  const handleDeleteWorker = (worker: any) => {
+    Alert.alert("Delete Worker", `Are you sure you want to delete ${worker.name}?`, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: async () => {
+          try {
+            await api.deleteWorker(worker.id);
+            Alert.alert("Success", "Worker has been deleted.");
+            refreshProfile();
+          } catch (err: any) {
+            Alert.alert("Error", err.message || "Failed to delete worker.");
+          }
+        } 
+      },
+    ]);
+  };
+
+  if (loading || refreshing) {
+    return <LoadingScreen message={refreshing ? "Refreshing data..." : "Fetching profile data..."} />;
   }
 
   return (
-    <ScrollView className="flex-1 bg-secondary px-6 py-10">
+    <ScrollView 
+      className="flex-1 bg-secondary px-6 py-10"
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       {error && <Text className="text-red-400 text-center mb-4">{error}</Text>}
 
       {profile && (
@@ -120,25 +169,63 @@ export default function ProfileTab() {
                   <Text className="text-white font-bold">+ Add Worker</Text>
                 </Pressable>
               </View>
-              <View className="overflow-hidden border border-gray-200 rounded-lg">
-                <View className="px-4 py-2 bg-gray-50">
-                  <Text className="text-primary font-semibold">Name</Text>
-                </View>
-                {workers && workers.length > 0 ? (
-                  workers.map((worker: any) => (
-                    <View
-                      key={worker.id}
-                      className="px-4 py-2 border-t border-gray-200"
-                    >
-                      <Text className="text-primary">{worker.name}</Text>
-                    </View>
-                  ))
-                ) : (
-                  <View className="px-4 py-2 border-t border-gray-200">
-                    <Text className="text-primary">No workers in the list</Text>
-                  </View>
-                )}
+
+              {/* Search Bar */}
+              <View className="mb-4">
+                <TextInput
+                  placeholder="Search by name, IC, or position..."
+                  value={search}
+                  onChangeText={setSearch}
+                  className="bg-secondary p-3 rounded-lg text-primary"
+                />
               </View>
+
+              {sortedAndFilteredWorkers.length > 0 ? (
+                <ScrollView horizontal>
+                  <View>
+                    {/* Table Header */}
+                    <View className="flex-row bg-gray-50 border-b border-gray-200">
+                      <Text className="p-3 w-16 font-semibold text-primary">#</Text>
+                      <Text className="p-3 w-40 font-semibold text-primary">Name</Text>
+                      <Text className="p-3 w-40 font-semibold text-primary">IC/Passport</Text>
+                      <Text className="p-3 w-32 font-semibold text-primary">Contact</Text>
+                      <Text className="p-3 w-40 font-semibold text-primary">Position</Text>
+                      <Text className="p-3 w-32 font-semibold text-primary">Status</Text>
+                      <Text className="p-3 w-32 font-semibold text-primary">Type</Text>
+                      <Text className="p-3 w-48 font-semibold text-primary text-center">Actions</Text>
+                    </View>
+
+                    {/* Table Body */}
+                    {sortedAndFilteredWorkers.map((worker: any, index: number) => (
+                      <View key={worker.id} className="flex-row border-b border-gray-200 items-center">
+                        <Text className="p-3 w-16 text-primary">{index + 1}</Text>
+                        <Text className="p-3 w-40 text-primary">{worker.name}</Text>
+                        <Text className="p-3 w-40 text-primary">{worker.ic_passport}</Text>
+                        <Text className="p-3 w-32 text-primary">{worker.contact}</Text>
+                        <Text className="p-3 w-40 text-primary">{worker.position}</Text>
+                        <Text className="p-3 w-32 text-primary capitalize">{worker.employment_status?.replace("-", " ")}</Text>
+                        <Text className="p-3 w-32 text-primary capitalize">{worker.employment_type?.replace("-", " ")}</Text>
+                        <View className="p-3 w-48 flex-row justify-center space-x-2">
+                          <Pressable
+                            onPress={() => router.push({ pathname: "/workers/form", params: { worker: JSON.stringify(worker) }})}
+                            className="bg-pending px-3 py-1 mx-1 rounded-md"
+                          >
+                            <Text className="text-primary font-bold">Edit</Text>
+                          </Pressable>
+                          <Pressable
+                            onPress={() => handleDeleteWorker(worker)}
+                            className="bg-rejected px-3 py-1 mx-1 rounded-md"
+                          >
+                            <Text className="text-white font-bold">Delete</Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+              ) : (
+                <Text className="text-primary text-center mt-4">No worker added</Text>
+              )}
             </View>
           )}
 
@@ -149,13 +236,14 @@ export default function ProfileTab() {
       {/* SIGN OUT BUTTON */}
       <Pressable
         onPress={handleSignOut}
-        className="bg-rejected px-6 py-4 rounded flex-row justify-center items-center my-10"
+        className="bg-rejected px-6 py-4 rounded flex-row justify-center items-center mb-10"
       >
         <Ionicons name="exit-outline" size={18} color="white" />
         <Text className="text-white font-semibold text-lg ml-2">
           Sign Out
         </Text>
       </Pressable>
+      <View className="py-5"></View>
     </ScrollView>
   );
 }

@@ -192,6 +192,24 @@ export async function createWorker(payload: any) {
   return res.json();
 }
 
+export async function updateWorker(id: number, payload: any) {
+  const res = await fetch(`${API_BASE_URL}api/workers/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to update worker: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteWorker(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/workers/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete worker: ${await res.text()}`);
+  return true; // DELETE often returns 204 No Content
+}
+
 // -------------------- Documents --------------------
 export async function uploadDocument(file: any, companyId: number = 1) {
   const formData = new FormData();

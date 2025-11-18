@@ -27,12 +27,13 @@ export default function WorkerForm() {
     employmentTypeItems, setEmploymentTypeItems,
     error,
     loading,
+    isEditMode,
     handleSubmit,
   } = useWorkerForm();
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <CustomHeader title="Add New Worker" onBack={() => router.back()} />
+      <CustomHeader title={isEditMode ? "Edit Worker" : "Add New Worker"} onBack={() => router.back()} />
 
       <ScrollView className="flex-1 p-4">
         {/* Worker Name */}
@@ -107,7 +108,9 @@ export default function WorkerForm() {
           disabled={loading}
           className={`rounded-xl py-4 mt-8 items-center ${loading ? "bg-gray-400" : "bg-primary"}`}
         >
-          <Text className="text-white font-semibold text-base">{loading ? "Adding..." : "Add Worker"}</Text>
+          <Text className="text-white font-semibold text-base">
+            {loading ? (isEditMode ? "Saving..." : "Adding...") : (isEditMode ? "Save Changes" : "Add Worker")}
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
