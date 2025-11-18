@@ -8,7 +8,7 @@ from .routers import (
     companies, permit_types, users, locations, documents,
     workflows, approvals, groups, user_groups,
     workflow_data, approval_data, applications,
-    location_managers, permit_officers,
+    location_managers, permit_officers, workers
 )
 
 app = FastAPI(title=settings.APP_NAME)
@@ -45,6 +45,7 @@ app.include_router(approval_data.router, prefix="/api")
 app.include_router(applications.router, prefix="/api")
 app.include_router(location_managers.router, prefix="/api")
 app.include_router(permit_officers.router, prefix="/api")
+app.include_router(workers.router, prefix="/api")
 
 @app.get("/")
 def root():

@@ -144,3 +144,18 @@ class PermitOfficer(Base):
 
     user = relationship("User", back_populates="permit_officers")
     permit_type = relationship("PermitType", back_populates="permit_officers")
+
+class Worker(Base):
+    __tablename__ = "worker"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
+
+    name = Column(String, nullable=False)
+    ic_passport = Column(String, nullable=False)
+    contact = Column(String, nullable=True)
+    employment_status = Column(String, nullable=True)
+    employment_type = Column(String, nullable=True)
+    position = Column(String, nullable=True)
+
+    company = relationship("Company")

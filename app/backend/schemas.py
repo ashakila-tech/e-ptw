@@ -254,3 +254,22 @@ class PermitOfficerOut(PermitOfficerBase):
 
     class Config:
         orm_mode = True
+
+# ---------- Worker ----------
+class WorkerBase(BaseModel):
+    company_id: int
+    name: str
+    ic_passport: str
+    contact: Optional[str] = None
+    employment_status: Optional[str] = None
+    employment_type: Optional[str] = None
+    position: Optional[str] = None
+
+class WorkerIn(WorkerBase):
+    pass
+
+class WorkerOut(WorkerBase):
+    id: int
+
+    class Config:
+        orm_mode = True
