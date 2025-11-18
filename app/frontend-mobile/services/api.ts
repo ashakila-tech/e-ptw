@@ -172,6 +172,26 @@ export async function fetchPermitTypeForSafetyOfficer(userId: number) {
   return enriched;
 }
 
+// -------------------- Workers --------------------
+export async function fetchWorkers(companyId?: number) {
+  const url = companyId
+    ? `${API_BASE_URL}api/workers/filter?company_id=${companyId}`
+    : `${API_BASE_URL}api/workers/`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch workers: ${await res.text()}`);
+  return res.json();
+}
+
+export async function createWorker(payload: any) {
+  const res = await fetch(`${API_BASE_URL}api/workers/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to create worker: ${await res.text()}`);
+  return res.json();
+}
+
 // -------------------- Documents --------------------
 export async function uploadDocument(file: any, companyId: number = 1) {
   const formData = new FormData();

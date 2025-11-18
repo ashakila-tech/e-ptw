@@ -3,7 +3,8 @@ import {
   getCurrentUser,
   fetchCompanyById,
   fetchLocationForSiteManager,
-  fetchPermitTypeForSafetyOfficer 
+  fetchPermitTypeForSafetyOfficer,
+  fetchWorkers
 } from "@/services/api";
 
 const SAFETY_OFFICER = "Safety Officer";
@@ -13,6 +14,7 @@ export function useProfile() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [workers, setWorkers] = useState<any[]>([]);
 
   async function fetchProfile() {
     try {
@@ -32,6 +34,10 @@ export function useProfile() {
         console.log("Fetched permit types:", permitTypeForSafetyOfficer);
       }
 
+      const workersData = await fetchWorkers(currentUserData.company_id);
+      setWorkers(workersData);
+
+
       setProfile(currentUserData);
     } catch (err: any) {
       setError(err.message || "Failed to load profile");
@@ -49,5 +55,6 @@ export function useProfile() {
     loading,
     error,
     refresh: fetchProfile,
+    workers,
   };
 }

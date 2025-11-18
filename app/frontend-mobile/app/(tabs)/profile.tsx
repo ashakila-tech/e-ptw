@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 export default function ProfileTab() {
   const router = useRouter();
   const { logout } = useAuth();
-  const { profile, loading, error } = useProfile();
+  const { profile, loading, error, workers } = useProfile();
 
   const handleSignOut = async () => {
     await logout();
@@ -110,6 +110,39 @@ export default function ProfileTab() {
               </View>
             </View>
           )}
+
+          {/* Workers Table */}
+          {profile && (
+            <View className="bg-white rounded-xl p-6 shadow-lg mb-6">
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-primary text-lg font-bold">Workers</Text>
+                <Pressable onPress={() => router.push("/workers/form")} className="bg-primary px-3 py-1 rounded-lg">
+                  <Text className="text-white font-bold">+ Add Worker</Text>
+                </Pressable>
+              </View>
+              <View className="overflow-hidden border border-gray-200 rounded-lg">
+                <View className="px-4 py-2 bg-gray-50">
+                  <Text className="text-primary font-semibold">Name</Text>
+                </View>
+                {workers && workers.length > 0 ? (
+                  workers.map((worker: any) => (
+                    <View
+                      key={worker.id}
+                      className="px-4 py-2 border-t border-gray-200"
+                    >
+                      <Text className="text-primary">{worker.name}</Text>
+                    </View>
+                  ))
+                ) : (
+                  <View className="px-4 py-2 border-t border-gray-200">
+                    <Text className="text-primary">No workers in the list</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
+
+
         </>
       )}
 
