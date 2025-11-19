@@ -5,6 +5,8 @@ type UserContextType = {
   setUserId: (id: number | null) => void;
   userName: string | null;
   setUserName: (name: string | null) => void;
+  companyId: number | null;
+  setCompanyId: (id: number | null) => void;
   isApproval: boolean;
   setIsApproval: (value: boolean) => void;
   isSecurity: boolean;
@@ -16,6 +18,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<number | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<number | null>(null);
   const [isApproval, setIsApproval] = useState<boolean>(false);
   const [isSecurity, setIsSecurity] = useState<boolean>(false);
 
@@ -26,6 +29,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setUserId,
         userName,
         setUserName,
+        companyId,
+        setCompanyId,
         isApproval,
         setIsApproval,
         isSecurity,

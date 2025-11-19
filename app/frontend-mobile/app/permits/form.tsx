@@ -6,6 +6,7 @@ import {
   TextInput,
   Pressable,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import DocumentUpload from "@/components/DocumentUpload";
@@ -26,7 +27,9 @@ export default function ApplicationForm() {
     permitTypeOpen, permitType, permitTypeItems, setPermitTypeOpen, setPermitType, setPermitTypeItems,
     locationOpen, location, locationItems, setLocationOpen, setLocation, setLocationItems,
     jobAssignerOpen, jobAssigner, jobAssignerItems, setJobAssignerOpen, setJobAssigner,
-    startTime, setStartTime, endTime, setEndTime,
+    workersOpen, setWorkersOpen, workerIds, setWorkerIds, workerItems,
+    safetyEquipmentOpen, setSafetyEquipmentOpen, safetyEquipmentIds, setSafetyEquipmentIds, safetyEquipmentItems,
+    startTime, setStartTime, endTime, setEndTime, loading,
     submitApplication,
   } = useApplicationForm(existingApp, router);
 
@@ -42,9 +45,6 @@ export default function ApplicationForm() {
     else if (!documentId) setFormError("Please upload a document.");
     else setFormError(null);
   }, [permitName, permitType, location, startTime, endTime, documentId]);
-
-  const loading =
-    permitTypeItems.length === 0 || locationItems.length === 0 || jobAssignerItems.length === 0;
 
   if (loading) return <LoadingScreen message="Fetching data..." />;
 
@@ -77,7 +77,7 @@ export default function ApplicationForm() {
           setValue={setPermitType}
           setItems={setPermitTypeItems}
           placeholder="Select permit type"
-          zIndex={20}
+          zIndex={50}
         />
 
         {/* Location */}
@@ -91,7 +91,7 @@ export default function ApplicationForm() {
           setValue={setLocation}
           setItems={setLocationItems}
           placeholder="Select location"
-          zIndex={10}
+          zIndex={40}
         />
 
         {/* Job Assigner */}
@@ -106,6 +106,64 @@ export default function ApplicationForm() {
           placeholder="Select job assigner"
           zIndex={30}
         />
+
+        {/* Workers */}
+        <Text className="text-base text-gray-700 mt-4 mb-2">Workers</Text>
+        <DropdownField
+          label="Workers"
+          open={workersOpen}
+          value={workerIds}
+          items={workerItems}
+          setOpen={setWorkersOpen}
+          setValue={setWorkerIds}
+          placeholder="Select workers"
+          zIndex={20}
+          multiple={true}
+        />
+        {/* Display Selected Workers */}
+        <View className="flex-row flex-wrap mt-2">
+          {workerIds.map((id) => {
+            const worker = workerItems.find((item) => item.value === id);
+            if (!worker) return null;
+            return (
+              <View key={id} className="flex-row items-center bg-blue-100 rounded-full px-3 py-1 mr-2 mb-2">
+                <Text className="text-blue-800 text-sm">{worker.label}</Text>
+                <TouchableOpacity onPress={() => setWorkerIds(currentIds => currentIds.filter(workerId => workerId !== id))} className="ml-2">
+                  <Text className="text-blue-800 font-bold text-xs">✕</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Safety Equipment */}
+        <Text className="text-base text-gray-700 mt-4 mb-2">Safety Equipment</Text>
+        <DropdownField
+          label="Safety Equipment"
+          open={safetyEquipmentOpen}
+          value={safetyEquipmentIds}
+          items={safetyEquipmentItems}
+          setOpen={setSafetyEquipmentOpen}
+          setValue={setSafetyEquipmentIds}
+          placeholder="Select safety equipment"
+          zIndex={10}
+          multiple={true}
+        />
+        {/* Display Selected Safety Equipment */}
+        <View className="flex-row flex-wrap mt-2">
+          {safetyEquipmentIds.map((id) => {
+            const equipment = safetyEquipmentItems.find((item) => item.value === id);
+            if (!equipment) return null;
+            return (
+              <View key={id} className="flex-row items-center bg-green-100 rounded-full px-3 py-1 mr-2 mb-2">
+                <Text className="text-green-800 text-sm">{equipment.label}</Text>
+                <TouchableOpacity onPress={() => setSafetyEquipmentIds(currentIds => currentIds.filter(equipmentId => equipmentId !== id))} className="ml-2">
+                  <Text className="text-green-800 font-bold text-xs">✕</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </View>
 
         {/* Start / End Date */}
         <Text className="text-base text-gray-700 mt-4 mb-2">Start Date and Time</Text>
@@ -123,7 +181,7 @@ export default function ApplicationForm() {
           onPress={pickAndUploadDocument}
         />
 
-        {formError && <Text className="text-red-600 mt-4">{formError}</Text>}
+        {formError ? <Text className="text-red-600 mt-4">{formError}</Text> : null}
 
         {/* Action Buttons */}
         <View className="flex-row mt-8 space-x-4">
@@ -143,6 +201,7 @@ export default function ApplicationForm() {
             <Text className="text-white font-semibold text-base">Submit Application</Text>
           </Pressable>
         </View>
+        <View className="p-10" /> {/* Spacer */}
       </ScrollView>
     </SafeAreaView>
   );

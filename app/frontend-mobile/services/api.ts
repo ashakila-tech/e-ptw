@@ -210,6 +210,15 @@ export async function deleteWorker(id: number) {
   return true; // DELETE often returns 204 No Content
 }
 
+// -------------------- Safety Equipment --------------------
+export async function fetchSafetyEquipments() {
+  const res = await fetch(`${API_BASE_URL}api/safety-equipments/`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch safety equipment: ${await res.text()}`);
+  }
+  return res.json();
+}
+
 // -------------------- Documents --------------------
 export async function uploadDocument(file: any, companyId: number = 1) {
   const formData = new FormData();

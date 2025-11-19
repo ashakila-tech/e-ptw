@@ -4,6 +4,8 @@ import * as DocumentPicker from "expo-document-picker";
 import {
   fetchPermitTypes,
   fetchLocations,
+  fetchWorkers,
+  fetchSafetyEquipments,
   uploadDocument,
   createWorkflow,
   createWorkflowData,
@@ -23,7 +25,7 @@ const PLACEHOLDER_THRESHOLD = 3;
 const PLACEHOLDER_ID = 1;
 
 export function useApplicationForm(existingApp: any, router: any) {
-  const { userId, userName } = useUser();
+  const { userId, userName, companyId: userCompanyId } = useUser();
 
   const [applicantName, setApplicantName] = useState(existingApp?.createdBy || "");
   const [permitName, setPermitName] = useState(existingApp?.name || "");
@@ -54,6 +56,14 @@ export function useApplicationForm(existingApp: any, router: any) {
   const [jobAssigner, setJobAssigner] = useState<number | null>(existingApp?.jobAssignerId || null);
   const [jobAssignerItems, setJobAssignerItems] = useState<{ label: string; value: number }[]>([]);
 
+  const [workersOpen, setWorkersOpen] = useState(false);
+  const [workerIds, setWorkerIds] = useState<number[]>([]);
+  const [workerItems, setWorkerItems] = useState<{ label: string; value: number }[]>([]);
+
+  const [safetyEquipmentOpen, setSafetyEquipmentOpen] = useState(false);
+  const [safetyEquipmentIds, setSafetyEquipmentIds] = useState<number[]>([]);
+  const [safetyEquipmentItems, setSafetyEquipmentItems] = useState<{ label: string; value: number }[]>([]);
+
   const [startTime, setStartTime] = useState<Date | null>(
     existingApp?.workStartTime ? new Date(existingApp.workStartTime) : null
   );
@@ -62,10 +72,12 @@ export function useApplicationForm(existingApp: any, router: any) {
   );
 
   const [initialized, setInitialized] = useState(false);
+  const [loading, setLoading] = useState(true); // New loading state
 
   // Fetch dropdown data once
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       try {
         const typeData = await fetchPermitTypes();
         setPermitTypeItems(
@@ -88,16 +100,32 @@ export function useApplicationForm(existingApp: any, router: any) {
             .map((u: any) => ({ label: u.name, value: u.id }))
         );
 
+        // Fetch workers for the current user's company
+        if (userCompanyId) {
+          const workersData = await fetchWorkers(userCompanyId);
+          setWorkerItems(
+            workersData.map((w: any) => ({ label: w.name, value: w.id }))
+          );
+        }
+
+        // Fetch all safety equipment
+        const equipmentData = await fetchSafetyEquipments();
+        setSafetyEquipmentItems(
+          equipmentData.map((e: any) => ({ label: e.name, value: e.id }))
+        );
+
         if (userId) {
           const currentUser = approversData.find((u: any) => u.id === userId);
           setApplicantName(currentUser?.name || "Unknown User");
         }
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
+      } finally {
+        setLoading(false); // Stop loading regardless of outcome
       }
     }
     fetchData();
-  }, [userId]);
+  }, [userId, userCompanyId]);
 
   // Initialize values from existing application after dropdowns load
   useEffect(() => {
@@ -105,7 +133,9 @@ export function useApplicationForm(existingApp: any, router: any) {
     if (
       permitTypeItems.length === 0 ||
       locationItems.length === 0 ||
-      jobAssignerItems.length === 0
+      jobAssignerItems.length === 0 ||
+      workerItems.length === 0 ||
+      safetyEquipmentItems.length === 0
     )
       return;
 
@@ -124,6 +154,8 @@ export function useApplicationForm(existingApp: any, router: any) {
         ? Number(existingApp.jobAssignerId)
         : null
     );
+    setWorkerIds(Array.isArray(existingApp.worker_ids) ? existingApp.worker_ids : []);
+    setSafetyEquipmentIds(Array.isArray(existingApp.safety_equipment_ids) ? existingApp.safety_equipment_ids : []);
 
     // Reset document placeholders
     if (!existingApp.documentId || existingApp.documentId <= PLACEHOLDER_THRESHOLD) {
@@ -132,7 +164,7 @@ export function useApplicationForm(existingApp: any, router: any) {
     }
 
     setInitialized(true);
-  }, [existingApp, initialized, permitTypeItems, locationItems, jobAssignerItems]);
+  }, [existingApp, initialized, permitTypeItems, locationItems, jobAssignerItems, workerItems, safetyEquipmentItems]);
 
   // File upload logic
   const pickAndUploadDocument = async () => {
@@ -212,7 +244,6 @@ export function useApplicationForm(existingApp: any, router: any) {
         permit_type_id: permitType || PLACEHOLDER_ID,
         workflow_data_id: workflowDataId!,
         location_id: location || PLACEHOLDER_ID,
-        job_assigner_id: jobAssigner || PLACEHOLDER_ID,
         applicant_id: userId || PLACEHOLDER_ID,
         name: permitName || "",
         document_id:
@@ -222,6 +253,8 @@ export function useApplicationForm(existingApp: any, router: any) {
             ? existingApp.documentId
             : PLACEHOLDER_ID,
         status,
+        worker_ids: workerIds,
+        safety_equipment_ids: safetyEquipmentIds,
         created_by: applicantName || "Unknown User",
         updated_by: applicantName || "Unknown User",
       };
@@ -347,6 +380,14 @@ export function useApplicationForm(existingApp: any, router: any) {
     }
   };
 
+  // Create safe setters to ensure state is always an array
+  const safeSetWorkerIds = (value: React.SetStateAction<number[]>) => {
+    setWorkerIds(value);
+  };
+  const safeSetSafetyEquipmentIds = (value: React.SetStateAction<number[]>) => {
+    setSafetyEquipmentIds(value);
+  };
+
   return {
     applicantName,
     setApplicantName,
@@ -373,11 +414,22 @@ export function useApplicationForm(existingApp: any, router: any) {
     jobAssignerItems,
     setJobAssignerOpen,
     setJobAssigner,
+    workersOpen,
+    setWorkersOpen,
+    workerIds,
+    setWorkerIds: safeSetWorkerIds, // Use the safe setter
+    workerItems,
+    safetyEquipmentOpen,
+    setSafetyEquipmentOpen,
+    safetyEquipmentIds,
+    setSafetyEquipmentIds: safeSetSafetyEquipmentIds, // Use the safe setter
+    safetyEquipmentItems,
     setJobAssignerItems,
     startTime,
     setStartTime,
     endTime,
     setEndTime,
+    loading, // Expose the new loading state
     submitApplication,
   };
 }
