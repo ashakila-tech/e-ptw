@@ -251,8 +251,9 @@ class SafetyEquipmentOut(SafetyEquipmentBase):
     class Config:
         from_attributes = True
 
-# ---------- Application ----------
-class ApplicationIn(BaseModel):
+# ---------- Application Schemas ----------
+
+class ApplicationBase(BaseModel):
     permit_type_id: int
     workflow_data_id: int | None = None
     location_id: int
@@ -261,11 +262,13 @@ class ApplicationIn(BaseModel):
     document_id: int | None = None
     status: Optional[str] = "DRAFT"
 
-    # workers & safety equipment
+class ApplicationIn(ApplicationBase):
+    # Use ID lists for creating/updating applications
     worker_ids: List[int] = []
     safety_equipment_ids: List[int] = []
 
-class ApplicationOut(ApplicationIn):
+class ApplicationOut(ApplicationBase):
+    # Return full objects in the output, not the ID lists
     id: int
     created_by: int | None = None
     updated_by: int | None = None
@@ -285,8 +288,6 @@ class ApplicationUpdate(BaseModel):
     name: Optional[str] = None
     document_id: Optional[int] = None
     status: Optional[str] = None
-    created_by: Optional[int] = None
-    updated_by: Optional[int] = None
 
     worker_ids: Optional[List[int]] = None
     safety_equipment_ids: Optional[List[int]] = None
