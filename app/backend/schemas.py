@@ -205,7 +205,7 @@ class LocationManagerIn(LocationManagerBase):
 class LocationManagerOut(LocationManagerBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- PermitOfficer ----------
 class PermitOfficerBase(BaseModel):
@@ -218,7 +218,7 @@ class PermitOfficerIn(PermitOfficerBase):
 class PermitOfficerOut(PermitOfficerBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- Worker ----------
 class WorkerBase(BaseModel):
@@ -236,7 +236,7 @@ class WorkerIn(WorkerBase):
 class WorkerOut(WorkerBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- SafetyEquipment ----------
 class SafetyEquipmentBase(BaseModel):
@@ -249,7 +249,7 @@ class SafetyEquipmentIn(SafetyEquipmentBase):
 class SafetyEquipmentOut(SafetyEquipmentBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- Application ----------
 class ApplicationIn(BaseModel):
@@ -302,7 +302,7 @@ class ApplicationWorkerIn(ApplicationWorkerBase):
 class ApplicationWorkerOut(ApplicationWorkerBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ---------- ApplicationSafetyEquipment ----------
 class ApplicationSafetyEquipmentBase(BaseModel):
@@ -315,4 +315,4 @@ class ApplicationSafetyEquipmentIn(ApplicationSafetyEquipmentBase):
 class ApplicationSafetyEquipmentOut(ApplicationSafetyEquipmentBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -166,7 +166,7 @@ def confirm_security_action(
 # Attach the CRUD routes, GET/POST/PUT/DELETE
 crud_router = make_crud_router(
     Model=models.Application,
-    CreateSchema=schemas.ApplicationIn,
+    InSchema=schemas.ApplicationIn,
     OutSchema=schemas.ApplicationOut,
     UpdateSchema=schemas.ApplicationUpdate,
     prefix="",
