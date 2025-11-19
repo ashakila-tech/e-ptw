@@ -6,9 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import (
     authentication,               # /auth/*
     companies, permit_types, users, locations, documents,
-    workflows, approvals, groups, user_groups,
-    workflow_data, approval_data, applications,
-    location_managers, permit_officers, workers
+    workflows, approvals, groups, user_groups, workflow_data, approval_data,
+    applications, location_managers, permit_officers, workers,
+    safety_equipments,
+    application_workers,
+    application_safety_equipments
 )
 
 app = FastAPI(title=settings.APP_NAME)
@@ -46,6 +48,9 @@ app.include_router(applications.router, prefix="/api")
 app.include_router(location_managers.router, prefix="/api")
 app.include_router(permit_officers.router, prefix="/api")
 app.include_router(workers.router, prefix="/api")
+app.include_router(safety_equipments.crud_router, prefix="/api")
+app.include_router(application_workers.crud_router, prefix="/api")
+app.include_router(application_safety_equipments.crud_router, prefix="/api")
 
 @app.get("/")
 def root():

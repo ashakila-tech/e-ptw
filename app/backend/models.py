@@ -110,6 +110,17 @@ class Application(Base):
     applicant = relationship("User", foreign_keys=[applicant_id], lazy="joined")
     created_by_user = relationship("User", foreign_keys=[created_by], lazy="joined")
     updated_by_user = relationship("User", foreign_keys=[updated_by], lazy="joined")
+    workers = relationship(
+        "Worker",
+        secondary="application_worker",
+        back_populates="applications"
+    )
+    safety_equipment = relationship(
+        "SafetyEquipment",
+        secondary="application_safety_equipment",
+        back_populates="applications"
+    )
+
 
 class ApprovalData(Base):
     __tablename__ = "approval_data"
@@ -133,7 +144,6 @@ class LocationManager(Base):
 
     user = relationship("User", back_populates="location_managers")
     location = relationship("Location", back_populates="location_managers")
-
 
 class PermitOfficer(Base):
     __tablename__ = "permit_officer"
@@ -159,3 +169,35 @@ class Worker(Base):
     position = Column(String, nullable=True)
 
     company = relationship("Company")
+    applications = relationship(
+        "Application",
+        secondary="application_worker",
+        back_populates="workers"
+    )
+
+class ApplicationWorker(Base):
+    __tablename__ = "application_worker"
+
+    id = Column(Integer, primary_key=True, index=True)
+    application_id = Column(Integer, ForeignKey("application.id", ondelete="CASCADE"), nullable=False)
+    worker_id = Column(Integer, ForeignKey("worker.id", ondelete="CASCADE"), nullable=False)
+
+class SafetyEquipment(Base):
+    __tablename__ = "safety_equipment"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
+    name = Column(String, nullable=False)
+
+    applications = relationship(
+        "Application",
+        secondary="application_safety_equipment",
+        back_populates="safety_equipment"
+    )
+
+class ApplicationSafetyEquipment(Base):
+    __tablename__ = "application_safety_equipment"
+
+    id = Column(Integer, primary_key=True, index=True)
+    application_id = Column(Integer, ForeignKey("application.id", ondelete="CASCADE"), nullable=False)
+    safety_equipment_id = Column(Integer, ForeignKey("safety_equipment.id", ondelete="CASCADE"), nullable=False)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 # ---------- Auth ----------
@@ -32,7 +32,6 @@ class PermitTypeIn(BaseModel):
 class PermitTypeOut(PermitTypeIn):
     id: int
     model_config = ConfigDict(from_attributes=True)
-
 
 class PermitTypeUpdate(BaseModel):
     company_id: Optional[int] = None
@@ -73,20 +72,17 @@ class LocationUpdate(BaseModel):
     name: Optional[str] = None
 
 # ---------- Document ----------
-# Response model (read)
 class DocumentOut(BaseModel):
     id: int
     company_id: int
     name: str
-    path: str                     # server-managed
+    path: str
     time: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
-# Update model (what clients can change)
 class DocumentUpdate(BaseModel):
     company_id: Optional[int] = None
     name: Optional[str] = None
-    # path/time are intentionally NOT updatable
 
 # ---------- Workflow ----------
 class WorkflowIn(BaseModel):
@@ -198,35 +194,6 @@ class ApprovalDataUpdate(BaseModel):
     role_name: Optional[str] = None
     level: Optional[int] = None
 
-# ---------- Application ----------
-class ApplicationIn(BaseModel):
-    permit_type_id: int
-    workflow_data_id: int | None = None
-    location_id: int
-    applicant_id: int
-    name: str
-    document_id: int | None = None
-    status: Optional[str] = "DRAFT"
-
-class ApplicationOut(ApplicationIn):
-    id: int
-    created_by: int | None = None
-    updated_by: int | None = None
-    created_time: datetime | None = None
-    updated_time: datetime | None = None
-    model_config = ConfigDict(from_attributes=True)
-
-class ApplicationUpdate(BaseModel):
-    permit_type_id: Optional[int] = None
-    workflow_data_id: Optional[int] = None
-    location_id: Optional[int] = None
-    applicant_id: Optional[int] = None
-    name: Optional[str] = None
-    document_id: Optional[int] = None
-    status: Optional[str] = None
-    created_by: Optional[int] = None
-    updated_by: Optional[int] = None
-
 # ---------- LocationManager ----------
 class LocationManagerBase(BaseModel):
     location_id: int
@@ -237,7 +204,6 @@ class LocationManagerIn(LocationManagerBase):
 
 class LocationManagerOut(LocationManagerBase):
     id: int
-
     class Config:
         orm_mode = True
 
@@ -251,7 +217,6 @@ class PermitOfficerIn(PermitOfficerBase):
 
 class PermitOfficerOut(PermitOfficerBase):
     id: int
-
     class Config:
         orm_mode = True
 
@@ -270,6 +235,84 @@ class WorkerIn(WorkerBase):
 
 class WorkerOut(WorkerBase):
     id: int
+    class Config:
+        orm_mode = True
 
+# ---------- SafetyEquipment ----------
+class SafetyEquipmentBase(BaseModel):
+    company_id: int
+    name: str
+
+class SafetyEquipmentIn(SafetyEquipmentBase):
+    pass
+
+class SafetyEquipmentOut(SafetyEquipmentBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+# ---------- Application ----------
+class ApplicationIn(BaseModel):
+    permit_type_id: int
+    workflow_data_id: int | None = None
+    location_id: int
+    applicant_id: int
+    name: str
+    document_id: int | None = None
+    status: Optional[str] = "DRAFT"
+
+    # workers & safety equipment
+    worker_ids: List[int] = []
+    safety_equipment_ids: List[int] = []
+
+class ApplicationOut(ApplicationIn):
+    id: int
+    created_by: int | None = None
+    updated_by: int | None = None
+    created_time: datetime | None = None
+    updated_time: datetime | None = None
+
+    workers: List[WorkerOut] = []
+    safety_equipment: List[SafetyEquipmentOut] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ApplicationUpdate(BaseModel):
+    permit_type_id: Optional[int] = None
+    workflow_data_id: Optional[int] = None
+    location_id: Optional[int] = None
+    applicant_id: Optional[int] = None
+    name: Optional[str] = None
+    document_id: Optional[int] = None
+    status: Optional[str] = None
+    created_by: Optional[int] = None
+    updated_by: Optional[int] = None
+
+    worker_ids: Optional[List[int]] = None
+    safety_equipment_ids: Optional[List[int]] = None
+
+# ---------- ApplicationWorker ----------
+class ApplicationWorkerBase(BaseModel):
+    application_id: int
+    worker_id: int
+
+class ApplicationWorkerIn(ApplicationWorkerBase):
+    pass
+
+class ApplicationWorkerOut(ApplicationWorkerBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+# ---------- ApplicationSafetyEquipment ----------
+class ApplicationSafetyEquipmentBase(BaseModel):
+    application_id: int
+    safety_equipment_id: int
+
+class ApplicationSafetyEquipmentIn(ApplicationSafetyEquipmentBase):
+    pass
+
+class ApplicationSafetyEquipmentOut(ApplicationSafetyEquipmentBase):
+    id: int
     class Config:
         orm_mode = True

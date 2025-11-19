@@ -19,22 +19,37 @@ def create_application(
     """
     Create a new application without authentication.
     """
-    # Override timestamps with server UTC time
-    payload_dict = payload.model_dump()
+    # Exclude relationship IDs from the main object creation
+    payload_dict = payload.model_dump(exclude={"worker_ids", "safety_equipment_ids"})
     payload_dict["created_time"] = datetime.utcnow()
     payload_dict["updated_time"] = None  # new record
 
     obj = models.Application(**payload_dict)
+
+    # Handle workers many-to-many relationship
+    if payload.worker_ids:
+        workers = db.query(models.Worker).filter(models.Worker.id.in_(payload.worker_ids)).all()
+        obj.workers = workers
+
+    # Handle safety_equipment many-to-many relationship
+    if payload.safety_equipment_ids:
+        equipment = db.query(models.SafetyEquipment).filter(models.SafetyEquipment.id.in_(payload.safety_equipment_ids)).all()
+        obj.safety_equipment = equipment
+
     db.add(obj)
     db.commit()
     db.refresh(obj)
+
+    # Eager load relationships for the response
+    db.refresh(obj, attribute_names=["workers", "safety_equipment"])
     return obj
+
 
 @router.put("/{item_id}", response_model=schemas.ApplicationOut,
             dependencies=[Depends(require_role(["admin", "user"]))])
 def update_application(
     item_id: int,
-    payload: schemas.ApplicationIn,
+    payload: schemas.ApplicationUpdate,
     db: Session = Depends(get_db),
     me: models.User = Depends(get_current_user),
 ):
@@ -45,20 +60,38 @@ def update_application(
     if not obj:
         raise HTTPException(status_code=404, detail="Application not found")
 
-    # Ensure referenced document exists
-    doc = db.get(models.Document, payload.document_id)
-    if not doc:
-        raise HTTPException(status_code=400, detail="Invalid document_id")
+    # Get payload data, excluding unset fields and relationship IDs
+    update_data = payload.model_dump(exclude_unset=True, exclude={"worker_ids", "safety_equipment_ids"})
 
     # Update fields
-    for k, v in payload.model_dump().items():
+    for k, v in update_data.items():
         setattr(obj, k, v)
+
+    # Handle workers update
+    if payload.worker_ids is not None:
+        if not payload.worker_ids:
+            obj.workers = []  # Clear workers if an empty list is provided
+        else:
+            workers = db.query(models.Worker).filter(models.Worker.id.in_(payload.worker_ids)).all()
+            obj.workers = workers
+
+    # Handle safety equipment update
+    if payload.safety_equipment_ids is not None:
+        if not payload.safety_equipment_ids:
+            obj.safety_equipment = [] # Clear equipment if an empty list is provided
+        else:
+            equipment = db.query(models.SafetyEquipment).filter(models.SafetyEquipment.id.in_(payload.safety_equipment_ids)).all()
+            obj.safety_equipment = equipment
 
     obj.updated_by = me.id
     obj.updated_time = datetime.utcnow()  # server timestamp
     db.commit()
     db.refresh(obj)
+
+    # Eager load relationships for the response
+    db.refresh(obj, attribute_names=["workers", "safety_equipment"])
     return obj
+
 
 # Filter Endpoint for Optimized Fetching
 @router.get("/filter", response_model=List[schemas.ApplicationOut])
@@ -89,6 +122,8 @@ def filter_applications(
         joinedload(models.Application.location),
         joinedload(models.Application.permit_type),
         joinedload(models.Application.workflow_data),
+        joinedload(models.Application.workers),
+        joinedload(models.Application.safety_equipment),
     )
 
     return query.all()
@@ -131,8 +166,9 @@ def confirm_security_action(
 # Attach the CRUD routes, GET/POST/PUT/DELETE
 crud_router = make_crud_router(
     Model=models.Application,
-    InSchema=schemas.ApplicationIn,
+    CreateSchema=schemas.ApplicationIn,
     OutSchema=schemas.ApplicationOut,
+    UpdateSchema=schemas.ApplicationUpdate,
     prefix="",
     tag="Applications",
     list_roles=["admin", "user"],
