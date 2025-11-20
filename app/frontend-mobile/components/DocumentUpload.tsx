@@ -49,7 +49,7 @@ export default function DocumentUpload({
         </TouchableOpacity>
 
         {/* Download button */}
-        {documentUrl && (
+        {documentUrl && documentId && documentName && (
           <TouchableOpacity
             onPress={() => handleDownload(documentId, documentName!)}
             className="bg-approved rounded-2xl py-2 px-4 ml-2"

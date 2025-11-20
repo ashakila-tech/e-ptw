@@ -7,6 +7,8 @@ import {
   fetchWorkers,
   fetchSafetyEquipments,
   uploadDocument,
+  createWorker,
+  createSafetyEquipment,
   createWorkflow,
   createWorkflowData,
   saveApplication,
@@ -239,6 +241,41 @@ export function useApplicationForm(existingApp: any, router: any) {
       }
 
       // -------------------- Build payload for application --------------------
+      const finalWorkerIds = await Promise.all(
+        workerIds.map(async (idOrName) => {
+          if (typeof idOrName === "number") {
+            return idOrName;
+          }
+          if (typeof idOrName === "string") {
+            try {
+              const newWorker = await createWorker({ name: idOrName, company_id: companyId });
+              return newWorker.id;
+            } catch (err) {
+              console.error(`Failed to create worker: ${idOrName}`, err);
+              return null; // Or handle error appropriately
+            }
+          }
+          return null;
+        })
+      );
+
+      const finalSafetyEquipmentIds = await Promise.all(
+        safetyEquipmentIds.map(async (idOrName) => {
+          if (typeof idOrName === "number") {
+            return idOrName;
+          }
+          if (typeof idOrName === "string") {
+            try {
+              const newEquipment = await createSafetyEquipment({ name: idOrName, company_id: companyId });
+              return newEquipment.id;
+            } catch (err) {
+              console.error(`Failed to create safety equipment: ${idOrName}`, err);
+              return null; // Or handle error appropriately
+            }
+          }
+          return null;
+        })
+      );
       const payload: any = {
         company_id: companyId,
         permit_type_id: permitType || PLACEHOLDER_ID,
@@ -253,8 +290,8 @@ export function useApplicationForm(existingApp: any, router: any) {
             ? existingApp.documentId
             : PLACEHOLDER_ID,
         status,
-        worker_ids: workerIds,
-        safety_equipment_ids: safetyEquipmentIds,
+        worker_ids: finalWorkerIds.filter(id => id !== null),
+        safety_equipment_ids: finalSafetyEquipmentIds.filter(id => id !== null),
         created_by: applicantName || "Unknown User",
         updated_by: applicantName || "Unknown User",
       };

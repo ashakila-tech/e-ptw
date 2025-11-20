@@ -9,6 +9,8 @@ export function usePermitDetails(id?: string) {
   const [approvals, setApprovals] = useState<any[]>([]);
   const [approvalData, setApprovalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [workers, setWorkers] = useState<any[]>([]);
+  const [safetyEquipments, setSafetyEquipments] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPermit = async () => {
@@ -97,6 +99,8 @@ export function usePermitDetails(id?: string) {
         permitTypeId: permitData.permit_type_id ?? undefined,
         workflowDataId: permitData.workflow_data_id ?? undefined,
         jobAssigner: jobAssigner?.name || "-",
+        workers: permitData.workers || [],
+        safety_equipment: permitData.safety_equipment || [],
       });
 
       setApprovals(approvalsList);
@@ -112,5 +116,5 @@ export function usePermitDetails(id?: string) {
     fetchPermit();
   }, [id]);
 
-  return { permit, approvals, approvalData, loading, error, refetch: fetchPermit };
+  return { permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, safetyEquipments };
 }

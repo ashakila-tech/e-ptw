@@ -182,6 +182,12 @@ export async function fetchWorkers(companyId?: number) {
   return res.json();
 }
 
+export async function fetchWorkerById(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/workers/${id}`);
+  if (!res.ok) throw new Error(`Failed to fetch worker: ${await res.text()}`);
+  return res.json();
+}
+
 export async function createWorker(payload: any) {
   const res = await fetch(`${API_BASE_URL}api/workers/`, {
     method: "POST",
@@ -216,6 +222,16 @@ export async function fetchSafetyEquipments() {
   if (!res.ok) {
     throw new Error(`Failed to fetch safety equipment: ${await res.text()}`);
   }
+  return res.json();
+}
+
+export async function createSafetyEquipment(payload: any) {
+  const res = await fetch(`${API_BASE_URL}api/safety-equipments/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to create safety equipment: ${await res.text()}`);
   return res.json();
 }
 

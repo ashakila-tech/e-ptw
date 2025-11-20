@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Ionicons } from "@expo/vector-icons";
+import WorkerTable from "@/components/WorkerTable";
 import * as api from "@/services/api";
 
 export default function ProfileTab() {
@@ -180,51 +181,10 @@ export default function ProfileTab() {
                 />
               </View>
 
-              {sortedAndFilteredWorkers.length > 0 ? (
-                <ScrollView horizontal>
-                  <View>
-                    {/* Table Header */}
-                    <View className="flex-row bg-gray-50 border-b border-gray-200">
-                      <Text className="p-3 w-16 font-semibold text-primary">#</Text>
-                      <Text className="p-3 w-40 font-semibold text-primary">Name</Text>
-                      <Text className="p-3 w-40 font-semibold text-primary">IC/Passport</Text>
-                      <Text className="p-3 w-32 font-semibold text-primary">Contact</Text>
-                      <Text className="p-3 w-40 font-semibold text-primary">Position</Text>
-                      <Text className="p-3 w-32 font-semibold text-primary">Status</Text>
-                      <Text className="p-3 w-32 font-semibold text-primary">Type</Text>
-                      <Text className="p-3 w-48 font-semibold text-primary text-center">Actions</Text>
-                    </View>
-
-                    {/* Table Body */}
-                    {sortedAndFilteredWorkers.map((worker: any, index: number) => (
-                      <View key={worker.id} className="flex-row border-b border-gray-200 items-center">
-                        <Text className="p-3 w-16 text-primary">{index + 1}</Text>
-                        <Text className="p-3 w-40 text-primary">{worker.name}</Text>
-                        <Text className="p-3 w-40 text-primary">{worker.ic_passport}</Text>
-                        <Text className="p-3 w-32 text-primary">{worker.contact}</Text>
-                        <Text className="p-3 w-40 text-primary">{worker.position}</Text>
-                        <Text className="p-3 w-32 text-primary capitalize">{worker.employment_status?.replace("-", " ")}</Text>
-                        <Text className="p-3 w-32 text-primary capitalize">{worker.employment_type?.replace("-", " ")}</Text>
-                        <View className="p-3 w-48 flex-row justify-center space-x-2">
-                          <Pressable
-                            onPress={() => router.push({ pathname: "/workers/form", params: { worker: JSON.stringify(worker) }})}
-                            className="bg-pending px-3 py-1 mx-1 rounded-md"
-                          >
-                            <Text className="text-primary font-bold">Edit</Text>
-                          </Pressable>
-                          <Pressable
-                            onPress={() => handleDeleteWorker(worker)}
-                            className="bg-rejected px-3 py-1 mx-1 rounded-md"
-                          >
-                            <Text className="text-white font-bold">Delete</Text>
-                          </Pressable>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
-              ) : (
-                <Text className="text-primary text-center mt-4">No worker added</Text>
+              {sortedAndFilteredWorkers.length > 0 ? (                
+                <WorkerTable workers={sortedAndFilteredWorkers} handleDeleteWorker={handleDeleteWorker} isEditable={true} />
+              ) : (                
+                <Text className="text-primary text-center mt-4">No worker added</Text>                
               )}
             </View>
           )}

@@ -11,6 +11,7 @@ export default function DropdownField({
   setItems,
   placeholder,
   zIndex,
+  multiple,
 }: any) {
   return (
     <DropDownPicker
@@ -21,6 +22,7 @@ export default function DropdownField({
       setValue={setValue}
       setItems={setItems}
       placeholder={placeholder}
+      multiple={multiple}
       listMode="MODAL"
       zIndex={zIndex}
       style={{ borderColor: "#d1d5db", borderRadius: 16 }}

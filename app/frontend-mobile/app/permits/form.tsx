@@ -129,7 +129,7 @@ export default function ApplicationForm() {
               <View key={id} className="flex-row items-center bg-blue-100 rounded-full px-3 py-1 mr-2 mb-2">
                 <Text className="text-blue-800 text-sm">{worker.label}</Text>
                 <TouchableOpacity onPress={() => setWorkerIds(currentIds => currentIds.filter(workerId => workerId !== id))} className="ml-2">
-                  <Text className="text-blue-800 font-bold text-xs">✕</Text>
+                  <Text className="text-blue-800 font-bold text-xs">X</Text>
                 </TouchableOpacity>
               </View>
             );
@@ -158,7 +158,7 @@ export default function ApplicationForm() {
               <View key={id} className="flex-row items-center bg-green-100 rounded-full px-3 py-1 mr-2 mb-2">
                 <Text className="text-green-800 text-sm">{equipment.label}</Text>
                 <TouchableOpacity onPress={() => setSafetyEquipmentIds(currentIds => currentIds.filter(equipmentId => equipmentId !== id))} className="ml-2">
-                  <Text className="text-green-800 font-bold text-xs">✕</Text>
+                  <Text className="text-green-800 font-bold text-xs">X</Text>
                 </TouchableOpacity>
               </View>
             );

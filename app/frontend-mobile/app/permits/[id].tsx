@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   SafeAreaView,
   View,
@@ -20,6 +20,8 @@ import { PermitStatus } from "@/constants/Status";
 import * as api from "@/services/api";
 import { Colors } from "@/constants/Colors";
 import CustomHeader from "@/components/CustomHeader";
+import WorkerTable from "@/components/WorkerTable";
+import { TextInput } from "react-native";
 
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
@@ -28,12 +30,24 @@ export default function PermitDetails() {
   const { userId, isApproval, isSecurity } = useUser();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
   }, [refetch]);
+
+  const filteredWorkers = useMemo(() => {
+    let list = permit?.workers || [];
+
+    if (search.trim()) {
+      const term = search.toLowerCase();
+      list = list.filter((worker: any) => (worker.name || '').toLowerCase().includes(term) || (worker.ic_passport || '').toLowerCase().includes(term) || (worker.position || '').toLowerCase().includes(term));
+    }
+
+    return list;
+  }, [permit?.workers, search]);
 
   if (loading) return <LoadingScreen message="Fetching data..." />;
 
@@ -143,6 +157,40 @@ export default function PermitDetails() {
               <Text className="text-white text-sm font-semibold">Download</Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Workers */}
+        <View className="bg-white rounded-xl p-4 mb-4">
+          <Text className="text-xl font-bold text-primary mb-3">Workers</Text>
+          <TextInput
+            placeholder="Search by name, IC, or position..."
+            value={search}
+            onChangeText={setSearch}
+            className="bg-secondary p-3 rounded-lg text-primary mb-4"
+          />
+
+
+          {filteredWorkers.length > 0 ? (
+            <WorkerTable
+              workers={filteredWorkers}
+              isEditable={false}
+              handleDeleteWorker={() => {}}
+            />
+          ) : (            
+            <Text className="text-gray-500 italic">No workers assigned</Text>
+          )}
+        </View>
+
+        {/* Safety Equipment */}
+        <View className="bg-white rounded-xl p-4 mb-4">
+          <Text className="text-xl font-bold text-primary mb-3">Safety Equipment</Text>
+          {permit.safety_equipment && permit.safety_equipment.length > 0 ? (
+            permit.safety_equipment.map((item: any) => (
+              <View key={item.id} className="border-b border-gray-200 pb-2 mb-2">
+                <Text className="text-base text-primary">{item.name}</Text>
+              </View>
+            ))
+          ) : <Text className="text-gray-500 italic">No safety equipment required</Text>}
         </View>
 
         {/* Approvals */}
