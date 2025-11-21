@@ -185,11 +185,13 @@ export default function PermitDetails() {
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Safety Equipment</Text>
           {permit.safety_equipment && permit.safety_equipment.length > 0 ? (
-            permit.safety_equipment.map((item: any) => (
-              <View key={item.id} className="border-b border-gray-200 pb-2 mb-2">
-                <Text className="text-base text-primary">{item.name}</Text>
-              </View>
-            ))
+            <View className="flex-row flex-wrap">
+              {permit.safety_equipment.map((item: any) => (
+                <View key={item.id} className="bg-blue-100 rounded-lg px-3 py-2 mr-2 mb-2">
+                  <Text className="text-blue-800 text-sm font-medium">{item.name}</Text>
+                </View>
+              ))}
+            </View>
           ) : <Text className="text-gray-500 italic">No safety equipment required</Text>}
         </View>
 
