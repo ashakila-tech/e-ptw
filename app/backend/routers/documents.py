@@ -25,8 +25,11 @@ def upload_document(
     """
     allowed = {
         "application/pdf",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", # .docx
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", # .xlsx
+        "application/vnd.ms-excel", # .xls
+        "text/csv", # .csv
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation", # .pptx
         "image/jpeg",
         "image/png",
     }
