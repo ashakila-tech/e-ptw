@@ -22,21 +22,27 @@ export default function DocumentUpload({
   const documentUrl = documentId && documentName ? `${API_BASE_URL}api/documents/${documentId}/download` : undefined;
 
   const handleDownload = async (docId: number | null | undefined, name: string) => {
+    if (!docId || !name) return;
+
+    // Sanitize the name to prevent issues with filesystem characters.
+    const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
     const url = `${API_BASE_URL}api/documents/${docId}/download`;
-    await downloadDocument(url, name);
+    await downloadDocument(url, safeName); // The util function handles the rest
   };
 
   return (
     <View className="mb-1">
       <View className="flex-row items-center justify-between">
         {/* <Text className="text-gray-800 flex-1">
-          {documentName ? documentName : "No document uploaded"}
-        </Text> */}
+          {documentName ? documentName : "No document uploaded"} */}
+        {/* </Text> */}
         <View className="flex-1">
           <Text className="text-gray-800">
             {documentName ? documentName : "No document uploaded"}
           </Text>
-          <Text className="text-xs text-gray-500 mt-1">Supported formats: PDF, DOCX, XLSX, CSV, PPTX, JPG, PNG</Text>
+          {/* <Text className="text-xs text-gray-500 mt-1">Supported formats: PDF, DOCX, XLSX, CSV, PPTX, JPG, PNG</Text> */}
+          <Text className="text-xs text-gray-500 mt-1">Supported formats: PDF, DOCX, XLSX, CSV, PPTX, JPG, PNG, GIF, BMP, TXT, RTF</Text>
         </View>
 
         {/* Upload / Change button */}

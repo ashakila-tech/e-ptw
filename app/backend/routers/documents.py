@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-import os, shutil, mimetypes
+import os, shutil, mimetypes, uuid
 from datetime import datetime
 
 from ._crud_factory import make_crud_router
@@ -37,8 +37,13 @@ def upload_document(
         raise HTTPException(400, detail=f"Unsupported file type: {file.content_type}")
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
-    safe_name = file.filename.replace("/", "_").replace("\\", "_")
-    path = os.path.join(UPLOAD_DIR, safe_name)
+
+    # Sanitize original filename and create a unique filename to prevent overwrites
+    base, ext = os.path.splitext(file.filename)
+    safe_base = "".join(c for c in base if c.isalnum() or c in (' ', '_', '-')).rstrip()
+    unique_id = uuid.uuid4().hex[:8] # Use a short UUID for uniqueness
+    unique_filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{unique_id}_{safe_base}{ext}"
+    path = os.path.join(UPLOAD_DIR, unique_filename)
 
     with open(path, "wb") as buf:
         shutil.copyfileobj(file.file, buf)
@@ -98,7 +103,15 @@ def download_document(doc_id: int, db: Session = Depends(get_db)):
     if not os.path.exists(doc.path):
         raise HTTPException(410, "File missing on server")
     ctype = mimetypes.guess_type(doc.path)[0] or "application/octet-stream"
-    return FileResponse(path=doc.path, media_type=ctype, filename=os.path.basename(doc.path))
+
+    # Ensure the filename for download has the correct extension
+    download_name = doc.name
+    _, stored_ext = os.path.splitext(doc.path)
+    # If the display name doesn't have an extension, append the one from the stored file
+    if stored_ext and not download_name.lower().endswith(stored_ext.lower()):
+        download_name += stored_ext
+
+    return FileResponse(path=doc.path, media_type=ctype, filename=download_name)
 
 @router.delete("/{doc_id}", status_code=204)
 def delete_document(doc_id: int, db: Session = Depends(get_db)):
