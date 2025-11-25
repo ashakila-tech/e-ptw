@@ -1,28 +1,40 @@
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Alert, Platform } from 'react-native';
+import * as api from '@/services/api';
 
-export const downloadDocument = async (url: string, fileName: string) => {
+export const downloadDocument = async (documentId: number, fileName: string) => {
   try {
-    console.log("Download URL:", url);
-    console.log("Sanitized Filename:", fileName);
+    console.log("Downloading document ID:", documentId);
 
-    // Local file path
-    // The directory from expo-file-system does not have a trailing slash, so we add one.
-    const fileUri = `${FileSystem.cacheDirectory}/${fileName}`;
+    // 1. Fetch the document as a blob from the API
+    const blob = await api.downloadDocumentById(documentId);
 
-    console.log("Constructed File URI:", fileUri);
+    // 2. Convert blob to a base64 string
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
 
-    // Download file
-    const { uri } = await FileSystem.downloadAsync(url, fileUri);
+    const base64Data = await new Promise<string>((resolve, reject) => {
+      reader.onload = () => {
+        // The result includes the data URL prefix (e.g., "data:application/pdf;base64,"),
+        // which needs to be removed for FileSystem.writeAsStringAsync.
+        const base64 = (reader.result as string).split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
 
-    console.log("Download successful. Saved to:", uri);
+    // 3. Save the base64 data to a local file
+    const fileUri = FileSystem.cacheDirectory + fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
 
-    // For Android, share via native share
-    if (Platform.OS === 'android' || Platform.OS === 'ios') {
-      await Sharing.shareAsync(uri);
-    } else {
-      Alert.alert('Download', `File saved to: ${uri}`);
+    console.log("Download successful. Saved to:", fileUri);
+
+    // 4. Share the local file
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(fileUri);
     }
   } catch (err: any) {
     console.error('Download failed', err);

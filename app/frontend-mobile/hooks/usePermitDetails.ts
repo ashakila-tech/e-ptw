@@ -76,9 +76,9 @@ export function usePermitDetails(id?: string) {
             ? "-"
             : document?.name || "-",
         documentUrl:
-          permitData.document_id && permitData.document_id > PLACEHOLDER_THRESHOLD
-            ? `${document?.download_url}`
-            : undefined,
+          permitData.document_id && permitData.document_id <= PLACEHOLDER_THRESHOLD
+            ? "-"
+            : document?.path || "-",
         location:
           permitData.location_id && permitData.location_id <= PLACEHOLDER_THRESHOLD
             ? "-"

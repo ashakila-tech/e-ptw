@@ -251,6 +251,19 @@ export async function fetchDocumentById(documentId: number) {
   return res.json();
 }
 
+export async function downloadDocumentById(documentId: number) {
+  const token = await AsyncStorage.getItem("access_token");
+  if (!token) throw new Error("No token found");
+
+  const res = await fetch(`${API_BASE_URL}api/documents/${documentId}/download`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(`Failed to download document (${res.status})`);
+
+  return res.blob();
+}
+
 // -------------------- Workflows --------------------
 export async function createWorkflow(name: string, company_id: number, permit_type_id: number) {
   const res = await fetch(`${API_BASE_URL}api/workflows/`, {

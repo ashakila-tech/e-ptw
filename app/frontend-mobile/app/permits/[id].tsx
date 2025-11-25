@@ -150,9 +150,9 @@ export default function PermitDetails() {
           <View className="flex-row items-center justify-between">
             <Text className="text-base text-primary">Document: <Text className="font-semibold">{permit.document}</Text></Text>
             <TouchableOpacity
-              disabled={!permit.documentUrl}
-              onPress={() => permit.documentUrl && downloadDocument(permit.documentUrl, permit.document)}
-              className={`px-3 py-2 rounded ${permit.documentUrl ? "bg-primary" : "bg-gray-400"}`}
+              disabled={!permit.documentId}
+              onPress={() => permit.documentId && downloadDocument(permit.documentId, permit.document)}
+              className={`px-3 py-2 rounded ${permit.documentId ? "bg-primary" : "bg-gray-400"}`}
             >
               <Text className="text-white text-sm font-semibold">Download</Text>
             </TouchableOpacity>
