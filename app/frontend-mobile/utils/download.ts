@@ -4,40 +4,66 @@ import { Alert, Platform } from 'react-native';
 import * as api from '@/services/api';
 
 export const downloadDocument = async (documentId: number, fileName: string) => {
+  let loadingAlertDisplayed = false;
   try {
     console.log("Downloading document ID:", documentId);
 
-    // 1. Fetch the document as a blob from the API
-    const blob = await api.downloadDocumentById(documentId);
+    // For Android, we'll try to save directly to the Downloads folder.
+    if (Platform.OS === 'android') {
+      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      if (permissions.granted) {
+        // Show a loading alert as this can take a moment
+        Alert.alert('Downloading', 'Your file is being downloaded...');
+        loadingAlertDisplayed = true;
 
-    // 2. Convert blob to a base64 string
+        const blob = await api.downloadDocumentById(documentId);
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.onerror = (error) => reject(error);
+        });
+
+        const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const mimeType = blob.type || 'application/octet-stream';
+
+        const uri = await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, sanitizedFileName, mimeType);
+        await FileSystem.writeAsStringAsync(uri, base64Data, { encoding: FileSystem.EncodingType.Base64 });
+
+        Alert.alert('Download Complete', `File saved to your Downloads folder: ${sanitizedFileName}`);
+        return; // Exit the function after successful Android download
+      }
+    }
+
+    // Fallback for iOS or if Android permissions are denied
+    Alert.alert('Downloading', 'Preparing your file for sharing...');
+    loadingAlertDisplayed = true;
+
+    const blob = await api.downloadDocumentById(documentId);
     const reader = new FileReader();
     reader.readAsDataURL(blob);
 
     const base64Data = await new Promise<string>((resolve, reject) => {
-      reader.onload = () => {
-        // The result includes the data URL prefix (e.g., "data:application/pdf;base64,"),
-        // which needs to be removed for FileSystem.writeAsStringAsync.
-        const base64 = (reader.result as string).split(',')[1];
-        resolve(base64);
-      };
+      reader.onload = () => resolve((reader.result as string).split(',')[1]);
       reader.onerror = (error) => reject(error);
     });
 
-    // 3. Save the base64 data to a local file
     const fileUri = FileSystem.cacheDirectory + fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
-    await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    await FileSystem.writeAsStringAsync(fileUri, base64Data, { encoding: FileSystem.EncodingType.Base64 });
 
-    console.log("Download successful. Saved to:", fileUri);
+    console.log("Download successful. Saved to cache:", fileUri);
 
-    // 4. Share the local file
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(fileUri);
+      await Sharing.shareAsync(fileUri, { dialogTitle: 'Save or share your document' });
+    } else {
+      Alert.alert('Sharing Not Available', 'Could not open the share dialog.');
     }
   } catch (err: any) {
     console.error('Download failed', err);
-    Alert.alert('Error', err.message || 'Failed to download document');
+    // Only show error alert if we haven't already shown a downloading alert that we can't dismiss
+    if (!loadingAlertDisplayed) {
+      Alert.alert('Error', err.message || 'Failed to download document');
+    }
   }
 };

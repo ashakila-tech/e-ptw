@@ -27,8 +27,7 @@ export default function DocumentUpload({
     // Sanitize the name to prevent issues with filesystem characters.
     const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-    const url = `${API_BASE_URL}api/documents/${docId}/download`;
-    await downloadDocument(url, safeName); // The util function handles the rest
+    await downloadDocument(docId, safeName); // The util function handles the rest
   };
 
   return (
