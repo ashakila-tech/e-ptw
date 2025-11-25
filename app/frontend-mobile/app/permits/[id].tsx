@@ -71,7 +71,13 @@ export default function PermitDetails() {
   const myApproval = approvals?.find(a => a.user_id === userId && a.status === PermitStatus.PENDING);
   const canTakeAction = isApproval && myApproval;
   const isAlreadyHandled = myApproval?.status === PermitStatus.APPROVED || myApproval?.status === PermitStatus.REJECTED;
-  const canConfirmSecurity = isSecurity;
+  
+  const now = new Date();
+  const workStartTime = permit.workStartTime ? new Date(permit.workStartTime) : null;
+  const workEndTime = permit.workEndTime ? new Date(permit.workEndTime) : null;
+  const isWithinWorkWindow = workStartTime && workEndTime && now >= workStartTime && now <= workEndTime;
+
+  const canConfirmSecurity = permit.status === PermitStatus.APPROVED && isWithinWorkWindow;
 
   async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
     if (!myApproval) return Alert.alert("Error", "No pending approval found for you.");
@@ -226,11 +232,21 @@ export default function PermitDetails() {
         )}
 
         {/* Security button */}
-        {canConfirmSecurity && (
+        {isSecurity && (
           <View className="my-6">
-            <Pressable onPress={handleSecurityConfirm} className="py-3 rounded-xl items-center bg-primary">
-              <Text className="text-white font-medium">{permit.status === PermitStatus.ACTIVE ? "Confirm Exit" : "Confirm Entry"}</Text>
+            <Pressable
+              onPress={handleSecurityConfirm}
+              disabled={!canConfirmSecurity || loading}
+              className={`py-3 rounded-xl items-center ${!canConfirmSecurity || loading ? 'bg-gray-400' : 'bg-primary'}`}
+            >
+              <Text className="text-white font-medium">Confirm Entry</Text>
             </Pressable>
+            {!canConfirmSecurity && permit.status === PermitStatus.APPROVED && !isWithinWorkWindow && (
+              <Text className="text-center text-sm text-gray-600 mt-2">You can only confirm entry within the scheduled work window.</Text>
+            )}
+            {permit.status === PermitStatus.ACTIVE && (
+              <Text className="text-center text-sm text-gray-600 mt-2">Entry has been confirmed for this permit.</Text>
+            )}
           </View>
         )}
         <View className="p-5" />
