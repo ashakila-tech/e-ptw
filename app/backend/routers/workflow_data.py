@@ -6,7 +6,7 @@ from ..deps import get_db, require_role
 
 router = APIRouter()
 
-@router.patch("/workflow-data/{item_id}", response_model=schemas.WorkflowDataOut, dependencies=[Depends(require_role(["admin", "user"]))])
+@router.patch("/workflow-data/{item_id}", response_model=schemas.WorkflowDataOut)
 def patch_workflow_data(
     item_id: int,
     payload: schemas.WorkflowDataUpdate,
