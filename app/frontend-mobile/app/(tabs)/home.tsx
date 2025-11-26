@@ -73,18 +73,19 @@ export default function Home() {
             <Text className="text-gray-500">No active permits found.</Text>
           ) : (
             activePermits.map((permit) => (
-              <PermitCard
-                key={permit.id}
-                {...permit}
-                isApproval={isApproval}
-                onEdit={() =>
-                  router.push({
-                    pathname: "/permits/form",
-                    params: { application: JSON.stringify(permit) },
-                  })
-                }
-                onDeleted={refetch}
-              />
+              <View className="mb-4" key={permit.id}>
+                <PermitCard
+                  {...permit}
+                  isApproval={isApproval}
+                  onEdit={() =>
+                    router.push({
+                      pathname: "/permits/form",
+                      params: { application: JSON.stringify(permit) },
+                    })
+                  }
+                  onDeleted={refetch}
+                />
+              </View>
             ))
           )}
         </View>

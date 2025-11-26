@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   SafeAreaView,
   View,
@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   Pressable,
   Alert,
+  Platform,
   RefreshControl,
 } from "react-native";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, Stack, useRouter } from "expo-router";
 import LoadingScreen from "@/components/LoadingScreen";
 import { usePermitDetails } from "@/hooks/usePermitDetails";
@@ -31,12 +33,21 @@ export default function PermitDetails() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [newWorkEndTime, setNewWorkEndTime] = useState(new Date());
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
   }, [refetch]);
+
+  useEffect(() => {
+    if (permit?.workEndTime) {
+      setNewWorkEndTime(new Date(permit.workEndTime));
+    }
+  }, [permit?.workEndTime]);
 
   const filteredWorkers = useMemo(() => {
     let list = permit?.workers || [];
@@ -78,6 +89,22 @@ export default function PermitDetails() {
   const isWithinWorkWindow = workStartTime && workEndTime && now >= workStartTime && now <= workEndTime;
 
   const canConfirmSecurity = permit.status === PermitStatus.APPROVED && isWithinWorkWindow;
+  
+  // --- Extend Permit Logic ---
+  let isBeforeThreeDayWindow = false;
+  if (workEndTime) {
+    // Create a date for 'today' at the start of the day for a clean comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    // Create a date for the cutoff, which is 3 days before the workEndTime
+    const cutoffDate = new Date(workEndTime);
+    cutoffDate.setDate(cutoffDate.getDate() - 3);
+    cutoffDate.setHours(0, 0, 0, 0);
+    // The button should be visible if today is on or before the cutoff date
+    isBeforeThreeDayWindow = today >= cutoffDate; // Changed to >= for "on or after"
+  }
+
+  const canExtendPermit = userId === permit?.applicantId && permit?.status === PermitStatus.ACTIVE && isBeforeThreeDayWindow;
 
   async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
     if (!myApproval) return Alert.alert("Error", "No pending approval found for you.");
@@ -123,6 +150,29 @@ export default function PermitDetails() {
     }
   }
 
+  const onDateTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    const currentDate = selectedDate || newWorkEndTime;
+    setShowDatePicker(Platform.OS === 'ios');
+    setNewWorkEndTime(currentDate);
+
+    if (event.type === "set") {
+      handleExtendPermit(currentDate);
+    }
+  };
+
+  async function handleExtendPermit(date: Date) {
+    if (!permit?.workflowDataId) return Alert.alert("Error", "Workflow data ID not found.");
+    if (date <= new Date(permit.workEndTime)) {
+      return Alert.alert("Invalid Date", "New end time must be later than the current one.");
+    }
+    try {
+      await api.extendWorkEndTime(permit.workflowDataId, date.toISOString());
+      Alert.alert("Success", "Work end time has been extended.");
+      refetch();
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to extend permit.");
+    }
+  }
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
       <CustomHeader
@@ -229,6 +279,31 @@ export default function PermitDetails() {
               </Pressable>
             </View>
           </>
+        )}
+
+        {/* Extend Permit Button */}
+        {canExtendPermit && (
+          <View className="my-6">
+            <Pressable
+              onPress={() => setShowDatePicker(true)}
+              className="py-3 rounded-xl items-center bg-blue-600"
+            >
+              <Text className="text-white font-medium">Extend Work End Time</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {/* DateTime Picker Modal */}
+        {showDatePicker && (
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={newWorkEndTime}
+            mode="datetime"
+            is24Hour={true}
+            display="default"
+            onChange={onDateTimeChange}
+            minimumDate={workEndTime ? new Date(workEndTime) : new Date()}
+          />
         )}
 
         {/* Security button */}

@@ -303,6 +303,17 @@ export async function fetchWorkflowDataById(workflowDataId: number) {
   return res.json();
 }
 
+export async function extendWorkEndTime(workflowDataId: number, newEndTime: string) {
+  if (!workflowDataId) throw new Error("Workflow Data ID is required");
+  const res = await fetch(`${API_BASE_URL}api/workflow-data/${workflowDataId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ end_time: newEndTime }),
+  });
+  if (!res.ok) throw new Error(await res.text() || "Failed to extend work end time");
+  return res.json();
+}
+
 // -------------------- Applications --------------------
 export async function saveApplication(id: number | null, payload: any, isUpdate: boolean) {
   const url = id && isUpdate ? `${API_BASE_URL}api/applications/${id}` : `${API_BASE_URL}api/applications/`;

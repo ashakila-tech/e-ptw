@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List
 from datetime import datetime
-
+from datetime import timedelta
 from ._crud_factory import make_crud_router
 from .. import models, schemas
 from ..deps import get_db, get_current_user, require_role
@@ -162,6 +162,37 @@ def confirm_security_action(
     db.refresh(app)
     return {"message": message, "status": app.status}
 
+@router.get("/{application_id}/check-extension-eligibility", response_model=schemas.PermitExtensionEligibility)
+def check_permit_extension_eligibility(application_id: int, db: Session = Depends(get_db)):
+    """
+    Checks if a permit is eligible for a work time extension based on server time.
+    """
+    permit = db.query(models.Application).options(
+        joinedload(models.Application.workflow_data)
+    ).filter(models.Application.id == application_id).first()
+
+    if not permit:
+        raise HTTPException(status_code=404, detail="Permit not found")
+
+    # 1. Check if permit status is ACTIVE
+    if permit.status != "ACTIVE":
+        return {"eligible": False, "reason": f"Permit status is '{permit.status}', not 'ACTIVE'."}
+
+    # 2. Check if work end time exists
+    if not permit.workflow_data or not permit.workflow_data.end_time:
+        return {"eligible": False, "reason": "Permit does not have a work end time."}
+
+    # 3. Perform date comparison using server time
+    work_end_time = permit.workflow_data.end_time
+    today = datetime.utcnow().date()
+    
+    # The cutoff date is 3 days before the work_end_time (inclusive)
+    cutoff_date = work_end_time.date() - timedelta(days=3)
+
+    if today < cutoff_date:
+        return {"eligible": False, "reason": f"Extension window opens on {cutoff_date.strftime('%d %b %Y')}."}
+
+    return {"eligible": True, "reason": "Permit is eligible for extension."}
 
 # Attach the CRUD routes, GET/POST/PUT/DELETE
 crud_router = make_crud_router(

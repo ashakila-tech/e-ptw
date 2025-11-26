@@ -292,6 +292,11 @@ class ApplicationUpdate(BaseModel):
     worker_ids: Optional[List[int]] = None
     safety_equipment_ids: Optional[List[int]] = None
 
+# ---------- Permit Extension Eligibility ----------
+class PermitExtensionEligibility(BaseModel):
+    eligible: bool
+    reason: str | None = None
+
 # ---------- ApplicationWorker ----------
 class ApplicationWorkerBase(BaseModel):
     application_id: int
