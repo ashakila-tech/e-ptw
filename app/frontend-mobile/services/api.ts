@@ -305,12 +305,24 @@ export async function fetchWorkflowDataById(workflowDataId: number) {
 
 export async function extendWorkEndTime(workflowDataId: number, newEndTime: string) {
   if (!workflowDataId) throw new Error("Workflow Data ID is required");
+  const token = await AsyncStorage.getItem("access_token");
+  if (!token) throw new Error("Authentication token not found.");
+
   const res = await fetch(`${API_BASE_URL}api/workflow-data/${workflowDataId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    method: "PATCH", // Use PATCH for partial updates
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ end_time: newEndTime }),
   });
   if (!res.ok) throw new Error(await res.text() || "Failed to extend work end time");
+  return res.json();
+}
+
+export async function checkExtensionEligibility(permitId: number) {
+  const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/check-extension-eligibility`);
+  if (!res.ok) throw new Error("Failed to check extension eligibility");
   return res.json();
 }
 

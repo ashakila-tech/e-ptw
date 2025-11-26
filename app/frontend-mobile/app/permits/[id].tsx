@@ -35,7 +35,11 @@ export default function PermitDetails() {
   const [search, setSearch] = useState("");
   
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [newWorkEndTime, setNewWorkEndTime] = useState(new Date());
+  
+  const [canExtend, setCanExtend] = useState(false);
+  const [extensionReason, setExtensionReason] = useState<string | null>(null);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -48,6 +52,23 @@ export default function PermitDetails() {
       setNewWorkEndTime(new Date(permit.workEndTime));
     }
   }, [permit?.workEndTime]);
+
+  useEffect(() => {
+    const checkEligibility = async () => {
+      // Reset state on check
+      setCanExtend(false);
+      setExtensionReason(null);
+
+      if (permit?.id && userId === permit?.applicantId) {
+        try {
+          const { eligible, reason } = await api.checkExtensionEligibility(permit.id);
+          setCanExtend(eligible);
+          setExtensionReason(reason);
+        } catch (e) { setCanExtend(false); }
+      }
+    };
+    checkEligibility();
+  }, [permit?.id, permit?.applicantId, userId, permit?.status]); // Re-check if status changes
 
   const filteredWorkers = useMemo(() => {
     let list = permit?.workers || [];
@@ -89,22 +110,6 @@ export default function PermitDetails() {
   const isWithinWorkWindow = workStartTime && workEndTime && now >= workStartTime && now <= workEndTime;
 
   const canConfirmSecurity = permit.status === PermitStatus.APPROVED && isWithinWorkWindow;
-  
-  // --- Extend Permit Logic ---
-  let isBeforeThreeDayWindow = false;
-  if (workEndTime) {
-    // Create a date for 'today' at the start of the day for a clean comparison
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    // Create a date for the cutoff, which is 3 days before the workEndTime
-    const cutoffDate = new Date(workEndTime);
-    cutoffDate.setDate(cutoffDate.getDate() - 3);
-    cutoffDate.setHours(0, 0, 0, 0);
-    // The button should be visible if today is on or before the cutoff date
-    isBeforeThreeDayWindow = today >= cutoffDate; // Changed to >= for "on or after"
-  }
-
-  const canExtendPermit = userId === permit?.applicantId && permit?.status === PermitStatus.ACTIVE && isBeforeThreeDayWindow;
 
   async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
     if (!myApproval) return Alert.alert("Error", "No pending approval found for you.");
@@ -150,15 +155,29 @@ export default function PermitDetails() {
     }
   }
 
-  const onDateTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    const currentDate = selectedDate || newWorkEndTime;
-    setShowDatePicker(Platform.OS === 'ios');
-    setNewWorkEndTime(currentDate);
-
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowDatePicker(false); // Always hide date picker
     if (event.type === "set") {
-      handleExtendPermit(currentDate);
+      const currentDate = selectedDate || newWorkEndTime;
+      setNewWorkEndTime(currentDate);
+      setShowTimePicker(true); // Show time picker next
     }
   };
+
+  const onTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowTimePicker(false); // Always hide time picker
+    if (event.type === "set") {
+      const selectedTime = selectedDate || newWorkEndTime;
+      const finalDate = new Date(newWorkEndTime); // Start with the date part
+
+      // Apply the new time
+      finalDate.setHours(selectedTime.getHours());
+      finalDate.setMinutes(selectedTime.getMinutes());
+      finalDate.setSeconds(selectedTime.getSeconds());
+
+      handleExtendPermit(finalDate);
+    }
+  }
 
   async function handleExtendPermit(date: Date) {
     if (!permit?.workflowDataId) return Alert.alert("Error", "Workflow data ID not found.");
@@ -169,8 +188,8 @@ export default function PermitDetails() {
       await api.extendWorkEndTime(permit.workflowDataId, date.toISOString());
       Alert.alert("Success", "Work end time has been extended.");
       refetch();
-    } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to extend permit.");
+    } catch (error: any) {
+      console.error("Failed to extend permit:", error.message || error);
     }
   }
   return (
@@ -282,7 +301,7 @@ export default function PermitDetails() {
         )}
 
         {/* Extend Permit Button */}
-        {canExtendPermit && (
+        {userId === permit?.applicantId && canExtend && (
           <View className="my-6">
             <Pressable
               onPress={() => setShowDatePicker(true)}
@@ -293,15 +312,31 @@ export default function PermitDetails() {
           </View>
         )}
 
+        {/* Reason for disabled extend button */}
+        {userId === permit?.applicantId && !canExtend && extensionReason && (
+          <Text className="text-center text-sm text-gray-600 mt-2 italic">{extensionReason}</Text>
+        )}
+
         {/* DateTime Picker Modal */}
         {showDatePicker && (
           <DateTimePicker
-            testID="dateTimePicker"
+            testID="datePicker"
             value={newWorkEndTime}
-            mode="datetime"
-            is24Hour={true}
+            mode="date"
             display="default"
-            onChange={onDateTimeChange}
+            onChange={onDateChange}
+            minimumDate={workEndTime ? new Date(workEndTime) : new Date()}
+          />
+        )}
+
+        {showTimePicker && (
+          <DateTimePicker
+            testID="timePicker"
+            value={newWorkEndTime}
+            mode="time"
+            is24Hour={false}
+            display="default"
+            onChange={onTimeChange}
             minimumDate={workEndTime ? new Date(workEndTime) : new Date()}
           />
         )}

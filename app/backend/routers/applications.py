@@ -176,7 +176,7 @@ def check_permit_extension_eligibility(application_id: int, db: Session = Depend
 
     # 1. Check if permit status is ACTIVE
     if permit.status != "ACTIVE":
-        return {"eligible": False, "reason": f"Permit status is '{permit.status}', not 'ACTIVE'."}
+        return {"eligible": False, "reason": f"Permit status is '{permit.status}'."}
 
     # 2. Check if work end time exists
     if not permit.workflow_data or not permit.workflow_data.end_time:
