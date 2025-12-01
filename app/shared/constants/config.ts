@@ -1,0 +1,1 @@
+export const ADMIN_PORTAL_TITLE = "Permit to Work - Admin Portal";
