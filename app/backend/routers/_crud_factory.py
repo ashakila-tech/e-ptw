@@ -51,7 +51,7 @@ def make_crud_router(
     # --- UPDATE ---
     _UpdateSchema = UpdateSchema or InSchema
 
-    @router.put("/{item_id}", response_model=OutSchema)
+    @router.put("/{item_id:int}", response_model=OutSchema)
     def update_item(item_id: int, payload: _UpdateSchema, db: Session = Depends(get_db)):
         obj = db.get(Model, item_id)
         if not obj:
@@ -65,7 +65,7 @@ def make_crud_router(
         return obj
 
     # --- DELETE ---
-    @router.delete("/{item_id}", status_code=204)
+    @router.delete("/{item_id:int}", status_code=204)
     def delete_item(item_id: int, db: Session = Depends(get_db)):
         obj = db.get(Model, item_id)
         if not obj:
