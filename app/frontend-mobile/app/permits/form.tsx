@@ -166,11 +166,15 @@ export default function ApplicationForm() {
         </View>
 
         {/* Start / End Date */}
-        <Text className="text-base text-gray-700 mt-4 mb-2">Start Date and Time</Text>
-        <DatePickerField value={startTime} onChange={setStartTime} />
+        <View style={{ zIndex: 60 }}>
+          <Text className="text-base text-gray-700 mt-4 mb-2">Start Date and Time</Text>
+          <DatePickerField value={startTime} onChange={setStartTime} />
+        </View>
 
-        <Text className="text-base text-gray-700 mt-4 mb-2">End Date and Time</Text>
-        <DatePickerField value={endTime} onChange={setEndTime} />
+        <View style={{ zIndex: 55 }}>
+          <Text className="text-base text-gray-700 mt-4 mb-2">End Date and Time</Text>
+          <DatePickerField value={endTime} onChange={setEndTime} />
+        </View>
 
         {/* Document Upload */}
         <Text className="text-base text-gray-700 mt-4 mb-2">Document</Text>

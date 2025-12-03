@@ -1,59 +1,76 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { View, Text, Pressable, Platform } from "react-native";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { format } from "date-fns";
+import Datetime from "react-datetime";
+import "react-datetime/css/react-datetime.css";
 
-export default function DatePickerField({
-  value,
-  onChange,
-}: {
+// In-component styles for the web date picker popup.
+const WebDatePickerStyles = () => (
+  <style>
+    {`
+      .rdtPicker {
+        background-color: white !important;
+        z-index: 9999 !important;
+        border: 1px solid #ccc !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+      }
+    `}
+  </style>
+);
+
+interface DatePickerFieldProps {
   value: Date | null;
-  onChange: (date: Date) => void;
-}) {
-  const [isPickerVisible, setPickerVisible] = useState(false);
+  onChange: (date: Date | null) => void;
+}
 
-  const handleConfirm = (date: Date) => {
-    onChange(date);
-    setPickerVisible(false);
-  };
+export default function DatePickerField({ value, onChange }: DatePickerFieldProps) {
+  const [show, setShow] = useState(false);
 
-  const formatDate = (date: Date) => {
-    const day = date.getDate();
-    const year = date.getFullYear();
+  // --- Web Implementation ---
+  if (Platform.OS === "web") {
+    const handleWebChange = (momentDate: any) => {
+      // react-datetime returns a Moment.js object or a string
+      if (momentDate && typeof momentDate.toDate === "function") {
+        onChange(momentDate.toDate());
+      } else {
+        onChange(null);
+      }
+    };
 
-    const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ];
-    const month = monthNames[date.getMonth()];
+    return (
+      <View>
+        <WebDatePickerStyles />
+        <Datetime
+          value={value || undefined}
+          onChange={handleWebChange}
+          inputProps={{
+            className: "border border-gray-300 rounded-2xl px-4 py-3 w-full bg-white",
+            placeholder: "Select date and time",
+          }}
+          dateFormat="D MMM YYYY"
+          timeFormat="h:mm A"
+        />
+      </View>
+    );
+  }
 
-    // 12-hour time format
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours === 0 ? 12 : hours; // convert 0 to 12
-
-    return `${day} ${month} ${year} ${hours}:${minutes} ${ampm}`;
+  // --- Native (Android/iOS) Implementation ---
+  const onNativeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShow(Platform.OS === "ios"); // On iOS, the picker is a modal
+    if (event.type === "set" && selectedDate) {
+      onChange(selectedDate);
+    }
   };
 
   return (
     <View>
-      <TouchableOpacity
-        onPress={() => setPickerVisible(true)}
-        className="border border-gray-300 rounded-2xl px-4 py-3 bg-gray-50"
-      >
-        <Text className="text-gray-900">
-          {value ? formatDate(value) : "Select date & time"}
+      <Pressable onPress={() => setShow(true)} className="border border-gray-300 rounded-2xl px-4 py-3">
+        <Text className={value ? "text-black" : "text-gray-400"}>
+          {value ? format(value, "PPP p") : "Select date and time"}
         </Text>
-      </TouchableOpacity>
-
-      <DateTimePickerModal
-        isVisible={isPickerVisible}
-        mode="datetime"
-        date={value || new Date()}
-        onConfirm={handleConfirm}
-        onCancel={() => setPickerVisible(false)}
-      />
+      </Pressable>
+      {show && <DateTimePicker value={value || new Date()} mode="datetime" display="default" onChange={onNativeChange} />}
     </View>
   );
 }

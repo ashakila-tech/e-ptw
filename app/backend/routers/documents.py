@@ -13,54 +13,6 @@ UPLOAD_DIR = "/app/ptw-uploads"
 # Create the base router
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
-# @router.post("/upload", response_model=schemas.DocumentOut)
-# def upload_document(
-#     company_id: int,
-#     name: str,
-#     file: UploadFile = File(...),
-#     db: Session = Depends(get_db),
-# ):
-#     """
-#     Upload a document and store it in the server.
-#     """
-#     allowed = {
-#         "application/pdf",
-#         "application/vnd.openxmlformats-officedocument.wordprocessingml.document", # .docx
-#         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", # .xlsx
-#         "application/vnd.ms-excel", # .xls
-#         "text/csv", # .csv
-#         "application/vnd.openxmlformats-officedocument.presentationml.presentation", # .pptx
-#         "image/jpeg",
-#         "image/png",
-#     }
-#     if file.content_type not in allowed:
-#         raise HTTPException(400, detail=f"Unsupported file type: {file.content_type}")
-
-#     os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-#     # Sanitize original filename and create a unique filename to prevent overwrites
-#     base, ext = os.path.splitext(file.filename)
-#     safe_base = "".join(c for c in base if c.isalnum() or c in (' ', '_', '-')).rstrip()
-#     unique_id = uuid.uuid4().hex[:8] # Use a short UUID for uniqueness
-#     unique_filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{unique_id}_{safe_base}{ext}"
-#     path = os.path.join(UPLOAD_DIR, unique_filename)
-
-#     with open(path, "wb") as buf:
-#         shutil.copyfileobj(file.file, buf)
-
-#     # Set server time
-#     doc = models.Document(
-#         company_id=company_id,
-#         name=name,
-#         path=path,
-#         time=datetime.utcnow()   # store current UTC time
-#     )
-
-#     db.add(doc)
-#     db.commit()
-#     db.refresh(doc)
-#     return doc
-
 @router.post("/upload", response_model=schemas.DocumentOut)
 def upload_document(
     company_id: int,
@@ -123,38 +75,6 @@ def upload_document(
     db.refresh(doc)
 
     return doc
-
-
-# @router.post("/upload", response_model=schemas.DocumentOut)
-# def upload_document(
-#     company_id: int,
-#     name: str,
-#     file: UploadFile = File(...),
-#     db: Session = Depends(get_db),
-# ):
-#     """
-#     Upload a document and store it in the server.
-#     """
-#     allowed = {
-#         "application/pdf",
-#         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-#         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-#         "image/jpeg",
-#         "image/png",
-#     }
-#     if file.content_type not in allowed:
-#         raise HTTPException(400, detail=f"Unsupported file type: {file.content_type}")
-
-#     os.makedirs(UPLOAD_DIR, exist_ok=True)
-#     safe_name = file.filename.replace("/", "_").replace("\\", "_")
-#     path = os.path.join(UPLOAD_DIR, safe_name)
-
-#     with open(path, "wb") as buf:
-#         shutil.copyfileobj(file.file, buf)
-
-#     doc = models.Document(company_id=company_id, name=name, path=path)
-#     db.add(doc); db.commit(); db.refresh(doc)
-#     return doc
 
 @router.get("/{doc_id}/download")
 def download_document(doc_id: int, db: Session = Depends(get_db)):

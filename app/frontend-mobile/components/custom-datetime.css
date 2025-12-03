@@ -1,0 +1,12 @@
+/* Ensure the calendar popup has a white background and is on top of other elements */
+.rdtPicker {
+  background-color: white !important;
+  z-index: 9999 !important; /* A high z-index to ensure it appears above other content */
+  border: 1px solid #ccc !important; /* Optional: Add a subtle border */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important; /* Optional: Add a subtle shadow */
+}
+
+/* Optional: Adjust input field styling if needed, though Tailwind should handle this */
+.form-control.rdtInput {
+  /* Add any specific styles for the input if Tailwind classes are not sufficient */
+}

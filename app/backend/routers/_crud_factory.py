@@ -29,7 +29,7 @@ def make_crud_router(
         return [OutSchema.model_validate(x, from_attributes=True) for x in q.all()]
 
     # --- GET ---
-    @router.get("/{item_id}", response_model=OutSchema)
+    @router.get("/{item_id:int}", response_model=OutSchema)
     def get_item(item_id: int, db: Session = Depends(get_db)):
         obj = db.get(Model, item_id)
         if not obj:
