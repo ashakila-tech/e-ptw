@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Form
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import os, shutil, mimetypes, uuid
@@ -15,8 +15,8 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 
 @router.post("/upload", response_model=schemas.DocumentOut)
 def upload_document(
-    company_id: int,
-    name: str,
+    company_id: int = Form(...),
+    name: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):

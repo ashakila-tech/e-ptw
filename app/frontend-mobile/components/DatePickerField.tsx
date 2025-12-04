@@ -26,6 +26,9 @@ interface DatePickerFieldProps {
 
 export default function DatePickerField({ value, onChange }: DatePickerFieldProps) {
   const [show, setShow] = useState(false);
+  // --- State for multi-step native picker ---
+  const [date, setDate] = useState(value || new Date());
+  const [mode, setMode] = useState<'date' | 'time'>('date');
 
   // --- Web Implementation ---
   if (Platform.OS === "web") {
@@ -56,21 +59,50 @@ export default function DatePickerField({ value, onChange }: DatePickerFieldProp
   }
 
   // --- Native (Android/iOS) Implementation ---
+  const showPicker = (currentMode: 'date' | 'time') => {
+    setShow(true);
+    setMode(currentMode);
+  };
+
   const onNativeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShow(Platform.OS === "ios"); // On iOS, the picker is a modal
-    if (event.type === "set" && selectedDate) {
-      onChange(selectedDate);
+    const currentDate = selectedDate || date;
+
+    // On Android, the picker is dismissed automatically. On iOS, we need to hide it.
+    if (Platform.OS === 'android') {
+      setShow(false);
+    }
+
+    if (event.type === 'set') {
+      setDate(currentDate);
+      if (mode === 'date') {
+        // After picking a date, automatically show the time picker.
+        showPicker('time');
+      } else {
+        // After picking a time, the process is complete.
+        onChange(currentDate);
+        if (Platform.OS === 'ios') setShow(false); // Hide iOS picker
+      }
+    } else {
+      // User cancelled, hide the picker.
+      setShow(false);
     }
   };
 
   return (
     <View>
-      <Pressable onPress={() => setShow(true)} className="border border-gray-300 rounded-2xl px-4 py-3">
+      <Pressable onPress={() => showPicker('date')} className="border border-gray-300 rounded-2xl px-4 py-3">
         <Text className={value ? "text-black" : "text-gray-400"}>
           {value ? format(value, "PPP p") : "Select date and time"}
         </Text>
       </Pressable>
-      {show && <DateTimePicker value={value || new Date()} mode="datetime" display="default" onChange={onNativeChange} />}
+      {show && (
+        <DateTimePicker
+          value={date}
+          mode={mode} // Use dynamic mode ('date' then 'time')
+          display="default"
+          onChange={onNativeChange}
+        />
+      )}
     </View>
   );
 }

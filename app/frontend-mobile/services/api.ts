@@ -236,11 +236,35 @@ export async function createSafetyEquipment(payload: any) {
 }
 
 // -------------------- Documents --------------------
+// export async function uploadDocument(file: any, companyId: number = 1) {
+//   const formData = new FormData();
+//   formData.append("file", { uri: file.uri, type: file.mimeType || "application/octet-stream", name: file.name } as any);
+//   const query = `?company_id=${encodeURIComponent(companyId)}&name=${encodeURIComponent(file.name)}`;
+//   const res = await fetch(`${API_BASE_URL}api/documents/upload${query}`, { method: "POST", body: formData, headers: { Accept: "application/json" } });
+//   if (!res.ok) throw new Error(`Failed to upload document (${res.status})`);
+//   return res.json();
+// }
 export async function uploadDocument(file: any, companyId: number = 1) {
   const formData = new FormData();
-  formData.append("file", { uri: file.uri, type: file.mimeType || "application/octet-stream", name: file.name } as any);
-  const query = `?company_id=${encodeURIComponent(companyId)}&name=${encodeURIComponent(file.name)}`;
-  const res = await fetch(`${API_BASE_URL}api/documents/upload${query}`, { method: "POST", body: formData, headers: { Accept: "application/json" } });
+  formData.append("file", {
+    uri: file.uri,
+    type: file.mimeType || "application/octet-stream",
+    name: file.name,
+  } as any);
+  
+  // Add form fields here
+  formData.append("company_id", String(companyId));
+  formData.append("name", file.name);
+
+  const res = await fetch(`${API_BASE_URL}api/documents/upload`, {
+    method: "POST",
+    body: formData,
+    headers: {
+      Accept: "application/json",
+      // "Content-Type": "multipart/form-data", // Let React Native set this with the boundary
+    },
+  });
+
   if (!res.ok) throw new Error(`Failed to upload document (${res.status})`);
   return res.json();
 }
