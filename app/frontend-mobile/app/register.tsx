@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, Alert, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff } from "lucide-react-native";
+import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 
 export default function Register() {
   const router = useRouter();
@@ -37,12 +38,12 @@ export default function Register() {
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert("Error", "All fields are required.");
+      crossPlatformAlert("Error", "All fields are required.");
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
+      crossPlatformAlert("Error", "Passwords do not match.");
       return;
     }
 
@@ -56,10 +57,10 @@ export default function Register() {
         password,
       });
 
-      Alert.alert("Success", "Account created successfully. Please log in.");
+      crossPlatformAlert("Success", "Account created successfully. Please log in.");
       router.replace("/login");
     } catch (err: any) {
-      Alert.alert("Registration failed", err.message || "Something went wrong.");
+      crossPlatformAlert("Registration failed", err.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, Alert } from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff } from "lucide-react-native"; // For clean eye icons
+import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 
 export default function Login() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please enter both email and password.");
+      crossPlatformAlert("Error", "Please enter both email and password.");
       return;
     }
 
@@ -31,7 +32,7 @@ export default function Login() {
       await login(email, password);
       router.replace("/(tabs)/home");
     } catch (err: any) {
-      Alert.alert("Login failed", err.message);
+      crossPlatformAlert("Login failed", err.message);
     } finally {
       setLoading(false);
     }

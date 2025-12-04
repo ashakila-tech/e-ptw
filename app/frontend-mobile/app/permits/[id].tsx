@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Pressable,
-  Alert,
   Platform,
   RefreshControl,
 } from "react-native";
@@ -15,6 +14,7 @@ import { useLocalSearchParams, Stack, useRouter } from "expo-router";
 import LoadingScreen from "@/components/LoadingScreen";
 import { usePermitDetails } from "@/hooks/usePermitDetails";
 import { useUser } from "@/contexts/UserContext";
+import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { downloadDocument } from "@/utils/download";
 import { getStatusClass } from "@/utils/class";
 import { formatDate } from "@/utils/date";
@@ -112,9 +112,9 @@ export default function PermitDetails() {
   const canConfirmSecurity = permit.status === PermitStatus.APPROVED && isWithinWorkWindow;
 
   async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
-    if (!myApproval) return Alert.alert("Error", "No pending approval found for you.");
+    if (!myApproval) return crossPlatformAlert("Error", "No pending approval found for you.");
     const myApprovalData = approvalData.find(ad => ad.approval_id === myApproval.id && ad.workflow_data_id === permit.workflowDataId);
-    if (!myApprovalData) return Alert.alert("Error", "ApprovalData record not found.");
+    if (!myApprovalData) return crossPlatformAlert("Error", "ApprovalData record not found.");
 
     try {
       await api.updateApprovalData({ ...myApprovalData, status: action, time: new Date().toISOString() });
@@ -129,16 +129,16 @@ export default function PermitDetails() {
         }
       }
 
-      Alert.alert("Success", `Permit ${action.toLowerCase()} successfully!`);
+      crossPlatformAlert("Success", `Permit ${action.toLowerCase()} successfully!`);
       refetch();
     } catch (err: any) {
       console.error("Approval update failed:", err);
-      Alert.alert("Error", err.message || "Failed to update status");
+      crossPlatformAlert("Error", err.message || "Failed to update status");
     }
   }
 
   function confirmAction(action: "APPROVED" | "REJECTED") {
-    Alert.alert(
+    crossPlatformAlert(
       action === "APPROVED" ? "Approve Permit" : "Reject Permit",
       `Confirm to ${action.toLowerCase()} this permit?`,
       [{ text: "Cancel", style: "cancel" }, { text: "Yes", onPress: () => handleApprovalAction(action) }]
@@ -148,10 +148,10 @@ export default function PermitDetails() {
   async function handleSecurityConfirm() {
     try {
       await api.confirmSecurity(permit.id);
-      Alert.alert("Success", "Security confirmation successful");
+      crossPlatformAlert("Success", "Security confirmation successful");
       refetch();
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Security confirmation failed");
+      crossPlatformAlert("Error", err.message || "Security confirmation failed");
     }
   }
 
@@ -180,13 +180,13 @@ export default function PermitDetails() {
   }
 
   async function handleExtendPermit(date: Date) {
-    if (!permit?.workflowDataId) return Alert.alert("Error", "Workflow data ID not found.");
+    if (!permit?.workflowDataId) return crossPlatformAlert("Error", "Workflow data ID not found.");
     if (date <= new Date(permit.workEndTime)) {
-      return Alert.alert("Invalid Date", "New end time must be later than the current one.");
+      return crossPlatformAlert("Invalid Date", "New end time must be later than the current one.");
     }
     try {
       await api.extendWorkEndTime(permit.workflowDataId, date.toISOString());
-      Alert.alert("Success", "Work end time has been extended.");
+      crossPlatformAlert("Success", "Work end time has been extended.");
       refetch();
     } catch (error: any) {
       console.error("Failed to extend permit:", error.message || error);

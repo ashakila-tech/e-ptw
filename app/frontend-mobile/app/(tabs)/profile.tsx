@@ -1,11 +1,12 @@
 import React, { useCallback, useState, useMemo } from "react";
 import { useRouter } from "expo-router";
-import { View, Text, Pressable, ScrollView, Alert, RefreshControl, TextInput } from "react-native";
+import { View, Text, Pressable, ScrollView, RefreshControl, TextInput } from "react-native";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Ionicons } from "@expo/vector-icons";
 import WorkerTable from "@/components/WorkerTable";
+import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import * as api from "@/services/api";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -46,15 +47,15 @@ export default function ProfileTab() {
   };
 
   const handleDeleteWorker = (worker: any) => {
-    Alert.alert("Delete Worker", `Are you sure you want to delete ${worker.name}?`, [
+    crossPlatformAlert("Delete Worker", `Are you sure you want to delete ${worker.name}?`, [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: async () => {
           try {
             await api.deleteWorker(worker.id);
-            Alert.alert("Success", "Worker has been deleted.");
+            crossPlatformAlert("Success", "Worker has been deleted.");
             refreshProfile();
           } catch (err: any) {
-            Alert.alert("Error", err.message || "Failed to delete worker.");
+            crossPlatformAlert("Error", err.message || "Failed to delete worker.");
           }
         } 
       },

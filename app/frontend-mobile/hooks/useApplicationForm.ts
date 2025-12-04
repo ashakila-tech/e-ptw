@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
@@ -22,6 +22,7 @@ import {
   downloadDocumentById,
 } from "@/services/api";
 import Constants from "expo-constants";
+import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { useUser } from "@/contexts/UserContext";
 import { PermitStatus } from "@/constants/Status";
 
@@ -186,9 +187,9 @@ export function useApplicationForm(existingApp: any, router: any) {
         const doc = await uploadDocument(fileToUpload, companyId);
         setDocumentId(doc.id);
         setDocumentName(doc.name);
-        Alert.alert("Upload Success", `Uploaded: ${doc.name}`);
+        crossPlatformAlert("Upload Success", `Uploaded: ${doc.name}`);
       } catch (err: any) {
-        Alert.alert("Error", err.message || "Upload failed");
+        crossPlatformAlert("Error", err.message || "Upload failed");
       } finally {
         setUploading(false);
       }
@@ -230,17 +231,17 @@ export function useApplicationForm(existingApp: any, router: any) {
             if (await Sharing.isAvailableAsync()) {
               await Sharing.shareAsync(fileUri);
             } else {
-              Alert.alert("Sharing not available", "Sharing is not available on this device.");
+              crossPlatformAlert("Sharing not available", "Sharing is not available on this device.");
             }
           } catch (e: any) {
-            Alert.alert("Error", `Failed to save or share file: ${e.message}`);
+            crossPlatformAlert("Error", `Failed to save or share file: ${e.message}`);
           }
         };
-        reader.onerror = (error) => Alert.alert("Error", "Failed to read file blob.");
+        reader.onerror = (error) => crossPlatformAlert("Error", "Failed to read file blob.");
         reader.readAsDataURL(blob);
       }
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Download failed");
+      crossPlatformAlert("Error", err.message || "Download failed");
     }
   };
 
@@ -283,12 +284,12 @@ export function useApplicationForm(existingApp: any, router: any) {
       // -------------------- Validate required fields --------------------
       if (status === "SUBMITTED") {
         if (!permitName.trim() || !permitType || !location || !jobAssigner || !startTime || !endTime) {
-          Alert.alert("Error", "Please complete all required fields before submitting.");
+          crossPlatformAlert("Error", "Please complete all required fields before submitting.");
           return;
         }
       } else if (status === "DRAFT") {
         if (!permitName.trim() || !permitType || !location || !startTime || !endTime || !documentId) {
-          Alert.alert(
+          crossPlatformAlert(
             "Error",
             "Please complete all required fields before saving as draft (except Job Assigner)."
           );
@@ -455,7 +456,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         }
       }
 
-      Alert.alert(
+      crossPlatformAlert(
         "Success",
         status === "DRAFT"
           ? "Application saved as draft."
@@ -469,7 +470,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         console.error("Response error data:", err.response.data);
         console.error("Response status:", err.response.status);
       }
-      Alert.alert("Error", err.message || "Something went wrong");
+      crossPlatformAlert("Error", err.message || "Something went wrong");
     }
   };
 
