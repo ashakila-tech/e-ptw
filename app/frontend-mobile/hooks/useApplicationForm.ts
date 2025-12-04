@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 import {
   fetchPermitTypes,
   fetchLocations,
@@ -17,6 +19,7 @@ import {
   createApprovalData,
   fetchPermitOfficersByPermitType,
   fetchLocationManagersByLocation,
+  downloadDocumentById,
 } from "@/services/api";
 import Constants from "expo-constants";
 import { useUser } from "@/contexts/UserContext";
@@ -172,11 +175,15 @@ export function useApplicationForm(existingApp: any, router: any) {
   const pickAndUploadDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
     if (!result.canceled) {
-      const file = result.assets[0];
+      // On web, the actual File object is nested. On native, the asset itself is used.
+      const asset = result.assets[0];
+      const fileToUpload = Platform.OS === 'web' ? (asset as any).file : asset;
+      fileToUpload.name = asset.name; // Ensure the name is consistent
+
       setUploading(true);
       try {
         const companyId = existingApp?.company_id ?? 1;
-        const doc = await uploadDocument(file, companyId);
+        const doc = await uploadDocument(fileToUpload, companyId);
         setDocumentId(doc.id);
         setDocumentName(doc.name);
         Alert.alert("Upload Success", `Uploaded: ${doc.name}`);
@@ -185,6 +192,55 @@ export function useApplicationForm(existingApp: any, router: any) {
       } finally {
         setUploading(false);
       }
+    }
+  };
+
+  // File download logic
+  const handleDownloadDocument = async () => {
+    if (!documentId) return;
+
+    try {
+      const blob = await downloadDocumentById(documentId);
+      const fileName = documentName || "download";
+
+      if (Platform.OS === "web") {
+        // Create a link and trigger the download
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        // On native, you might use Share or FileSystem API
+        const fileUri = FileSystem.cacheDirectory + fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+        // The blob needs to be read by a FileReader to get a base64 string
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64Data = (reader.result as string).split(",")[1];
+          try {
+            await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+
+            // Check if sharing is available
+            if (await Sharing.isAvailableAsync()) {
+              await Sharing.shareAsync(fileUri);
+            } else {
+              Alert.alert("Sharing not available", "Sharing is not available on this device.");
+            }
+          } catch (e: any) {
+            Alert.alert("Error", `Failed to save or share file: ${e.message}`);
+          }
+        };
+        reader.onerror = (error) => Alert.alert("Error", "Failed to read file blob.");
+        reader.readAsDataURL(blob);
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Download failed");
     }
   };
 
@@ -434,6 +490,7 @@ export function useApplicationForm(existingApp: any, router: any) {
     documentName,
     uploading,
     pickAndUploadDocument,
+    handleDownloadDocument,
     permitTypeOpen,
     permitType,
     permitTypeItems,

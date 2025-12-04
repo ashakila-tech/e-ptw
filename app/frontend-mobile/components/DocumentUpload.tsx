@@ -1,35 +1,15 @@
 import React from "react";
 import { TouchableOpacity, Text, View } from "react-native";
-import { downloadDocument } from "@/utils/download";
-import Constants from "expo-constants";
-
-const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 interface DocumentUploadProps {
   uploading: boolean;
   documentId?: number | null;
   documentName?: string | null;
-  onPress: () => void;
+  onUploadPress: () => void;
+  onDownloadPress: () => void;
 }
 
-export default function DocumentUpload({
-  uploading,
-  documentId,
-  documentName,
-  onPress,
-}: DocumentUploadProps) {
-  // Construct the download URL if document exists
-  const documentUrl = documentId && documentName ? `${API_BASE_URL}api/documents/${documentId}/download` : undefined;
-
-  const handleDownload = async (docId: number | null | undefined, name: string) => {
-    if (!docId || !name) return;
-
-    // Sanitize the name to prevent issues with filesystem characters.
-    const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
-
-    await downloadDocument(docId, safeName); // The util function handles the rest
-  };
-
+export default function DocumentUpload({ uploading, documentId, documentName, onUploadPress, onDownloadPress }: DocumentUploadProps) {
   return (
     <View className="mb-1">
       <View className="flex-row items-center justify-between">
@@ -46,7 +26,7 @@ export default function DocumentUpload({
 
         {/* Upload / Change button */}
         <TouchableOpacity
-          onPress={onPress}
+          onPress={onUploadPress}
           className="bg-primary rounded-2xl py-2 px-4 ml-2"
           disabled={uploading}
         >
@@ -60,10 +40,10 @@ export default function DocumentUpload({
         </TouchableOpacity>
 
         {/* Download button */}
-        {documentUrl && documentId && documentName && (
+        {documentId && (
           <TouchableOpacity
-            onPress={() => handleDownload(documentId, documentName!)}
-            className="bg-approved rounded-2xl py-2 px-4 ml-2"
+            onPress={onDownloadPress}
+            className="bg-green-600 rounded-2xl py-2 px-4 ml-2"
           >
             <Text className="text-white text-xs">Download</Text>
           </TouchableOpacity>

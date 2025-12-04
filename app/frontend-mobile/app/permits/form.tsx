@@ -23,7 +23,7 @@ export default function ApplicationForm() {
 
   const {
     permitName, setPermitName,
-    documentId, documentName, uploading, pickAndUploadDocument,
+    documentId, documentName, uploading, pickAndUploadDocument, handleDownloadDocument,
     permitTypeOpen, permitType, permitTypeItems, setPermitTypeOpen, setPermitType, setPermitTypeItems,
     locationOpen, location, locationItems, setLocationOpen, setLocation, setLocationItems,
     jobAssignerOpen, jobAssigner, jobAssignerItems, setJobAssignerOpen, setJobAssigner,
@@ -182,7 +182,8 @@ export default function ApplicationForm() {
           uploading={uploading}
           documentId={documentId}
           documentName={documentName}
-          onPress={pickAndUploadDocument}
+          onUploadPress={pickAndUploadDocument}
+          onDownloadPress={handleDownloadDocument}
         />
 
         {formError ? <Text className="text-red-600 mt-4">{formError}</Text> : null}

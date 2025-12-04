@@ -245,13 +245,20 @@ export async function createSafetyEquipment(payload: any) {
 //   return res.json();
 // }
 export async function uploadDocument(file: any, companyId: number = 1) {
+  // Platform-specific file handling for FormData
+  // On web, `file` is a File object. On native, it's an object with `uri`.
   const formData = new FormData();
-  formData.append("file", {
-    uri: file.uri,
-    type: file.mimeType || "application/octet-stream",
-    name: file.name,
-  } as any);
-  
+  if (file instanceof File) {
+    // Web environment
+    formData.append("file", file, file.name);
+  } else {
+    // React Native environment
+    formData.append("file", {
+      uri: file.uri,
+      type: file.mimeType || "application/octet-stream",
+      name: file.name,
+    } as any);
+  }
   // Add form fields here
   formData.append("company_id", String(companyId));
   formData.append("name", file.name);
