@@ -19,58 +19,66 @@ def make_crud_router(
     list_roles: Optional[list[str]] = None,
     read_roles: Optional[list[str]] = None,
     write_roles: Optional[list[str]] = None,
+    enable_list: bool = True,
+    enable_get: bool = True,
+    enable_create: bool = True,
+    enable_update: bool = True,
+    enable_delete: bool = True,
 ) -> APIRouter:
     router = APIRouter(prefix=prefix, tags=[tag])
 
     # --- LIST ---
-    @router.get("/", response_model=list[OutSchema])
-    def list_items(db: Session = Depends(get_db), page: int = 1, page_size: int = 20):
-        q = db.query(Model).offset((page - 1) * page_size).limit(page_size)
-        return [OutSchema.model_validate(x, from_attributes=True) for x in q.all()]
+    if enable_list:
+        @router.get("/", response_model=list[OutSchema])
+        def list_items(db: Session = Depends(get_db), page: int = 1, page_size: int = 20):
+            q = db.query(Model).offset((page - 1) * page_size).limit(page_size)
+            return [OutSchema.model_validate(x, from_attributes=True) for x in q.all()]
 
     # --- GET ---
-    @router.get("/{item_id:int}", response_model=OutSchema)
-    def get_item(item_id: int, db: Session = Depends(get_db)):
-        obj = db.get(Model, item_id)
-        if not obj:
-            raise HTTPException(404, f"{Model.__name__} not found")
-        return OutSchema.model_validate(obj, from_attributes=True)
+    if enable_get:
+        @router.get("/{item_id:int}", response_model=OutSchema)
+        def get_item(item_id: int, db: Session = Depends(get_db)):
+            obj = db.get(Model, item_id)
+            if not obj:
+                raise HTTPException(404, f"{Model.__name__} not found")
+            return OutSchema.model_validate(obj, from_attributes=True)
 
     # --- CREATE ---
-    _CreateSchema = CreateSchema or InSchema
-
-    @router.post("/", response_model=OutSchema)
-    def create_item(payload: _CreateSchema, db: Session = Depends(get_db)):
-        data = payload.model_dump()
-        if create_mutator:
-            data = create_mutator(data, db)
-        obj = Model(**data)
-        db.add(obj); db.commit(); db.refresh(obj)
-        return obj
+    if enable_create:
+        _CreateSchema = CreateSchema or InSchema
+        @router.post("/", response_model=OutSchema)
+        def create_item(payload: _CreateSchema, db: Session = Depends(get_db)):
+            data = payload.model_dump()
+            if create_mutator:
+                data = create_mutator(data, db)
+            obj = Model(**data)
+            db.add(obj); db.commit(); db.refresh(obj)
+            return obj
 
     # --- UPDATE ---
-    _UpdateSchema = UpdateSchema or InSchema
-
-    @router.put("/{item_id:int}", response_model=OutSchema)
-    def update_item(item_id: int, payload: _UpdateSchema, db: Session = Depends(get_db)):
-        obj = db.get(Model, item_id)
-        if not obj:
-            raise HTTPException(404, f"{Model.__name__} not found")
-        data = payload.model_dump(exclude_unset=True)  # only update provided fields
-        if update_mutator:
-            data = update_mutator(obj, data, db)
-        for k, v in data.items():
-            setattr(obj, k, v)
-        db.commit(); db.refresh(obj)
-        return obj
+    if enable_update:
+        _UpdateSchema = UpdateSchema or InSchema
+        @router.put("/{item_id:int}", response_model=OutSchema)
+        def update_item(item_id: int, payload: _UpdateSchema, db: Session = Depends(get_db)):
+            obj = db.get(Model, item_id)
+            if not obj:
+                raise HTTPException(404, f"{Model.__name__} not found")
+            data = payload.model_dump(exclude_unset=True)  # only update provided fields
+            if update_mutator:
+                data = update_mutator(obj, data, db)
+            for k, v in data.items():
+                setattr(obj, k, v)
+            db.commit(); db.refresh(obj)
+            return obj
 
     # --- DELETE ---
-    @router.delete("/{item_id:int}", status_code=204)
-    def delete_item(item_id: int, db: Session = Depends(get_db)):
-        obj = db.get(Model, item_id)
-        if not obj:
-            raise HTTPException(404, f"{Model.__name__} not found")
-        db.delete(obj); db.commit()
-        return
+    if enable_delete:
+        @router.delete("/{item_id:int}", status_code=204)
+        def delete_item(item_id: int, db: Session = Depends(get_db)):
+            obj = db.get(Model, item_id)
+            if not obj:
+                raise HTTPException(404, f"{Model.__name__} not found")
+            db.delete(obj); db.commit()
+            return
 
     return router

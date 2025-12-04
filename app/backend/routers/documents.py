@@ -121,8 +121,10 @@ crud_router = make_crud_router(
     prefix="",
     tag="Documents",
     list_roles=None,
-    read_roles=None,
-    write_roles=None,                  # open for now; tighten later
+    read_roles=None, # GET / and GET /{id}
+    write_roles=None, # PUT /{id}
+    enable_create=False, # Disable POST /
+    enable_delete=False, # Disable DELETE /{id}
 )
 
 router.include_router(crud_router)    # GET list/get, PUT
