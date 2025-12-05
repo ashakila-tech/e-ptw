@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as api from "@/services/api";
 import { useProfile } from "./useProfile";
+import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 
 export function useWorkerForm() {
   const router = useRouter();
@@ -74,9 +74,8 @@ export function useWorkerForm() {
         await api.createWorker(payload);
       }
       await refreshProfile();
-      Alert.alert("Success", `Worker "${name}" has been ${isEditMode ? 'updated' : 'added'}.`, [
-        { text: "OK", onPress: () => router.replace("/(tabs)/profile") }
-      ]);
+      crossPlatformAlert("Success", `Worker "${name}" has been ${isEditMode ? 'updated' : 'added'}.`);
+      router.replace("/(tabs)/profile");
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");
     } finally {

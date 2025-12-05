@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as api from "@/services/api";
 
 type UserContextType = {
   userId: number | null;
@@ -21,6 +23,27 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [companyId, setCompanyId] = useState<number | null>(null);
   const [isApproval, setIsApproval] = useState<boolean>(false);
   const [isSecurity, setIsSecurity] = useState<boolean>(false);
+
+  useEffect(() => {
+    const rehydrateUser = async () => {
+      try {
+        const token = await AsyncStorage.getItem("access_token");
+        if (token) {
+          const user = await api.getCurrentUser();
+          setUserId(user.id);
+          setUserName(user.name);
+          setCompanyId(user.company_id);
+          setIsApproval(user.is_approver);
+          setIsSecurity(user.is_security);
+        }
+      } catch (error) {
+        console.error("Failed to rehydrate user:", error);
+        // Could also clear token here if it's invalid
+      }
+    };
+
+    rehydrateUser();
+  }, []);
 
   return (
     <UserContext.Provider

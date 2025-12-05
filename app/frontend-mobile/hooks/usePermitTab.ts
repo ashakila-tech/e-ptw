@@ -10,12 +10,18 @@ const PLACEHOLDER_THRESHOLD = 3;
 export function usePermitTab() {
   const { userId, isApproval, isSecurity } = useUser();
   const [permits, setPermits] = useState<PermitData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const fetchPermits = useCallback(async () => {
-    if (!userId) return;
+    // Don't fetch if there's no user ID.
+    if (!userId) {
+      // If there's no user, we are not loading, and there are no permits.
+      setPermits([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-
+  
     try {
       const numericUserId = Number(userId);
 
