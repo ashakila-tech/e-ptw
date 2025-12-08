@@ -178,6 +178,7 @@ class ApprovalDataIn(BaseModel):
     time: Optional[datetime] = None
     role_name: Optional[str] = None
     level: Optional[int] = None
+    remarks: Optional[str] = None
 
 class ApprovalDataOut(ApprovalDataIn):
     id: int
@@ -193,6 +194,7 @@ class ApprovalDataUpdate(BaseModel):
     time: Optional[datetime] = None
     role_name: Optional[str] = None
     level: Optional[int] = None
+    remarks: Optional[str] = None
 
 # ---------- LocationManager ----------
 class LocationManagerBase(BaseModel):

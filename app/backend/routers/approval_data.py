@@ -61,11 +61,14 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
     - Updates Application status to REJECTED if any approver rejects
     """
     new_status = data.get("status")
+    new_remarks = data.get("remarks")
 
     # Update the ApprovalData object itself
     if new_status in {"APPROVED", "REJECTED"} and obj.status != new_status:
         obj.status = new_status
         obj.time = datetime.utcnow()
+        if new_remarks is not None:
+            obj.remarks = new_remarks
         db.flush()
 
     # Fetch all approval data for this workflow

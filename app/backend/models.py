@@ -134,6 +134,7 @@ class ApprovalData(Base):
     time = Column(DateTime, nullable=True)
     role_name = Column(String, nullable=True)
     level = Column(Integer, nullable=True)
+    remarks = Column(String, nullable=True)
 
 class LocationManager(Base):
     __tablename__ = "location_manager"
