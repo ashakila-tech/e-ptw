@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Pressable,
   Platform,
+  Modal,
   RefreshControl,
 } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -38,6 +39,9 @@ export default function PermitDetails() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [newWorkEndTime, setNewWorkEndTime] = useState(new Date());
   
+  const [remarksModalVisible, setRemarksModalVisible] = useState(false);
+  const [remarks, setRemarks] = useState("");
+
   const [canExtend, setCanExtend] = useState(false);
   const [extensionReason, setExtensionReason] = useState<string | null>(null);
 
@@ -111,13 +115,22 @@ export default function PermitDetails() {
 
   const canConfirmSecurity = permit.status === PermitStatus.APPROVED && isWithinWorkWindow;
 
-  async function handleApprovalAction(action: "APPROVED" | "REJECTED") {
+  async function handleApprovalAction(action: "APPROVED" | "REJECTED", remarksText?: string) {
     if (!myApproval) return crossPlatformAlert("Error", "No pending approval found for you.");
     const myApprovalData = approvalData.find(ad => ad.approval_id === myApproval.id && ad.workflow_data_id === permit.workflowDataId);
     if (!myApprovalData) return crossPlatformAlert("Error", "ApprovalData record not found.");
 
     try {
-      await api.updateApprovalData({ ...myApprovalData, status: action, time: new Date().toISOString() });
+      const payload: any = {
+        ...myApprovalData,
+        status: action,
+        time: new Date().toISOString(),
+      };
+
+      if (action === "REJECTED" && remarksText) {
+        payload.remarks = remarksText;
+      }
+      await api.updateApprovalData(payload);
 
       if (action === "APPROVED") {
         const nextApproval = approvals.find(a => a.level === myApproval.level + 1);
@@ -130,6 +143,8 @@ export default function PermitDetails() {
       }
 
       crossPlatformAlert("Success", `Permit ${action.toLowerCase()} successfully!`);
+      setRemarksModalVisible(false);
+      setRemarks("");
       refetch();
     } catch (err: any) {
       console.error("Approval update failed:", err);
@@ -138,11 +153,15 @@ export default function PermitDetails() {
   }
 
   function confirmAction(action: "APPROVED" | "REJECTED") {
-    crossPlatformAlert(
-      action === "APPROVED" ? "Approve Permit" : "Reject Permit",
-      `Confirm to ${action.toLowerCase()} this permit?`,
-      [{ text: "Cancel", style: "cancel" }, { text: "Yes", onPress: () => handleApprovalAction(action) }]
-    );
+    if (action === "REJECTED") {
+      setRemarksModalVisible(true);
+    } else {
+      crossPlatformAlert(
+        "Approve Permit",
+        "Confirm to approve this permit?",
+        [{ text: "Cancel", style: "cancel" }, { text: "Yes", onPress: () => handleApprovalAction(action) }]
+      );
+    }
   }
 
   async function handleSecurityConfirm() {
@@ -280,7 +299,8 @@ export default function PermitDetails() {
                 <Text className="text-base text-primary mb-1">Role: <Text className="font-semibold">{a.role_name || a.roleName || "Role"}</Text></Text>
                 <Text className="text-base text-primary mb-1">Approver: <Text className="font-semibold">{a.approver_name || "Unknown"}</Text></Text>
                 <Text className="text-base text-primary mb-1">Status: <Text className={getStatusClass(a.status)}>{a.status || PermitStatus.PENDING}</Text></Text>
-                <Text className="text-base text-primary mb-0">Time: <Text className="font-semibold">{a.time ? formatDate(a.time) : "-"}</Text></Text>
+                {a.remarks && <Text className="text-base text-primary mb-1">Remarks: <Text className="font-normal text-rejected italic">{a.remarks}</Text></Text>}
+                <Text className="text-base text-primary">Time: <Text className="font-semibold">{a.time ? formatDate(a.time) : "-"}</Text></Text>
               </View>
             ))
           ) : <Text className="text-gray-500 italic">No approvals yet</Text>}
@@ -300,6 +320,33 @@ export default function PermitDetails() {
             </View>
           </>
         )}
+
+        {/* Remarks Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={remarksModalVisible}
+          onRequestClose={() => setRemarksModalVisible(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/50 p-4">
+            <View className="bg-white rounded-xl p-6 w-full">
+              <Text className="text-lg font-bold text-primary mb-4">Add Rejection Remarks</Text>
+              <TextInput
+                placeholder="Please provide a reason for rejection..."
+                value={remarks}
+                onChangeText={setRemarks}
+                multiline
+                numberOfLines={4}
+                className="bg-secondary p-3 rounded-lg text-primary mb-6 h-24"
+                textAlignVertical="top"
+              />
+              <View className="flex-row justify-end">
+                <TouchableOpacity onPress={() => setRemarksModalVisible(false)} className="px-4 py-2 mr-2"><Text className="text-gray-600">Cancel</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => handleApprovalAction("REJECTED", remarks)} className="bg-rejected px-4 py-2 rounded-lg"><Text className="text-white font-semibold">Submit Rejection</Text></TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         {/* Extend Permit Button */}
         {userId === permit?.applicantId && canExtend && (

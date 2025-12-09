@@ -424,36 +424,36 @@ export function useApplicationForm(existingApp: any, router: any) {
           console.error("Error fetching safety officer:", err);
         }
 
-        // LEVEL 3 — SITE MANAGER (WAITING)
-        try {
-          const managerData = await fetchLocationManagersByLocation(location!);
-          const selectedManager = managerData && managerData.length > 0 ? managerData[0] : null;
+        // // LEVEL 3 — SITE MANAGER (WAITING)
+        // try {
+        //   const managerData = await fetchLocationManagersByLocation(location!);
+        //   const selectedManager = managerData && managerData.length > 0 ? managerData[0] : null;
 
-          if (selectedManager) {
-            const approval3 = await createApproval({
-              company_id: companyId,
-              workflow_id: workflowId,
-              user_group_id: null,
-              user_id: selectedManager.user_id,
-              name: `${permitName || "Untitled"} - ${selectedManager.user?.name || "Unknown"} - Site Manager`,
-              role_name: "Site Manager",
-              level: 3,
-            });
+        //   if (selectedManager) {
+        //     const approval3 = await createApproval({
+        //       company_id: companyId,
+        //       workflow_id: workflowId,
+        //       user_group_id: null,
+        //       user_id: selectedManager.user_id,
+        //       name: `${permitName || "Untitled"} - ${selectedManager.user?.name || "Unknown"} - Site Manager`,
+        //       role_name: "Site Manager",
+        //       level: 3,
+        //     });
 
-            await createApprovalData({
-              company_id: companyId,
-              approval_id: approval3.id,
-              document_id: payload.document_id ?? 0,
-              workflow_data_id: workflowDataId!,
-              status: PermitStatus.WAITING,
-              approver_name: selectedManager.user?.name || "Site Manager",
-              role_name: "Site Manager",
-              level: 3,
-            });
-          }
-        } catch (err) {
-          console.error("Error fetching site manager:", err);
-        }
+        //     await createApprovalData({
+        //       company_id: companyId,
+        //       approval_id: approval3.id,
+        //       document_id: payload.document_id ?? 0,
+        //       workflow_data_id: workflowDataId!,
+        //       status: PermitStatus.WAITING,
+        //       approver_name: selectedManager.user?.name || "Site Manager",
+        //       role_name: "Site Manager",
+        //       level: 3,
+        //     });
+        //   }
+        // } catch (err) {
+        //   console.error("Error fetching site manager:", err);
+        // }
       }
 
       crossPlatformAlert(

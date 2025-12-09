@@ -428,7 +428,7 @@ export async function fetchApprovalDataByWorkflow(workflowDataId: number) {
   return res.ok ? res.json() : [];
 }
 
-export async function updateApprovalData(data: { id: number; status: string; time: string; [key: string]: any }) {
+export async function updateApprovalData(data: { id: number; status: string; time: string; remarks?: string; [key: string]: any }) {
   if (!data.id) throw new Error("ApprovalData ID is required");
   const res = await fetch(`${API_BASE_URL}api/approval-data/${data.id}/`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
   if (!res.ok) throw new Error(await res.text() || "Failed to update approval data");

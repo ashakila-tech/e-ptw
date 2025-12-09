@@ -59,6 +59,7 @@ export function usePermitDetails(id?: string) {
             status: match?.status || PermitStatus.PENDING,
             approver_name: match?.approver_name || a.name || "Unknown",
             time: match?.time || null,
+            remarks: match?.remarks || null,
             company_id: match?.company_id || permitData.company_id || 1,
           };
         });
