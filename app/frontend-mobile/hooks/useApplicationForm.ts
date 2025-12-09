@@ -482,6 +482,19 @@ export function useApplicationForm(existingApp: any, router: any) {
     setSafetyEquipmentIds(value);
   };
 
+  // Custom setter for start time to enforce same-day logic
+  const handleSetStartTime = (date: Date | null) => {
+    setStartTime(date);
+    if (date) {
+      // If endTime exists, update its date part to match startTime
+      const newEndTime = endTime ? new Date(endTime) : new Date(date);
+      newEndTime.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+      // Only update if it's different to avoid re-renders
+      if (newEndTime.getTime() !== endTime?.getTime()) {
+        setEndTime(newEndTime);
+      }
+    }
+  };
   return {
     applicantName,
     setApplicantName,
@@ -521,7 +534,7 @@ export function useApplicationForm(existingApp: any, router: any) {
     safetyEquipmentItems,
     setJobAssignerItems,
     startTime,
-    setStartTime,
+    setStartTime: handleSetStartTime, // Use the custom setter
     endTime,
     setEndTime,
     loading, // Expose the new loading state

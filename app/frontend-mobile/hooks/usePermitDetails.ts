@@ -77,6 +77,7 @@ export function usePermitDetails(id?: string) {
             ? "-"
             : document?.name || "-",
         documentUrl:
+        // documentType: document?.type,
           permitData.document_id && permitData.document_id <= PLACEHOLDER_THRESHOLD
             ? "-"
             : document?.path || "-",

@@ -35,6 +35,27 @@ export default function ApplicationForm() {
 
   const [formError, setFormError] = useState<string | null>(null);
 
+  // State for the new date/time picker UI
+  const [workDate, setWorkDate] = useState<Date | null>(
+    startTime ? new Date(startTime) : null
+  );
+
+  // When the single date changes, update both startTime and endTime
+  const handleDateChange = (date: Date | null) => {
+    setWorkDate(date);
+    if (date) {
+      const newStartTime = startTime ? new Date(startTime) : new Date(date);
+      newStartTime.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+      setStartTime(newStartTime);
+
+      const newEndTime = endTime ? new Date(endTime) : new Date(date);
+      newEndTime.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+      setEndTime(newEndTime);
+    } else {
+      setStartTime(null);
+      setEndTime(null);
+    }
+  };
   // Validation
   useEffect(() => {
     if (!permitName.trim()) setFormError("Permit name is required.");
@@ -42,6 +63,14 @@ export default function ApplicationForm() {
     else if (!location) setFormError("Please select a location.");
     else if (!startTime || !endTime) setFormError("Please select both start and end times.");
     else if (startTime && endTime && endTime <= startTime) setFormError("End time must be after start time.");
+    else if (
+      startTime &&
+      endTime &&
+      (startTime.getFullYear() !== endTime.getFullYear() ||
+        startTime.getMonth() !== endTime.getMonth() ||
+        startTime.getDate() !== endTime.getDate())
+    )
+      setFormError("Permit must be on a per-day basis. Start and end dates must be the same.");
     else if (!documentId) setFormError("Please upload a document.");
     else setFormError(null);
   }, [permitName, permitType, location, startTime, endTime, documentId]);
@@ -166,15 +195,26 @@ export default function ApplicationForm() {
         </View>
 
         {/* Start / End Date */}
-        <View style={{ zIndex: 60 }}>
-          <Text className="text-base text-gray-700 mt-4 mb-2">Start Date and Time</Text>
-          <DatePickerField value={startTime} onChange={setStartTime} />
-        </View>
+        <Text className="text-base text-gray-700 mt-4 mb-2">Work Date</Text>
+        <DatePickerField value={workDate} onChange={handleDateChange} mode="date" />
 
-        <View style={{ zIndex: 55 }}>
-          <Text className="text-base text-gray-700 mt-4 mb-2">End Date and Time</Text>
-          <DatePickerField value={endTime} onChange={setEndTime} />
-        </View>
+        {workDate && (
+          <View className="flex-row mt-4 space-x-4">
+            <View className="flex-1">
+              <Text className="text-base text-gray-700 mb-2">Start Time</Text>
+              <View className="mr-1">
+                <DatePickerField value={startTime} onChange={setStartTime} mode="time" />
+              </View>
+            </View>
+            <View className="flex-1">
+              <Text className="text-base text-gray-700 mb-2">End Time</Text>
+              <View className="ml-1">
+              <DatePickerField value={endTime} onChange={setEndTime} mode="time" />
+              </View>
+            </View>
+          </View>
+        )}
+
 
         {/* Document Upload */}
         <Text className="text-base text-gray-700 mt-4 mb-2">Document</Text>

@@ -22,13 +22,14 @@ const WebDatePickerStyles = () => (
 interface DatePickerFieldProps {
   value: Date | null;
   onChange: (date: Date | null) => void;
+  mode?: 'date' | 'time' | 'datetime';
 }
 
-export default function DatePickerField({ value, onChange }: DatePickerFieldProps) {
+export default function DatePickerField({ value, onChange, mode = 'datetime' }: DatePickerFieldProps) {
   const [show, setShow] = useState(false);
   // --- State for multi-step native picker ---
   const [date, setDate] = useState(value || new Date());
-  const [mode, setMode] = useState<'date' | 'time'>('date');
+  const [currentPickerMode, setCurrentPickerMode] = useState<'date' | 'time'>('date');
 
   // --- Web Implementation ---
   if (Platform.OS === "web") {
@@ -51,8 +52,8 @@ export default function DatePickerField({ value, onChange }: DatePickerFieldProp
             className: "border border-gray-300 rounded-2xl px-4 py-3 w-full bg-white",
             placeholder: "Select date and time",
           }}
-          dateFormat="D MMM YYYY"
-          timeFormat="h:mm A"
+          dateFormat={mode !== 'time' ? "D MMM YYYY" : false}
+          timeFormat={mode !== 'date' ? "h:mm A" : false}
         />
       </View>
     );
@@ -61,7 +62,7 @@ export default function DatePickerField({ value, onChange }: DatePickerFieldProp
   // --- Native (Android/iOS) Implementation ---
   const showPicker = (currentMode: 'date' | 'time') => {
     setShow(true);
-    setMode(currentMode);
+    setCurrentPickerMode(currentMode);
   };
 
   const onNativeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -74,7 +75,7 @@ export default function DatePickerField({ value, onChange }: DatePickerFieldProp
 
     if (event.type === 'set') {
       setDate(currentDate);
-      if (mode === 'date') {
+      if (mode === 'datetime' && currentPickerMode === 'date') {
         // After picking a date, automatically show the time picker.
         showPicker('time');
       } else {
@@ -88,17 +89,28 @@ export default function DatePickerField({ value, onChange }: DatePickerFieldProp
     }
   };
 
+  const getDisplayFormat = () => {
+    if (!value) {
+      if (mode === 'date') return "Select date";
+      if (mode === 'time') return "Select time";
+      return "Select date and time";
+    }
+    if (mode === 'date') return format(value, "PPP");
+    if (mode === 'time') return format(value, "p");
+    return format(value, "PPP p");
+  };
+
   return (
     <View>
-      <Pressable onPress={() => showPicker('date')} className="border border-gray-300 rounded-2xl px-4 py-3">
+      <Pressable onPress={() => showPicker(mode === 'time' ? 'time' : 'date')} className="border border-gray-300 rounded-2xl px-4 py-3">
         <Text className={value ? "text-black" : "text-gray-400"}>
-          {value ? format(value, "PPP p") : "Select date and time"}
+          {getDisplayFormat()}
         </Text>
       </Pressable>
       {show && (
         <DateTimePicker
           value={date}
-          mode={mode} // Use dynamic mode ('date' then 'time')
+          mode={currentPickerMode}
           display="default"
           onChange={onNativeChange}
         />

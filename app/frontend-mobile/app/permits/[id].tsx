@@ -20,11 +20,13 @@ import { downloadDocument } from "@/utils/download";
 import { getStatusClass } from "@/utils/class";
 import { formatDate } from "@/utils/date";
 import { PermitStatus } from "@/constants/Status";
+import { getMimeType } from "@/utils/file";
 import * as api from "@/services/api";
 import { Colors } from "@/constants/Colors";
 import CustomHeader from "@/components/CustomHeader";
 import WorkerTable from "@/components/WorkerTable";
 import { TextInput } from "react-native";
+import Constants from "expo-constants";
 
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
@@ -174,20 +176,12 @@ export default function PermitDetails() {
     }
   }
 
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowDatePicker(false); // Always hide date picker
-    if (event.type === "set") {
-      const currentDate = selectedDate || newWorkEndTime;
-      setNewWorkEndTime(currentDate);
-      setShowTimePicker(true); // Show time picker next
-    }
-  };
-
   const onTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowTimePicker(false); // Always hide time picker
     if (event.type === "set") {
       const selectedTime = selectedDate || newWorkEndTime;
-      const finalDate = new Date(newWorkEndTime); // Start with the date part
+      // Start with the original work end time to preserve the correct date
+      const finalDate = new Date(permit.workEndTime); 
 
       // Apply the new time
       finalDate.setHours(selectedTime.getHours());
@@ -243,14 +237,34 @@ export default function PermitDetails() {
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Attachments</Text>
           <View className="flex-row items-center justify-between">
-            <Text className="text-base text-primary">Document: <Text className="font-semibold">{permit.document}</Text></Text>
-            <TouchableOpacity
-              disabled={!permit.documentId}
-              onPress={() => permit.documentId && downloadDocument(permit.documentId, permit.document)}
-              className={`px-3 py-2 rounded ${permit.documentId ? "bg-primary" : "bg-gray-400"}`}
-            >
-              <Text className="text-white text-sm font-semibold">Download</Text>
-            </TouchableOpacity>
+            <Text className="text-base text-primary flex-1" numberOfLines={1}>
+              Document: <Text className="font-semibold">{permit.document}</Text>
+            </Text>
+            <View className="flex-row">
+              <TouchableOpacity
+                disabled={!permit.documentId}
+                onPress={() => {
+                  if (permit.documentId) {
+                    const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+                    const fileUrl = `${API_BASE_URL}api/documents/${permit.documentId}/download`;
+                    router.push({
+                      pathname: "/permits/fileViewer",
+                      params: { fileUrl, fileName: permit.document, fileType: getMimeType(permit.document) },
+                    });
+                  }
+                }}
+                className={`px-3 py-2 rounded mr-2 ${permit.documentId ? "bg-blue-600" : "bg-gray-400"}`}
+              >
+                <Text className="text-white text-sm font-semibold">View</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={!permit.documentId}
+                onPress={() => permit.documentId && downloadDocument(permit.documentId, permit.document)}
+                className={`px-3 py-2 rounded ${permit.documentId ? "bg-primary" : "bg-gray-400"}`}
+              >
+                <Text className="text-white text-sm font-semibold">Download</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -352,7 +366,7 @@ export default function PermitDetails() {
         {userId === permit?.applicantId && canExtend && (
           <View className="my-6">
             <Pressable
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => setShowTimePicker(true)}
               className="py-3 rounded-xl items-center bg-blue-600"
             >
               <Text className="text-white font-medium">Extend Work End Time</Text>
@@ -366,17 +380,6 @@ export default function PermitDetails() {
         )}
 
         {/* DateTime Picker Modal */}
-        {showDatePicker && (
-          <DateTimePicker
-            testID="datePicker"
-            value={newWorkEndTime}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-            minimumDate={workEndTime ? new Date(workEndTime) : new Date()}
-          />
-        )}
-
         {showTimePicker && (
           <DateTimePicker
             testID="timePicker"
