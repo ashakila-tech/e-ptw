@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import datetime
 
-from ._crud_factory import make_crud_router, get_object_or_404
+from ._crud_factory import make_crud_router
 from ..deps import get_db
 from .. import models, schemas
 
@@ -39,6 +39,7 @@ def filter_approval_data(
     query = db.query(models.ApprovalData)
     if workflow_data_id is not None:
         query = query.filter(models.ApprovalData.workflow_data_id == workflow_data_id)
+        query = query.filter(models.ApprovalData.workflow_data_id == workflow_data_id) 
     if approval_id is not None:
         query = query.filter(models.ApprovalData.approval_id == approval_id)
     if status is not None:
@@ -58,8 +59,11 @@ def create_completion_flow(
     """
     Create 'Job Done' and 'Exit Confirmation' approval data for a given application
     when it becomes ACTIVE.
-    """
-    application = get_object_or_404(db, models.Application, application_id)
+    """ 
+    application = db.get(models.Application, application_id)
+    if not application:
+        raise HTTPException(status_code=404, detail=f"Application with ID {application_id} not found")
+
     if not application.workflow_data_id:
         raise HTTPException(status_code=400, detail="Application has no workflow data.")
 
