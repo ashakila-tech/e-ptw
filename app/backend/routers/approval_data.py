@@ -53,8 +53,7 @@ def filter_approval_data(
 
 @router.post("/create-completion-flow", response_model=List[schemas.ApprovalDataOut])
 def create_completion_flow(
-    application_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db), application_id: int = Query(..., description="The ID of the application to create completion flow for")
 ):
     """
     Create 'Job Done' and 'Exit Confirmation' approval data for a given application
