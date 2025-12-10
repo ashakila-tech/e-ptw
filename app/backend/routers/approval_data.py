@@ -80,8 +80,7 @@ def create_completion_flow(
         workflow_data_id=application.workflow_data_id,
         approval_id=supervisor_approval.id,
         level=98, # Special level for completion flow
-        status="PENDING",
-        custom_role="Job Done Confirmation"
+        status="PENDING"
     )
     db.add(job_done_data)
     db.commit()
@@ -150,7 +149,7 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
                 print(f"Application {application.id} fully approved!")
         
         # Custom logic for completion flow
-        if obj.custom_role == "Job Done Confirmation":
+        if obj.level == 98: # Check for special completion flow level
             application = db.query(models.Application).filter(
                 models.Application.workflow_data_id == obj.workflow_data_id
             ).first()
