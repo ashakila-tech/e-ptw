@@ -2,10 +2,10 @@ from fastapi import FastAPI
 from .config import settings
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from apscheduler.schedulers.background import BackgroundScheduler
+# from apscheduler.schedulers.background import BackgroundScheduler
 
 # Import routers once
-from .scheduler import check_and_complete_expired_permits
+# from .scheduler import check_and_complete_expired_permits
 from .routers import (
     authentication,               # /auth/*
     companies, permit_types, users, locations, documents,
@@ -15,7 +15,7 @@ from .routers import (
     application_workers,
     application_safety_equipments
 )
-scheduler = BackgroundScheduler()
+# scheduler = BackgroundScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,11 +24,11 @@ async def lifespan(app: FastAPI):
     """
     # On startup, add the job and start the scheduler
     # This job will run every minute. You can adjust the interval.
-    scheduler.add_job(check_and_complete_expired_permits, 'interval', minutes=1, id="complete_expired_permits")
-    scheduler.start()
+    # scheduler.add_job(check_and_complete_expired_permits, 'interval', minutes=1, id="complete_expired_permits")
+    # scheduler.start()
     yield
     # On shutdown, stop the scheduler
-    scheduler.shutdown()
+    # scheduler.shutdown()
 
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
