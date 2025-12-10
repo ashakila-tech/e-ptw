@@ -9,10 +9,12 @@ import WorkerTable from "@/components/WorkerTable";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import * as api from "@/services/api";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useUser } from "@/contexts/UserContext";
 
 export default function ProfileTab() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { isApproval, isSecurity } = useUser();
   const { profile, loading, error, workers, refresh: refreshProfile } = useProfile();
     
   const [refreshing, setRefreshing] = useState(false);
@@ -166,7 +168,8 @@ export default function ProfileTab() {
             )}
 
             {/* Workers Table */}
-            {profile && (
+            {/* Only shows worker table for contractor (not approver nor security) */}
+            {profile && !isApproval && !isSecurity && (
               <View className="bg-white rounded-xl p-6 shadow-lg mb-6">
                 <View className="flex-row justify-between items-center mb-4">
                   <Text className="text-primary text-lg font-bold">Workers</Text>

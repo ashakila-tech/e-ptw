@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import datetime
 
-from ._crud_factory import make_crud_router
+from ._crud_factory import make_crud_router, get_object_or_404
 from ..deps import get_db
 from .. import models, schemas
 
@@ -49,6 +49,41 @@ def filter_approval_data(
         raise HTTPException(status_code=404, detail="No approval data found for given filter")
 
     return results
+
+@router.post("/create-completion-flow", response_model=List[schemas.ApprovalDataOut])
+def create_completion_flow(
+    application_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Create 'Job Done' and 'Exit Confirmation' approval data for a given application
+    when it becomes ACTIVE.
+    """
+    application = get_object_or_404(db, models.Application, application_id)
+    if not application.workflow_data_id:
+        raise HTTPException(status_code=400, detail="Application has no workflow data.")
+
+    # 1. Supervisor "Job Done" confirmation
+    supervisor_approval = db.query(models.Approval).filter(
+        models.Approval.workflow_id == application.workflow_data.workflow_id,
+        models.Approval.role_name == "supervisor"
+    ).first()
+
+    if not supervisor_approval:
+        raise HTTPException(status_code=404, detail="Supervisor role not found in workflow approvals.")
+
+    job_done_data = models.ApprovalData(
+        workflow_data_id=application.workflow_data_id,
+        approval_id=supervisor_approval.id,
+        level=98, # Special level for completion flow
+        status="PENDING",
+        custom_role="Job Done Confirmation"
+    )
+    db.add(job_done_data)
+    db.commit()
+    db.refresh(job_done_data)
+
+    return [job_done_data]
 
 
 # --- Custom update mutator for approval logic ---
@@ -109,6 +144,16 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
                 application.updated_time = datetime.utcnow()
                 db.commit()
                 print(f"Application {application.id} fully approved!")
+        
+        # Custom logic for completion flow
+        if obj.custom_role == "Job Done Confirmation":
+            application = db.query(models.Application).filter(
+                models.Application.workflow_data_id == obj.workflow_data_id
+            ).first()
+            if application:
+                application.status = "EXIT_PENDING"
+                application.updated_time = datetime.utcnow()
+                db.commit()
 
     return data
 

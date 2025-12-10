@@ -117,14 +117,40 @@ export default function PermitDetails() {
 
   const canConfirmSecurity = permit.status === PermitStatus.APPROVED && isWithinWorkWindow;
 
+  const jobDoneApproval = approvals?.find(a => a.role_name === "Job Done Confirmation");
+  const canConfirmJobDone = isApproval && permit.status === PermitStatus.ACTIVE && jobDoneApproval?.status === PermitStatus.PENDING;
+
+  const canConfirmExit = isSecurity && permit.status === "EXIT_PENDING";
+
   async function handleApprovalAction(action: "APPROVED" | "REJECTED", remarksText?: string) {
     if (!myApproval) return crossPlatformAlert("Error", "No pending approval found for you.");
     const myApprovalData = approvalData.find(ad => ad.approval_id === myApproval.id && ad.workflow_data_id === permit.workflowDataId);
     if (!myApprovalData) return crossPlatformAlert("Error", "ApprovalData record not found.");
 
+    await updateStatus(myApprovalData, action, remarksText);
+  }
+
+  async function handleJobDoneConfirm() {
+    if (!jobDoneApproval) return crossPlatformAlert("Error", "Job Done approval not found.");
+    const jobDoneApprovalData = approvalData.find(ad => ad.approval_id === jobDoneApproval.id && ad.workflow_data_id === permit.workflowDataId);
+    if (!jobDoneApprovalData) return crossPlatformAlert("Error", "ApprovalData for Job Done not found.");
+
+    await updateStatus(jobDoneApprovalData, "APPROVED");
+  }
+
+  async function handleExitConfirm() {
+    // This action will complete the permit.
+    await api.saveApplication(permit.id, { ...permit, status: PermitStatus.COMPLETED }, true);
+    crossPlatformAlert("Success", "Permit completed successfully!");
+    refetch();
+  }
+
+  async function updateStatus(approvalDataToUpdate: any, action: "APPROVED" | "REJECTED", remarksText?: string) {
+    if (!approvalDataToUpdate) return crossPlatformAlert("Error", "Approval data to update is missing.");
+
     try {
       const payload: any = {
-        ...myApprovalData,
+        ...approvalDataToUpdate,
         status: action,
         time: new Date().toISOString(),
       };
@@ -133,16 +159,6 @@ export default function PermitDetails() {
         payload.remarks = remarksText;
       }
       await api.updateApprovalData(payload);
-
-      if (action === "APPROVED") {
-        const nextApproval = approvals.find(a => a.level === myApproval.level + 1);
-        if (nextApproval) {
-          const nextApprovalData = approvalData.find(ad => ad.approval_id === nextApproval.id && ad.workflow_data_id === permit.workflowDataId);
-          if (nextApprovalData && nextApprovalData.status === "WAITING") {
-            await api.updateApprovalData({ ...nextApprovalData, status: "PENDING", time: new Date().toISOString() });
-          }
-        }
-      }
 
       crossPlatformAlert("Success", `Permit ${action.toLowerCase()} successfully!`);
       setRemarksModalVisible(false);
@@ -164,6 +180,20 @@ export default function PermitDetails() {
         [{ text: "Cancel", style: "cancel" }, { text: "Yes", onPress: () => handleApprovalAction(action) }]
       );
     }
+  }
+
+  function confirmJobDoneAction() {
+    crossPlatformAlert("Confirm Job Done", "Are you sure the job is completed?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Yes", onPress: handleJobDoneConfirm },
+    ]);
+  }
+
+  function confirmExitAction() {
+    crossPlatformAlert("Confirm Exit", "Confirm exit for all workers and complete the permit?", [
+      { text: "Cancel", style: "cancel" }, 
+      { text: "Yes", onPress: handleExitConfirm },
+    ]);
   }
 
   async function handleSecurityConfirm() {
@@ -319,6 +349,26 @@ export default function PermitDetails() {
             ))
           ) : <Text className="text-gray-500 italic">No approvals yet</Text>}
         </View>
+
+        {/* Job Done Button (Supervisor) */}
+        {canConfirmJobDone && (
+          <View className="my-6">
+            <Pressable onPress={confirmJobDoneAction} className="py-3 rounded-xl items-center bg-green-600">
+              <Text className="text-white font-semibold text-base">Confirm Job Done</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {/* Exit Button (Security) */}
+        {canConfirmExit && (
+          <View className="my-6">
+            <Pressable
+              onPress={confirmExitAction}
+              className={`py-3 rounded-xl items-center bg-red-500`}>
+              <Text className="text-white font-medium">Confirm Exit & Complete Permit</Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* Approval Buttons */}
         {canTakeAction && (

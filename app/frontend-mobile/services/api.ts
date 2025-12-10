@@ -428,6 +428,15 @@ export async function fetchApprovalDataByWorkflow(workflowDataId: number) {
   return res.ok ? res.json() : [];
 }
 
+export async function createCompletionApprovalData(applicationId: number) {
+  const res = await fetch(`${API_BASE_URL}api/approval-data/create-completion-flow?application_id=${applicationId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error(`Failed to create completion flow data (${res.status})`);
+  return res.json();
+}
+
 export async function updateApprovalData(data: { id: number; status: string; time: string; remarks?: string; [key: string]: any }) {
   if (!data.id) throw new Error("ApprovalData ID is required");
   const res = await fetch(`${API_BASE_URL}api/approval-data/${data.id}/`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
@@ -449,7 +458,13 @@ export async function confirmSecurity(permitId: number) {
     }
     throw new Error(message || "Failed to confirm security");
   }
-  return res.json();
+  const result = await res.json();
+
+  // After successfully confirming security and making the permit ACTIVE,
+  // create the next set of approvals for job completion.
+  await createCompletionApprovalData(permitId);
+
+  return result;
 }
 
 // -------------------- Utility: Paginated Fetch --------------------
