@@ -418,7 +418,11 @@ export async function fetchApprovalsByWorkflow(workflowId: number) {
 export const fetchAllApprovalData = () => fetchPaginatedData("api/approval-data/");
 
 export async function createApprovalData(approvalData: any) {
-  const res = await fetch(`${API_BASE_URL}api/approval-data/`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(approvalData) });
+  const res = await fetch(`${API_BASE_URL}api/approval-data/`, {
+    method: "POST", 
+    headers: { "Content-Type": "application/json" }, 
+    body: JSON.stringify(approvalData)
+  });
   if (!res.ok) throw new Error(`Failed to create approval data (${res.status})`);
   return res.json();
 }
@@ -426,15 +430,6 @@ export async function createApprovalData(approvalData: any) {
 export async function fetchApprovalDataByWorkflow(workflowDataId: number) {
   const res = await fetch(`${API_BASE_URL}api/approval-data/filter?workflow_data_id=${workflowDataId}`);
   return res.ok ? res.json() : [];
-}
-
-export async function createCompletionApprovalData(applicationId: number) {
-  const res = await fetch(`${API_BASE_URL}api/approval-data/create-completion-flow?application_id=${applicationId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
-  if (!res.ok) throw new Error(`Failed to create completion flow data (${res.status})`);
-  return res.json();
 }
 
 export async function updateApprovalData(data: { id: number; status: string; time: string; remarks?: string; [key: string]: any }) {
@@ -459,11 +454,6 @@ export async function confirmSecurity(permitId: number) {
     throw new Error(message || "Failed to confirm security");
   }
   const result = await res.json();
-
-  // After successfully confirming security and making the permit ACTIVE,
-  // create the next set of approvals for job completion.
-  await createCompletionApprovalData(permitId);
-
   return result;
 }
 

@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { PermitStatus } from "@/constants/Status";
 import * as api from "@/services/api";
 
+import { useUser } from "@/contexts/UserContext";
 const PLACEHOLDER_THRESHOLD = 3;
 
 export function usePermitDetails(id?: string) {
   const [permit, setPermit] = useState<any | null>(null);
+  const { userId, companyId: userCompanyId } = useUser();
   const [approvals, setApprovals] = useState<any[]>([]);
   const [approvalData, setApprovalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +66,14 @@ export function usePermitDetails(id?: string) {
             company_id: match?.company_id || permitData.company_id || 1,
           };
         });
+
+        // Manually add "Job Done" for supervisor if it exists in approvalData but not in approvalsList
+        // const jobDoneApprovalData = approvalDataFetched.find(d => d.level === 98);
+        // if (jobDoneApprovalData && !approvalsList.some(a => a.level === 98)) {
+        //   approvalsList.push({
+        //     ...jobDoneApprovalData, role_name: "Job Done Confirmation", approver_name: "Supervisor", time: jobDoneApprovalData.time, remarks: jobDoneApprovalData.remarks
+        //   });
+        // }
       }
 
       setApprovalData(approvalDataFetched);
@@ -102,6 +112,8 @@ export function usePermitDetails(id?: string) {
         permitTypeId: permitData.permit_type_id ?? undefined,
         workflowDataId: permitData.workflow_data_id ?? undefined,
         jobAssigner: jobAssigner?.name || "-",
+        job_assigner_id: permitData.job_assigner_id,
+        workflowId: workflowData?.workflow_id,
         workers: permitData.workers || [],
         safety_equipment: permitData.safety_equipment || [],
       });
@@ -119,5 +131,63 @@ export function usePermitDetails(id?: string) {
     fetchPermit();
   }, [id]);
 
-  return { permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, safetyEquipments };
+  // This function creates the closing workflow steps (e.g., "Job Done" for supervisor)
+  const createClosingWorkflow = async () => {
+    if (!permit) throw new Error("Permit details are not loaded.");
+
+    const {
+      company_id,
+      workflowId,
+      workflowDataId,
+      job_assigner_id,
+      jobAssigner,
+      name: permitName,
+      documentId,
+    } = permit;
+
+    // Find the supervisor (level 1 approver) from the existing approvals list.
+    const supervisorApproval = approvals.find(a => a.level === 1);
+    const supervisorApprovalData = approvalData.find(ad => ad.level === 1);
+    // const supervisorId = job_assigner_id || supervisorApproval?.user_id;
+
+    console.log(approvals);
+
+    if (!workflowId || !workflowDataId || !supervisorApproval?.user_id) {
+      throw new Error("Missing critical permit data to create closing workflow.");
+    }
+
+    // LEVEL 98 — SUPERVISOR "JOB DONE" (PENDING)
+    const approval = await api.createApproval({
+      company_id: company_id || userCompanyId || 1,
+      workflow_id: workflowId,
+      user_id: !supervisorApproval?.user_id,
+      name: `${permitName || "Untitled"} - ${supervisorApprovalData?.approver_name || "Supervisor"} - Job Done`,
+      role_name: "Supervisor Job Done Confirmation",
+      level: 98, // Closing flow level
+    });
+
+    await api.createApprovalData({
+      company_id: company_id || userCompanyId || 1,
+      approval_id: approval.id,
+      document_id: documentId ?? 0,
+      workflow_data_id: workflowDataId,
+      status: PermitStatus.PENDING,
+      approver_name: supervisorApprovalData?.approver_name || "Supervisor",
+      role_name: "Supervisor Job Done Confirmation",
+      level: 98,
+    });
+  };
+
+  // This function orchestrates the full security confirmation process
+  const confirmEntryAndCreateClosingWorkflow = async () => {
+    if (!permit) throw new Error("Permit details are not loaded.");
+
+    // Step 1: Create the closing workflow (e.g., "Job Done" approval)
+    await createClosingWorkflow();
+
+    // Step 2: Activate the permit
+    await api.confirmSecurity(permit.id);
+  };
+
+  return { permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, safetyEquipments, createClosingWorkflow, confirmEntryAndCreateClosingWorkflow };
 }

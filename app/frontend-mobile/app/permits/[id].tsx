@@ -31,7 +31,7 @@ import Constants from "expo-constants";
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { permit, approvals, approvalData, loading, error, refetch } = usePermitDetails(id as string);
+  const { permit, approvals, approvalData, loading, error, refetch, confirmEntryAndCreateClosingWorkflow } = usePermitDetails(id as string);
   const { userId, isApproval, isSecurity } = useUser();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -107,19 +107,15 @@ export default function PermitDetails() {
     );
 
   const myApproval = approvals?.find(a => a.user_id === userId && a.status === PermitStatus.PENDING);
-  const canTakeAction = isApproval && myApproval;
+  const canTakeAction = isApproval && myApproval && myApproval.level < 98;
   const isAlreadyHandled = myApproval?.status === PermitStatus.APPROVED || myApproval?.status === PermitStatus.REJECTED;
   
   const now = new Date();
   const workStartTime = permit.workStartTime ? new Date(permit.workStartTime) : null;
   const workEndTime = permit.workEndTime ? new Date(permit.workEndTime) : null;
   const isWithinWorkWindow = workStartTime && workEndTime && now >= workStartTime && now <= workEndTime;
-
   const canConfirmSecurity = permit.status === PermitStatus.APPROVED && isWithinWorkWindow;
-
-  const jobDoneApproval = approvals?.find(a => a.role_name === "Job Done Confirmation");
-  const canConfirmJobDone = isApproval && permit.status === PermitStatus.ACTIVE && jobDoneApproval?.status === PermitStatus.PENDING;
-
+  const canConfirmJobDone = isApproval && permit.status === PermitStatus.ACTIVE && myApproval && myApproval.level === 98;
   const canConfirmExit = isSecurity && permit.status === "EXIT_PENDING";
 
   async function handleApprovalAction(action: "APPROVED" | "REJECTED", remarksText?: string) {
@@ -131,11 +127,11 @@ export default function PermitDetails() {
   }
 
   async function handleJobDoneConfirm() {
-    if (!jobDoneApproval) return crossPlatformAlert("Error", "Job Done approval not found.");
-    const jobDoneApprovalData = approvalData.find(ad => ad.approval_id === jobDoneApproval.id && ad.workflow_data_id === permit.workflowDataId);
+    if (!myApproval) return crossPlatformAlert("Error", "Job Done approval not found for you.");
+    const jobDoneApprovalData = approvalData.find(ad => ad.approval_id === myApproval.id && ad.workflow_data_id === permit.workflowDataId);
     if (!jobDoneApprovalData) return crossPlatformAlert("Error", "ApprovalData for Job Done not found.");
 
-    await updateStatus(jobDoneApprovalData, "APPROVED");
+    await updateStatus(jobDoneApprovalData, PermitStatus.APPROVED);
   }
 
   async function handleExitConfirm() {
@@ -198,11 +194,13 @@ export default function PermitDetails() {
 
   async function handleSecurityConfirm() {
     try {
-      await api.confirmSecurity(permit.id);
-      crossPlatformAlert("Success", "Security confirmation successful");
+      // This function handles creating the closing workflow and activating the permit
+      await confirmEntryAndCreateClosingWorkflow();
+
+      crossPlatformAlert("Success", "Permit has been activated and is now ACTIVE.");
       refetch();
     } catch (err: any) {
-      crossPlatformAlert("Error", err.message || "Security confirmation failed");
+      crossPlatformAlert("Error", err.message || "Failed to progress permit.");
     }
   }
 

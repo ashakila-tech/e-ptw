@@ -17,20 +17,21 @@ from .routers import (
 )
 # scheduler = BackgroundScheduler()
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Handles application startup and shutdown events.
-    """
-    # On startup, add the job and start the scheduler
-    # This job will run every minute. You can adjust the interval.
-    # scheduler.add_job(check_and_complete_expired_permits, 'interval', minutes=1, id="complete_expired_permits")
-    # scheduler.start()
-    yield
-    # On shutdown, stop the scheduler
-    # scheduler.shutdown()
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     """
+#     Handles application startup and shutdown events.
+#     """
+#     # On startup, add the job and start the scheduler
+#     # This job will run every minute. You can adjust the interval.
+#     scheduler.add_job(check_and_complete_expired_permits, 'interval', minutes=1, id="complete_expired_permits")
+#     scheduler.start()
+#     yield
+#     # On shutdown, stop the scheduler
+#     scheduler.shutdown()
 
-app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+# app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+app = FastAPI(title=settings.APP_NAME)
 
 app.add_middleware(
     CORSMiddleware,
