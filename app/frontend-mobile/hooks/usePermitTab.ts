@@ -67,9 +67,9 @@ export function usePermitTab() {
       if (isSecurity) {
         const allPermits = await api.fetchAllApplications();
         permitsData = allPermits.filter((p: any) =>
-          [PermitStatus.APPROVED, PermitStatus.ACTIVE, PermitStatus.COMPLETED].includes(
-            p.status
-          )
+          [
+            PermitStatus.APPROVED, PermitStatus.ACTIVE, PermitStatus.COMPLETED, PermitStatus.EXIT_PENDING
+          ].includes(p.status)
         );
       } else if (!isApproval) {
         permitsData = await api.fetchApplicationsByApplicant(numericUserId);

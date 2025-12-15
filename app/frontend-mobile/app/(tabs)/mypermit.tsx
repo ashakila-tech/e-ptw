@@ -56,6 +56,7 @@ export default function MyPermitTab() {
     { key: PermitStatus.APPROVED, label: "Approved" },
     { key: PermitStatus.ACTIVE, label: "Active" },
     { key: PermitStatus.COMPLETED, label: "Completed" },
+    { key: PermitStatus.EXIT_PENDING, label: "Exit Pending" },
   ];
 
   // Select which tab list to show based on role
