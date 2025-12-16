@@ -14,6 +14,7 @@ export function usePermitDetails(id?: string) {
   const [workers, setWorkers] = useState<any[]>([]);
   const [safetyEquipments, setSafetyEquipments] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [serverTime, setServerTime] = useState<string | null>(null);
 
   const fetchPermit = async () => {
     if (!id) return;
@@ -23,6 +24,7 @@ export function usePermitDetails(id?: string) {
     try {
       // Fetch main permit application
       const permitData = await api.fetchApplicationById(Number(id));
+      const timeRes = await api.fetchServerTime();
 
       // Fetch related resources in parallel
       const [
@@ -160,7 +162,7 @@ export function usePermitDetails(id?: string) {
     const approval = await api.createApproval({
       company_id: company_id || userCompanyId || 1,
       workflow_id: workflowId,
-      user_id: !supervisorApproval?.user_id,
+      user_id: supervisorApproval.user_id,
       name: `${permitName || "Untitled"} - ${supervisorApprovalData?.approver_name || "Supervisor"} - Job Done`,
       role_name: "Supervisor Job Done Confirmation",
       level: 98, // Closing flow level
@@ -189,5 +191,5 @@ export function usePermitDetails(id?: string) {
     await api.securityConfirmEntry(permit.id);
   };
 
-  return { permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, safetyEquipments, createClosingWorkflow, confirmEntryAndCreateClosingWorkflow };
+  return { permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, safetyEquipments, createClosingWorkflow, confirmEntryAndCreateClosingWorkflow, serverTime };
 }

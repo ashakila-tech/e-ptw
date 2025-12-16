@@ -492,6 +492,12 @@ export async function securityConfirmExit(permitId: number) {
   return res.json();
 }
 
+export async function fetchServerTime() {
+  const res = await fetch(`${API_BASE_URL}api/applications/server-time`);
+  if (!res.ok) throw new Error("Failed to fetch server time");
+  return res.json();
+}
+
 // -------------------- Utility: Paginated Fetch --------------------
 export async function fetchPaginatedData<T = any>(endpoint: string): Promise<T[]> {
   const results: T[] = [];

@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 
-const themeColors = ["approved", "pending", "rejected", "submitted", "draft", "waiting"];
+const themeColors = ["approved", "pending", "rejected", "submitted", "draft", "waiting", "exit-pending"];
 
 module.exports = {
   content: [
@@ -38,6 +38,7 @@ module.exports = {
         submitted: "#0d5facff",
         waiting: "#ff9900ff",
         draft: "#474747ff",
+        "exit-pending": "#f97316",
       },
       borderRadius: {
         xl: "1rem",

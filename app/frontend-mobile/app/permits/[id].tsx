@@ -31,20 +31,22 @@ import Constants from "expo-constants";
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { permit, approvals, approvalData, loading, error, refetch, confirmEntryAndCreateClosingWorkflow } = usePermitDetails(id as string);
+  const { 
+    permit, approvals, approvalData, loading, error, refetch, 
+    confirmEntryAndCreateClosingWorkflow, serverTime 
+  } = usePermitDetails(id as string);
   const { userId, isApproval, isSecurity } = useUser();
 
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [newWorkEndTime, setNewWorkEndTime] = useState(new Date());
   
   const [remarksModalVisible, setRemarksModalVisible] = useState(false);
   const [remarks, setRemarks] = useState("");
 
-  const [canExtend, setCanExtend] = useState(false);
+  const [extension, setExtension] = useState(false);
   const [extensionReason, setExtensionReason] = useState<string | null>(null);
 
   const onRefresh = useCallback(async () => {
@@ -62,15 +64,15 @@ export default function PermitDetails() {
   useEffect(() => {
     const checkEligibility = async () => {
       // Reset state on check
-      setCanExtend(false);
+      setExtension(false);
       setExtensionReason(null);
 
       if (permit?.id && userId === permit?.applicantId) {
         try {
           const { eligible, reason } = await api.checkExtensionEligibility(permit.id);
-          setCanExtend(eligible);
+          setExtension(eligible);
           setExtensionReason(reason);
-        } catch (e) { setCanExtend(false); }
+        } catch (e) { setExtension(false); }
       }
     };
     checkEligibility();
@@ -81,7 +83,11 @@ export default function PermitDetails() {
 
     if (search.trim()) {
       const term = search.toLowerCase();
-      list = list.filter((worker: any) => (worker.name || '').toLowerCase().includes(term) || (worker.ic_passport || '').toLowerCase().includes(term) || (worker.position || '').toLowerCase().includes(term));
+      list = list.filter((worker: any) => 
+        (worker.name || '').toLowerCase().includes(term) || 
+        (worker.ic_passport || '').toLowerCase().includes(term) || 
+        (worker.position || '').toLowerCase().includes(term)
+      );
     }
 
     return list;
@@ -107,16 +113,21 @@ export default function PermitDetails() {
     );
 
   const myApproval = approvals?.find(a => a.user_id === userId && a.status === PermitStatus.PENDING);
-  const canTakeAction = isApproval && myApproval && myApproval.level < 98;
   const isAlreadyHandled = myApproval?.status === PermitStatus.APPROVED || myApproval?.status === PermitStatus.REJECTED;
   
-  const now = new Date();
+  const now = serverTime ? new Date(serverTime) : new Date();
   const workStartTime = permit.workStartTime ? new Date(permit.workStartTime) : null;
   const workEndTime = permit.workEndTime ? new Date(permit.workEndTime) : null;
   const isWithinWorkWindow = workStartTime && workEndTime && now >= workStartTime && now <= workEndTime;
-  const canConfirmSecurity = permit.status === PermitStatus.APPROVED && isWithinWorkWindow;
-  const canConfirmJobDone = isApproval && permit.status === PermitStatus.ACTIVE && myApproval && myApproval.level === 98;
-  const canConfirmExit = isSecurity && permit.status === "EXIT_PENDING";
+
+  const canExtend = userId === permit?.applicantId && extension;
+  const canApproveReject = isApproval && myApproval; // && myApproval.level < 98;
+  const canConfirmSecurity = isSecurity && permit.status === PermitStatus.APPROVED;
+  const canConfirmJobDone = isApproval && permit.status === PermitStatus.ACTIVE && myApproval; // && myApproval.level === 98;
+  const canConfirmExit = isSecurity && permit.status === PermitStatus.EXIT_PENDING;
+
+
+  // ---------------------- Button handlers ----------------------
 
   async function handleApprovalAction(action: "APPROVED" | "REJECTED", remarksText?: string) {
     if (!myApproval) return crossPlatformAlert("Error", "No pending approval found for you.");
@@ -124,6 +135,32 @@ export default function PermitDetails() {
     if (!myApprovalData) return crossPlatformAlert("Error", "ApprovalData record not found.");
 
     await updateStatus(myApprovalData, action, remarksText);
+  }
+
+  async function handleSecurityConfirm() {
+    try {
+      // This function handles creating the closing workflow and activating the permit
+      await confirmEntryAndCreateClosingWorkflow();
+
+      crossPlatformAlert("Success", "Permit has been activated and is now ACTIVE.");
+      refetch();
+    } catch (err: any) {
+      crossPlatformAlert("Error", err.message || "Failed to progress permit.");
+    }
+  }
+
+  async function handleExtendPermit(date: Date) {
+    if (!permit?.workflowDataId) return crossPlatformAlert("Error", "Workflow data ID not found.");
+    if (date <= new Date(permit.workEndTime)) {
+      return crossPlatformAlert("Invalid Date", "New end time must be later than the current one.");
+    }
+    try {
+      await api.extendWorkEndTime(permit.workflowDataId, date.toISOString());
+      crossPlatformAlert("Success", "Work end time has been extended.");
+      refetch();
+    } catch (error: any) {
+      console.error("Failed to extend permit:", error.message || error);
+    }
   }
 
   async function handleJobDoneConfirm() {
@@ -175,7 +212,7 @@ export default function PermitDetails() {
     }
   }
 
-  function confirmAction(action: "APPROVED" | "REJECTED") {
+  function confirmApproveReject(action: "APPROVED" | "REJECTED") {
     if (action === "REJECTED") {
       setRemarksModalVisible(true);
     } else {
@@ -201,18 +238,6 @@ export default function PermitDetails() {
     ]);
   }
 
-  async function handleSecurityConfirm() {
-    try {
-      // This function handles creating the closing workflow and activating the permit
-      await confirmEntryAndCreateClosingWorkflow();
-
-      crossPlatformAlert("Success", "Permit has been activated and is now ACTIVE.");
-      refetch();
-    } catch (err: any) {
-      crossPlatformAlert("Error", err.message || "Failed to progress permit.");
-    }
-  }
-
   const onTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowTimePicker(false); // Always hide time picker
     if (event.type === "set") {
@@ -229,19 +254,6 @@ export default function PermitDetails() {
     }
   }
 
-  async function handleExtendPermit(date: Date) {
-    if (!permit?.workflowDataId) return crossPlatformAlert("Error", "Workflow data ID not found.");
-    if (date <= new Date(permit.workEndTime)) {
-      return crossPlatformAlert("Invalid Date", "New end time must be later than the current one.");
-    }
-    try {
-      await api.extendWorkEndTime(permit.workflowDataId, date.toISOString());
-      crossPlatformAlert("Success", "Work end time has been extended.");
-      refetch();
-    } catch (error: any) {
-      console.error("Failed to extend permit:", error.message || error);
-    }
-  }
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
       <CustomHeader
@@ -315,7 +327,6 @@ export default function PermitDetails() {
             className="bg-secondary p-3 rounded-lg text-primary mb-4"
           />
 
-
           {filteredWorkers.length > 0 ? (
             <WorkerTable
               workers={filteredWorkers}
@@ -357,6 +368,8 @@ export default function PermitDetails() {
           ) : <Text className="text-gray-500 italic">No approvals yet</Text>}
         </View>
 
+        {/* ---------------------------------- Action Buttons ------------------------------- */}
+
         {/* Job Done Button (Supervisor) */}
         {canConfirmJobDone && (
           <View className="my-6">
@@ -367,14 +380,22 @@ export default function PermitDetails() {
         )}
 
         {/* Approval Buttons */}
-        {canTakeAction && (
+        {canApproveReject && (
           <>
             {isAlreadyHandled && <Text className="text-gray-600 italic mt-3">You have already {myApproval?.status.toLowerCase()} this permit.</Text>}
             <View className="flex-row my-6">
-              <Pressable disabled={isAlreadyHandled} onPress={() => confirmAction(PermitStatus.REJECTED)} className={`flex-1 py-3 mr-3 rounded-xl items-center ${isAlreadyHandled ? "bg-gray-400" : "bg-rejected"}`}>
+              <Pressable 
+                disabled={isAlreadyHandled}
+                onPress={() => confirmApproveReject(PermitStatus.REJECTED)} 
+                className={`flex-1 py-3 mr-3 rounded-xl items-center ${isAlreadyHandled ? "bg-gray-400" : "bg-rejected"}`}
+              >
                 <Text className="text-white font-semibold text-base">Reject</Text>
               </Pressable>
-              <Pressable disabled={isAlreadyHandled} onPress={() => confirmAction(PermitStatus.APPROVED)} className={`flex-1 py-3 rounded-xl items-center ${isAlreadyHandled ? "bg-gray-400" : "bg-approved"}`}>
+              <Pressable 
+                disabled={isAlreadyHandled} 
+                onPress={() => confirmApproveReject(PermitStatus.APPROVED)}
+                className={`flex-1 py-3 rounded-xl items-center ${isAlreadyHandled ? "bg-gray-400" : "bg-approved"}`}
+              >
                 <Text className="text-white font-semibold text-base">Approve</Text>
               </Pressable>
             </View>
@@ -409,7 +430,7 @@ export default function PermitDetails() {
         </Modal>
 
         {/* Extend Permit Button */}
-        {userId === permit?.applicantId && canExtend && (
+        {canExtend && (
           <View className="my-6">
             <Pressable
               onPress={() => setShowTimePicker(true)}
@@ -439,7 +460,7 @@ export default function PermitDetails() {
         )}
 
         {/* Security button */}
-        {isSecurity && (
+        {canConfirmSecurity && (
           <View className="mt-6">
             <Pressable
               onPress={handleSecurityConfirm}
@@ -448,7 +469,7 @@ export default function PermitDetails() {
             >
               <Text className="text-white font-medium">Confirm Entry</Text>
             </Pressable>
-            {!canConfirmSecurity && permit.status === PermitStatus.APPROVED && !isWithinWorkWindow && (
+            {!isWithinWorkWindow && (
               <Text className="text-center text-sm text-gray-600 mt-2">You can only confirm entry within the scheduled work window.</Text>
             )}
             {permit.status === PermitStatus.ACTIVE && (

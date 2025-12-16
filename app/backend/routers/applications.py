@@ -233,6 +233,13 @@ def check_permit_extension_eligibility(application_id: int, db: Session = Depend
 
     return {"eligible": True, "reason": "Permit is eligible for extension."}
 
+@router.get("/server-time")
+def get_server_time():
+    """
+    Returns the current UTC time from the server.
+    """
+    return {"server_time": datetime.utcnow().isoformat() + "Z"}
+
 # Attach the CRUD routes, GET/POST/PUT/DELETE
 crud_router = make_crud_router(
     Model=models.Application,
