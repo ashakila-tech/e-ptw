@@ -186,7 +186,7 @@ export function usePermitDetails(id?: string) {
     await createClosingWorkflow();
 
     // Step 2: Activate the permit
-    await api.confirmSecurity(permit.id);
+    await api.securityConfirmEntry(permit.id);
   };
 
   return { permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, safetyEquipments, createClosingWorkflow, confirmEntryAndCreateClosingWorkflow };

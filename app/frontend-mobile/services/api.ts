@@ -440,9 +440,9 @@ export async function updateApprovalData(data: { id: number; status: string; tim
 }
 
 // -------------------- Security --------------------
-export async function confirmSecurity(permitId: number) {
+export async function securityConfirmEntry(permitId: number) {
   if (!permitId) throw new Error("Permit ID is required");
-  const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/confirm-security`, { method: "POST", headers: { "Content-Type": "application/json" } });
+  const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/security-confirm-entry`, { method: "POST", headers: { "Content-Type": "application/json" } });
   if (!res.ok) {
     let message = "";
     try {
@@ -451,10 +451,45 @@ export async function confirmSecurity(permitId: number) {
     } catch {
       message = await res.text();
     }
-    throw new Error(message || "Failed to confirm security");
+    throw new Error(message || "Failed to confirm entry");
   }
   const result = await res.json();
   return result;
+}
+
+export async function confirmJobDone(permitId: number) {
+  if (!permitId) throw new Error("Permit ID is required");
+  const token = await AsyncStorage.getItem("access_token");
+  if (!token) throw new Error("Authentication token not found.");
+
+  const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/job-done`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: "Failed to confirm job done" }));
+    throw new Error(errorData.detail);
+  }
+  return res.json();
+}
+
+export async function securityConfirmExit(permitId: number) {
+  if (!permitId) throw new Error("Permit ID is required");
+  const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/security-confirm-exit`, { method: "POST", headers: { "Content-Type": "application/json" } });
+  if (!res.ok) {
+    let message = "";
+    try {
+      const data = await res.json();
+      message = data.message || data.detail || "";
+    } catch {
+      message = await res.text();
+    }
+    throw new Error(message || "Failed to confirm exit");
+  }
+  return res.json();
 }
 
 // -------------------- Utility: Paginated Fetch --------------------

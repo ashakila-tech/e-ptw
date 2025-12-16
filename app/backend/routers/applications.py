@@ -128,15 +128,14 @@ def filter_applications(
 
     return query.all()
 
-@router.post("/{app_id}/confirm-security")
-def confirm_security_action(
+@router.post("/{app_id}/security-confirm-entry")
+def security_confirm_entry_action(
     app_id: int,
     db: Session = Depends(get_db),
 ):
     """
     Security confirmation endpoint without authentication.
-    - First press = mark as ACTIVE (entry)
-    - Second press = mark as COMPLETED (exit)
+    - Changes status from APPROVED to ACTIVE.
     """
     app = db.get(models.Application, app_id)
     if not app:
@@ -146,17 +145,57 @@ def confirm_security_action(
         app.status = "ACTIVE"
         app.updated_time = datetime.utcnow()
         message = "Permit activated successfully (entry confirmed)."
+    else:
+        raise HTTPException(status_code=400, detail=f"Cannot confirm entry for permit with status: {app.status}")
 
-    elif app.status == "ACTIVE":
+    db.commit()
+    db.refresh(app)
+    return {"message": message, "status": app.status}
+
+@router.post("/{app_id}/job-done")
+def job_done_action(
+    app_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Supervisor confirms job is done.
+    - Changes status from ACTIVE to EXIT_PENDING.
+    - This is an authenticated action.
+    """
+    app = db.get(models.Application, app_id)
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found.")
+
+    if app.status == "ACTIVE":
+        app.status = "EXIT_PENDING"
+        app.updated_time = datetime.utcnow()
+        message = "Job done confirmed. Permit is now pending exit confirmation."
+    else:
+        raise HTTPException(status_code=400, detail=f"Cannot confirm job done for permit with status: {app.status}")
+
+    db.commit()
+    db.refresh(app)
+    return {"message": message, "status": app.status}
+
+@router.post("/{app_id}/security-confirm-exit")
+def security_confirm_exit_action(
+    app_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Security confirmation for exit without authentication.
+    - Changes status from EXIT_PENDING to COMPLETED.
+    """
+    app = db.get(models.Application, app_id)
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found.")
+
+    if app.status == "EXIT_PENDING":
         app.status = "COMPLETED"
         app.updated_time = datetime.utcnow()
         message = "Permit completed successfully (exit confirmed)."
-
     else:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Cannot confirm security action for status: {app.status}"
-        )
+        raise HTTPException(status_code=400, detail=f"Cannot confirm exit for permit with status: {app.status}. Expected EXIT_PENDING.")
 
     db.commit()
     db.refresh(app)

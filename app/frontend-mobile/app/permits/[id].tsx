@@ -131,12 +131,21 @@ export default function PermitDetails() {
     const jobDoneApprovalData = approvalData.find(ad => ad.approval_id === myApproval.id && ad.workflow_data_id === permit.workflowDataId);
     if (!jobDoneApprovalData) return crossPlatformAlert("Error", "ApprovalData for Job Done not found.");
 
-    await updateStatus(jobDoneApprovalData, PermitStatus.APPROVED);
+    try {
+      // First, update the approval data record to mark it as done
+      await updateStatus(jobDoneApprovalData, PermitStatus.APPROVED);
+      // Then, call the new endpoint to change the permit status to EXIT_PENDING
+      await api.confirmJobDone(permit.id);
+      crossPlatformAlert("Success", "Job done confirmed. Permit is now awaiting exit confirmation from security.");
+      refetch();
+    } catch (err: any) {
+      crossPlatformAlert("Error", err.message || "Failed to confirm job done.");
+    }
   }
 
   async function handleExitConfirm() {
-    // This action will complete the permit.
-    await api.saveApplication(permit.id, { ...permit, status: PermitStatus.COMPLETED }, true);
+    // This action will complete the permit via the dedicated security endpoint.
+    await api.securityConfirmExit(permit.id);
     crossPlatformAlert("Success", "Permit completed successfully!");
     refetch();
   }
@@ -357,17 +366,6 @@ export default function PermitDetails() {
           </View>
         )}
 
-        {/* Exit Button (Security) */}
-        {canConfirmExit && (
-          <View className="my-6">
-            <Pressable
-              onPress={confirmExitAction}
-              className={`py-3 rounded-xl items-center bg-red-500`}>
-              <Text className="text-white font-medium">Confirm Exit & Complete Permit</Text>
-            </Pressable>
-          </View>
-        )}
-
         {/* Approval Buttons */}
         {canTakeAction && (
           <>
@@ -442,7 +440,7 @@ export default function PermitDetails() {
 
         {/* Security button */}
         {isSecurity && (
-          <View className="my-6">
+          <View className="mt-6">
             <Pressable
               onPress={handleSecurityConfirm}
               disabled={!canConfirmSecurity || loading}
@@ -456,6 +454,18 @@ export default function PermitDetails() {
             {permit.status === PermitStatus.ACTIVE && (
               <Text className="text-center text-sm text-gray-600 mt-2">Entry has been confirmed for this permit.</Text>
             )}
+          </View>
+        )}
+
+        {/* Exit Button (Security) */}
+        {canConfirmExit && (
+          <View className="my-6">
+            <Pressable
+              onPress={confirmExitAction}
+              className={`py-3 rounded-xl items-center bg-red-500`}>
+              <Text className="text-white font-medium">Confirm Exit & Complete Permit</Text>
+            </Pressable>
+            <Text className="text-center text-sm text-gray-600 mt-2">This will mark the permit as COMPLETED.</Text>
           </View>
         )}
         <View className="p-5" />
