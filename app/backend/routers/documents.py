@@ -97,6 +97,26 @@ def download_document(doc_id: int, db: Session = Depends(get_db)):
 
     return FileResponse(path=doc.path, media_type=ctype, filename=download_name)
 
+@router.get("/{doc_id}/view")
+def view_document(doc_id: int, db: Session = Depends(get_db)):
+    doc = db.get(models.Document, doc_id)
+    if not doc:
+        raise HTTPException(404, "Document not found")
+
+    if not os.path.exists(doc.path):
+        raise HTTPException(410, "File missing")
+
+    ctype = mimetypes.guess_type(doc.path)[0] or "application/octet-stream"
+
+    return FileResponse(
+        path=doc.path,
+        media_type=ctype,
+        headers={
+            # THIS is the key
+            "Content-Disposition": "inline"
+        }
+    )
+
 @router.delete("/{doc_id}", status_code=204)
 def delete_document(doc_id: int, db: Session = Depends(get_db)):
     """

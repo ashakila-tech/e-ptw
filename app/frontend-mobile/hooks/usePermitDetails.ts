@@ -4,6 +4,7 @@ import * as api from "@/services/api";
 
 import { useUser } from "@/contexts/UserContext";
 const PLACEHOLDER_THRESHOLD = 3;
+const CLOSING_FLOW_LEVEL = 98;
 
 export function usePermitDetails(id?: string) {
   const [permit, setPermit] = useState<any | null>(null);
@@ -141,8 +142,6 @@ export function usePermitDetails(id?: string) {
       company_id,
       workflowId,
       workflowDataId,
-      job_assigner_id,
-      jobAssigner,
       name: permitName,
       documentId,
     } = permit;
@@ -150,22 +149,19 @@ export function usePermitDetails(id?: string) {
     // Find the supervisor (level 1 approver) from the existing approvals list.
     const supervisorApproval = approvals.find(a => a.level === 1);
     const supervisorApprovalData = approvalData.find(ad => ad.level === 1);
-    // const supervisorId = job_assigner_id || supervisorApproval?.user_id;
-
-    console.log(approvals);
 
     if (!workflowId || !workflowDataId || !supervisorApproval?.user_id) {
       throw new Error("Missing critical permit data to create closing workflow.");
     }
 
-    // LEVEL 98 — SUPERVISOR "JOB DONE" (PENDING)
+    // LEVEL CLOSING_FLOW_LEVEL (98) — SUPERVISOR "JOB DONE" (PENDING)
     const approval = await api.createApproval({
       company_id: company_id || userCompanyId || 1,
       workflow_id: workflowId,
       user_id: supervisorApproval.user_id,
       name: `${permitName || "Untitled"} - ${supervisorApprovalData?.approver_name || "Supervisor"} - Job Done`,
       role_name: "Supervisor Job Done Confirmation",
-      level: 98, // Closing flow level
+      level: CLOSING_FLOW_LEVEL,
     });
 
     await api.createApprovalData({
@@ -176,7 +172,7 @@ export function usePermitDetails(id?: string) {
       status: PermitStatus.PENDING,
       approver_name: supervisorApprovalData?.approver_name || "Supervisor",
       role_name: "Supervisor Job Done Confirmation",
-      level: 98,
+      level: CLOSING_FLOW_LEVEL,
     });
   };
 
@@ -184,12 +180,15 @@ export function usePermitDetails(id?: string) {
   const confirmEntryAndCreateClosingWorkflow = async () => {
     if (!permit) throw new Error("Permit details are not loaded.");
 
-    // Step 1: Create the closing workflow (e.g., "Job Done" approval)
+    // Create the closing workflow (e.g., "Job Done" approval)
     await createClosingWorkflow();
 
-    // Step 2: Activate the permit
+    // Activate the permit
     await api.securityConfirmEntry(permit.id);
   };
 
-  return { permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, safetyEquipments, createClosingWorkflow, confirmEntryAndCreateClosingWorkflow, serverTime };
+  return { 
+    permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, 
+    safetyEquipments, createClosingWorkflow, confirmEntryAndCreateClosingWorkflow, serverTime 
+  };
 }

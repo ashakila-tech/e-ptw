@@ -56,7 +56,8 @@ export default function ApplicationForm() {
       setEndTime(null);
     }
   };
-  // Validation
+
+  // Data fields Validation
   useEffect(() => {
     if (!permitName.trim()) setFormError("Permit name is required.");
     else if (!permitType) setFormError("Please select a permit type.");
@@ -149,6 +150,7 @@ export default function ApplicationForm() {
           zIndex={20}
           multiple={true}
         />
+        
         {/* Display Selected Workers */}
         <View className="flex-row flex-wrap mt-2">
           {workerIds.map((id) => {
@@ -157,7 +159,10 @@ export default function ApplicationForm() {
             return (
               <View key={id} className="flex-row items-center bg-blue-100 rounded-full px-3 py-1 mr-2 mb-2">
                 <Text className="text-blue-800 text-sm">{worker.label}</Text>
-                <TouchableOpacity onPress={() => setWorkerIds(currentIds => currentIds.filter(workerId => workerId !== id))} className="ml-2">
+                <TouchableOpacity 
+                  onPress={() => setWorkerIds(currentIds => currentIds.filter(workerId => workerId !== id))} 
+                  className="ml-2"
+                >
                   <Text className="text-blue-800 font-bold text-xs">X</Text>
                 </TouchableOpacity>
               </View>
@@ -178,6 +183,7 @@ export default function ApplicationForm() {
           zIndex={10}
           multiple={true}
         />
+
         {/* Display Selected Safety Equipment */}
         <View className="flex-row flex-wrap mt-2">
           {safetyEquipmentIds.map((id) => {
@@ -198,6 +204,7 @@ export default function ApplicationForm() {
         <Text className="text-base text-gray-700 mt-4 mb-2">Work Date</Text>
         <DatePickerField value={workDate} onChange={handleDateChange} mode="date" />
 
+        {/* Start / End Time */}
         {workDate && (
           <View className="flex-row mt-4 space-x-4">
             <View className="flex-1">
@@ -214,7 +221,6 @@ export default function ApplicationForm() {
             </View>
           </View>
         )}
-
 
         {/* Document Upload */}
         <Text className="text-base text-gray-700 mt-4 mb-2">Document</Text>
@@ -239,14 +245,16 @@ export default function ApplicationForm() {
           </Pressable>
 
           <Pressable
-            onPress={() => !formError && submitApplication("SUBMITTED")}
+            onPress={() => submitApplication("SUBMITTED")}
             disabled={!!formError}
             className={`flex-[0.6] rounded-xl py-4 items-center ${formError ? "bg-gray-400" : "bg-bg1"}`}
           >
             <Text className="text-white font-semibold text-base">Submit Application</Text>
           </Pressable>
         </View>
-        <View className="p-10" />
+
+        <View className="p-10" /> {/* Spacer */}
+
       </ScrollView>
     </SafeAreaView>
   );

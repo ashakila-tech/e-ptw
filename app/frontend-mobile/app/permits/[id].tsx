@@ -295,7 +295,7 @@ export default function PermitDetails() {
                 onPress={() => {
                   if (permit.documentId) {
                     const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
-                    const fileUrl = `${API_BASE_URL}api/documents/${permit.documentId}/download`;
+                    const fileUrl = `${API_BASE_URL}api/documents/${permit.documentId}/view`;
                     router.push({
                       pathname: "/permits/fileViewer",
                       params: { fileUrl, fileName: permit.document, fileType: getMimeType(permit.document) },

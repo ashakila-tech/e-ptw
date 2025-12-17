@@ -127,7 +127,9 @@ export function useApplicationForm(existingApp: any, router: any) {
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
       } finally {
-        setLoading(false); // Stop loading regardless of outcome
+        // Stop loading regardless of outcome
+        // Removing this line causes infinite loading state if an error occurs
+        setLoading(false); 
       }
     }
     fetchData();
@@ -252,7 +254,7 @@ export function useApplicationForm(existingApp: any, router: any) {
       let workflow: any = null;
       let workflowDataId: number | null = existingApp?.workflowDataId ?? null;
 
-      // -------------------- Create workflow + workflowData if not existing --------------------
+      // Create workflow + workflowData if not existing
       if (!workflowDataId) {
         workflow = await createWorkflow(
           `${permitName || "Untitled"} - ${userName} - Workflow`,
@@ -281,7 +283,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         workflowDataId = workflowData.id;
       }
 
-      // -------------------- Validate required fields --------------------
+      // Validate required fields
       if (status === "SUBMITTED") {
         if (!permitName.trim() || !permitType || !location || !jobAssigner || !startTime || !endTime) {
           crossPlatformAlert("Error", "Please complete all required fields before submitting.");
@@ -297,7 +299,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         }
       }
 
-      // -------------------- Build payload for application --------------------
+      // Build payload for application
       const finalWorkerIds = await Promise.all(
         workerIds.map(async (idOrName) => {
           if (typeof idOrName === "number") {
@@ -353,7 +355,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         updated_by: applicantName || "Unknown User",
       };
 
-      // -------------------- Save application --------------------
+      // Save application
       const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
 
       // Ensure workflow exists before creating approvals
@@ -367,7 +369,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         workflowId = newWorkflow.id;
       }
 
-      // -------------------- Create approvals if submitted --------------------
+      // Create approvals if submitted
       if (status === "SUBMITTED" && jobAssigner) {
         const selectedAssigner = jobAssignerItems.find((item) => item.value === jobAssigner);
 
@@ -405,7 +407,7 @@ export function useApplicationForm(existingApp: any, router: any) {
               user_group_id: null,
               user_id: selectedOfficer.user_id,
               name: `${permitName || "Untitled"} - ${selectedOfficer.user?.name || "Unknown"} - Safety Officer`,
-              role_name: "Safety Officer",
+              role_name: "HSE Department",
               level: 2,
             });
 
@@ -416,13 +418,15 @@ export function useApplicationForm(existingApp: any, router: any) {
               workflow_data_id: workflowDataId!,
               status: PermitStatus.WAITING,
               approver_name: selectedOfficer.user?.name || "Safety Officer",
-              role_name: "Safety Officer",
+              role_name: "HSE Department",
               level: 2,
             });
           }
         } catch (err) {
           console.error("Error fetching safety officer:", err);
         }
+
+        // ---------------- KEEP THIS CODE COMMENTED OUT FOR NOW ----------------
 
         // // LEVEL 3 — SITE MANAGER (WAITING)
         // try {
@@ -495,6 +499,7 @@ export function useApplicationForm(existingApp: any, router: any) {
       }
     }
   };
+
   return {
     applicantName,
     setApplicantName,
@@ -537,7 +542,7 @@ export function useApplicationForm(existingApp: any, router: any) {
     setStartTime: handleSetStartTime, // Use the custom setter
     endTime,
     setEndTime,
-    loading, // Expose the new loading state
+    loading,
     submitApplication,
   };
 }
