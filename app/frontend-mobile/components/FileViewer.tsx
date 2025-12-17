@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Image, StyleSheet, Platform, View, Text } from "react-native";
 import { WebView } from "react-native-webview";
+import ImageViewer from "./ImageViewer";
 import LoadingScreen from "./LoadingScreen";
 
 interface FileViewerProps {
@@ -23,6 +24,7 @@ export default function FileViewer({ fileUrl, fileType }: FileViewerProps) {
         resizeMode="contain"
       />
     );
+    // return <ImageViewer uri={fileUrl} />;
   }
 
   // --------------------
