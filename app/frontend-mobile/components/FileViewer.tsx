@@ -24,10 +24,10 @@ export default function FileViewer({ fileUrl, fileType }: FileViewerProps) {
   }
 
   // Android native PDF app
-  if (isPdf && Platform.OS === "android") {
-    Linking.openURL(fileUrl);
-    return null;
-  }
+  // if (isPdf && Platform.OS === "android") {
+  //   Linking.openURL(fileUrl);
+  //   return null;
+  // }
 
   // Google Docs Viewer (PDF + Office)
   const googleViewerUrl =

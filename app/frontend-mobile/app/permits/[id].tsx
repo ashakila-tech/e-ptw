@@ -127,6 +127,19 @@ export default function PermitDetails() {
   const canConfirmJobDone = isApproval && permit.status === PermitStatus.ACTIVE && myApproval; // && myApproval.level === 98;
   const canConfirmExit = isSecurity && permit.status === PermitStatus.EXIT_PENDING;
 
+  const mimeType = getMimeType(permit.document);
+  const isOffice = isOfficeFile(mimeType);
+
+  function isOfficeFile(mime?: string) {
+    if (!mime) return false;
+
+    return (
+      mime.includes("officedocument") || // docx, xlsx, pptx
+      mime === "application/vnd.ms-excel" ||
+      mime === "application/msword" ||
+      mime === "text/csv"
+    );
+  }
 
   // ---------------------- Button handlers ----------------------
 
@@ -291,51 +304,34 @@ export default function PermitDetails() {
               Document: <Text className="font-semibold">{permit.document}</Text>
             </Text>
             <View className="flex-row">
-              {/* <TouchableOpacity
-                disabled={!permit.documentId}
-                onPress={() => {
-                  if (permit.documentId) {
+              {!isOffice && (
+                <TouchableOpacity
+                  disabled={!permit.documentId || isOffice}
+                  className={`px-3 py-2 rounded mr-2 ${permit.documentId ? "bg-blue-600" : "bg-gray-400"}`}
+                  onPress={() => {
+                    if (!permit.documentId || isOffice) return;
+
                     const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
                     const fileUrl = `${API_BASE_URL}api/documents/${permit.documentId}/view`;
-                    router.push({
-                      pathname: "/permits/fileViewer",
-                      params: { fileUrl, fileName: permit.document, fileType: getMimeType(permit.document) },
-                    });
-                  }
-                }}
-                className={`px-3 py-2 rounded mr-2 ${permit.documentId ? "bg-blue-600" : "bg-gray-400"}`}
-              >
-                <Text className="text-white text-sm font-semibold">View</Text>
-              </TouchableOpacity> */}
-              <TouchableOpacity
-                disabled={!permit.documentId}
-                className={`px-3 py-2 rounded mr-2 ${permit.documentId ? "bg-blue-600" : "bg-gray-400"}`}
-                onPress={() => {
-                  if (!permit.documentId) return;
 
-                  const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
-                  const fileUrl = `${API_BASE_URL}api/documents/${permit.documentId}/view`;
+                    if (Platform.OS === "android") {
+                      Linking.openURL(fileUrl);
+                      return;
+                    }
 
-                  if (Platform.OS === "android") {
-                    // Open directly, no navigation
-                    Linking.openURL(fileUrl);
-                    // return;
-                  }
-                  else {
-                    // Web (and iOS if you want later)
                     router.push({
                       pathname: "/permits/fileViewer",
                       params: {
                         fileUrl,
                         fileName: permit.document,
-                        fileType: getMimeType(permit.document),
+                        fileType: mimeType,
                       },
                     });
-                  }
-                }}
-              >
-                <Text className="text-white text-sm font-semibold">View</Text>
-              </TouchableOpacity>
+                  }}
+                >
+                  <Text className="text-white text-sm font-semibold">View</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 disabled={!permit.documentId}
                 onPress={() => permit.documentId && downloadDocument(permit.documentId, permit.document)}
@@ -345,6 +341,11 @@ export default function PermitDetails() {
               </TouchableOpacity>
             </View>
           </View>
+          {isOffice && (
+            <Text className="text-xs text-rejected mt-1">
+              No Preview. Office documents must be downloaded to view.
+            </Text>
+          )}
         </View>
 
         {/* Workers */}
