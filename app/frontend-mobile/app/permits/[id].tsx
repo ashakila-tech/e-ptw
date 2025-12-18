@@ -27,6 +27,7 @@ import CustomHeader from "@/components/CustomHeader";
 import WorkerTable from "@/components/WorkerTable";
 import { TextInput } from "react-native";
 import Constants from "expo-constants";
+import * as Linking from "expo-linking";
 
 export default function PermitDetails() {
   const { id } = useLocalSearchParams();
@@ -290,7 +291,7 @@ export default function PermitDetails() {
               Document: <Text className="font-semibold">{permit.document}</Text>
             </Text>
             <View className="flex-row">
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 disabled={!permit.documentId}
                 onPress={() => {
                   if (permit.documentId) {
@@ -303,6 +304,35 @@ export default function PermitDetails() {
                   }
                 }}
                 className={`px-3 py-2 rounded mr-2 ${permit.documentId ? "bg-blue-600" : "bg-gray-400"}`}
+              >
+                <Text className="text-white text-sm font-semibold">View</Text>
+              </TouchableOpacity> */}
+              <TouchableOpacity
+                disabled={!permit.documentId}
+                className={`px-3 py-2 rounded mr-2 ${permit.documentId ? "bg-blue-600" : "bg-gray-400"}`}
+                onPress={() => {
+                  if (!permit.documentId) return;
+
+                  const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+                  const fileUrl = `${API_BASE_URL}api/documents/${permit.documentId}/view`;
+
+                  if (Platform.OS === "android") {
+                    // Open directly, no navigation
+                    Linking.openURL(fileUrl);
+                    // return;
+                  }
+                  else {
+                    // Web (and iOS if you want later)
+                    router.push({
+                      pathname: "/permits/fileViewer",
+                      params: {
+                        fileUrl,
+                        fileName: permit.document,
+                        fileType: getMimeType(permit.document),
+                      },
+                    });
+                  }
+                }}
               >
                 <Text className="text-white text-sm font-semibold">View</Text>
               </TouchableOpacity>

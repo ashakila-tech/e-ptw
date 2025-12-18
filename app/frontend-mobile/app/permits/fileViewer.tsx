@@ -1,5 +1,5 @@
 import React from "react";
-import { SafeAreaView } from "react-native";
+import { SafeAreaView, Text } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import CustomHeader from "@/components/CustomHeader";
 import FileViewer from "@/components/FileViewer";

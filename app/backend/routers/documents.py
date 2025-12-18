@@ -107,13 +107,15 @@ def view_document(doc_id: int, db: Session = Depends(get_db)):
         raise HTTPException(410, "File missing")
 
     ctype = mimetypes.guess_type(doc.path)[0] or "application/octet-stream"
+    filename = os.path.basename(doc.path)
 
     return FileResponse(
         path=doc.path,
         media_type=ctype,
+        filename=filename,
         headers={
-            # THIS is the key
-            "Content-Disposition": "inline"
+            # CRITICAL for Android intents
+            "Content-Disposition": f'inline; filename="{filename}"'
         }
     )
 
