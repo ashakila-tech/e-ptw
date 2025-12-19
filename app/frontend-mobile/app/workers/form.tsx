@@ -116,9 +116,9 @@ export default function WorkerForm() {
           )}
           <TouchableOpacity
             onPress={pickImage}
-            className="border border-dashed border-primary rounded-lg px-4 py-3"
+            className="bg-primary rounded-lg px-4 py-3"
           >
-            <Text className="text-primary">
+            <Text className="text-white">
               {picture ? "Change Picture" : "Upload Picture"}
             </Text>
           </TouchableOpacity>
@@ -132,7 +132,7 @@ export default function WorkerForm() {
         <Pressable
           onPress={handleSubmit}
           disabled={loading}
-          className={`rounded-xl py-4 mt-8 items-center ${loading ? "bg-gray-400" : "bg-primary"}`}
+          className={`rounded-xl py-4 mt-8 items-center ${loading ? "bg-gray-400" : "bg-bg1"}`}
         >
           <Text className="text-white font-semibold text-base">
             {loading ? (isEditMode ? "Saving..." : "Adding...") : (isEditMode ? "Save Changes" : "Add Worker")}

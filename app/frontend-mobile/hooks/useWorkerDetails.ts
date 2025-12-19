@@ -24,7 +24,7 @@ export function useWorkerDetails(id?: string) {
       // Construct full picture URL if picture path exists
 
       const pictureUrl = workerData.picture
-        ? `${Constants.expoConfig?.extra?.API_BASE_URL}api/${workerData.picture}`
+        ? `${Constants.expoConfig?.extra?.API_BASE_URL}api/workers/${workerData.id}/picture?timestamp=${new Date().getTime()}`
         : null;
 
       console.log(pictureUrl);

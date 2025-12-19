@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as api from "@/services/api";
+import { Alert } from "react-native";
 import { useProfile } from "./useProfile";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import * as ImagePicker from "expo-image-picker";
@@ -46,7 +47,7 @@ export function useWorkerForm() {
       setEmploymentStatus(existingWorker.employment_status || null);
       setEmploymentType(existingWorker.employment_type || null);
       if (existingWorker.picture) {
-        const pictureUrl = `${Constants.expoConfig?.extra?.API_BASE_URL}${existingWorker.picture}`;
+        const pictureUrl = `${Constants.expoConfig?.extra?.API_BASE_URL}api/workers/${existingWorker.id}/picture?timestamp=${new Date().getTime()}`;
         setPicture({ 
           name: existingWorker.picture.split('/').pop(), 
           uri: pictureUrl, 
@@ -56,18 +57,47 @@ export function useWorkerForm() {
   }, []); // Run only once on initial mount
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
+    const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+    const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (!result.canceled) {
-      const file = result.assets[0];
-      const name = file.uri.split("/").pop() || "image.jpg";
-      setPicture({ ...file, name });
+    if (cameraStatus !== 'granted' || libraryStatus !== 'granted') {
+      Alert.alert("Permissions required", "Please grant camera and media library permissions in your settings to continue.");
+      return;
     }
+
+    Alert.alert(
+      "Upload Picture",
+      "Choose an option",
+      [
+        {
+          text: "Take Photo",
+          onPress: async () => {
+            const result = await ImagePicker.launchCameraAsync({
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.5,
+            });
+            if (!result.canceled) {
+              const file = result.assets[0];
+              const name = file.uri.split("/").pop() || "camera-image.jpg";
+              setPicture({ ...file, name });
+            }
+          },
+        },
+        {
+          text: "Choose from Library",
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.5 });
+            if (!result.canceled) {
+              const file = result.assets[0];
+              const name = file.uri.split("/").pop() || "library-image.jpg";
+              setPicture({ ...file, name });
+            }
+          },
+        },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
   };
 
 
