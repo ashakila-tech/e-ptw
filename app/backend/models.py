@@ -168,6 +168,7 @@ class Worker(Base):
     employment_status = Column(String, nullable=True)
     employment_type = Column(String, nullable=True)
     position = Column(String, nullable=True)
+    picture = Column(String, nullable=True)
 
     company = relationship("Company")
     applications = relationship(

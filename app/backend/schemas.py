@@ -231,6 +231,7 @@ class WorkerBase(BaseModel):
     employment_status: Optional[str] = None
     employment_type: Optional[str] = None
     position: Optional[str] = None
+    picture: Optional[str] = None
 
 class WorkerIn(WorkerBase):
     pass
