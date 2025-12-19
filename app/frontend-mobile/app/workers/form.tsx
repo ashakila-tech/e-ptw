@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import {
   SafeAreaView,
+  Image,
   View,
   Text,
   TextInput,
   Pressable,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
 import CustomHeader from "@/components/CustomHeader";
@@ -19,6 +21,8 @@ export default function WorkerForm() {
     icPassport, setIcPassport,
     contact, setContact,
     position, setPosition,
+    picture,
+    pickImage,
     employmentStatus, setEmploymentStatus,
     employmentStatusOpen, setEmploymentStatusOpen,
     employmentStatusItems, setEmploymentStatusItems,
@@ -100,6 +104,28 @@ export default function WorkerForm() {
           placeholder="Select employment type"
           zIndex={10}
         />
+
+        {/* Picture Upload */}
+        <Text className="text-base text-gray-700 mt-4 mb-2">Worker Picture</Text>
+        <View className="flex-row items-center">
+          {picture && (
+            <Image
+              source={{ uri: picture.uri }}
+              className="w-20 h-20 rounded-full mr-4"
+            />
+          )}
+          <TouchableOpacity
+            onPress={pickImage}
+            className="border border-dashed border-primary rounded-lg px-4 py-3"
+          >
+            <Text className="text-primary">
+              {picture ? "Change Picture" : "Upload Picture"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {picture && (
+          <Text className="text-sm text-gray-500 mt-2 ml-24">{picture.name}</Text>
+        )}
 
         {error && <Text className="text-red-600 mt-4">{error}</Text>}
 

@@ -189,20 +189,48 @@ export async function fetchWorkerById(id: number) {
 }
 
 export async function createWorker(payload: any) {
+  const formData = new FormData();
+
+  // Append all fields from the payload to formData
+  for (const key in payload) {
+    if (payload[key] !== null && payload[key] !== undefined) {
+      // Handle file object for picture
+      if (key === 'picture' && payload.picture.uri) {
+        formData.append('picture', {
+          uri: payload.picture.uri,
+          name: payload.picture.name,
+          type: payload.picture.mimeType || 'image/jpeg',
+        } as any);
+      } else if (key !== 'picture') {
+        formData.append(key, payload[key]);
+      }
+    }
+  }
+
   const res = await fetch(`${API_BASE_URL}api/workers/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: formData,
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (!res.ok) throw new Error(`Failed to create worker: ${await res.text()}`);
   return res.json();
 }
 
 export async function updateWorker(id: number, payload: any) {
+  const formData = new FormData();
+  for (const key in payload) {
+    if (payload[key] !== null && payload[key] !== undefined) {
+      if (key === 'picture' && payload.picture?.uri) {
+        formData.append('picture', { uri: payload.picture.uri, name: payload.picture.name, type: payload.picture.mimeType || 'image/jpeg' } as any);
+      } else if (key !== 'picture') {
+        formData.append(key, payload[key]);
+      }
+    }
+  }
   const res = await fetch(`${API_BASE_URL}api/workers/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: formData,
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (!res.ok) throw new Error(`Failed to update worker: ${await res.text()}`);
   return res.json();

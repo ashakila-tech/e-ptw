@@ -3,6 +3,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import * as api from "@/services/api";
 import { useProfile } from "./useProfile";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
+import * as ImagePicker from "expo-image-picker";
+import Constants from "expo-constants";
 
 export function useWorkerForm() {
   const router = useRouter();
@@ -15,6 +17,7 @@ export function useWorkerForm() {
   const [icPassport, setIcPassport] = useState(""); // Corrected variable name
   const [contact, setContact] = useState("");
   const [position, setPosition] = useState("");
+  const [picture, setPicture] = useState<any | null>(null);
 
   const [employmentStatus, setEmploymentStatus] = useState<string | null>(null);
   const [employmentStatusOpen, setEmploymentStatusOpen] = useState(false);
@@ -42,8 +45,30 @@ export function useWorkerForm() {
       setPosition(existingWorker.position || "");
       setEmploymentStatus(existingWorker.employment_status || null);
       setEmploymentType(existingWorker.employment_type || null);
+      if (existingWorker.picture) {
+        const pictureUrl = `${Constants.expoConfig?.extra?.API_BASE_URL}${existingWorker.picture}`;
+        setPicture({ 
+          name: existingWorker.picture.split('/').pop(), 
+          uri: pictureUrl, 
+        });
+      }
     }
   }, []); // Run only once on initial mount
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      const file = result.assets[0];
+      const name = file.uri.split("/").pop() || "image.jpg";
+      setPicture({ ...file, name });
+    }
+  };
 
 
   const handleSubmit = async () => {
@@ -67,6 +92,7 @@ export function useWorkerForm() {
         position,
         employment_status: employmentStatus,
         employment_type: employmentType,
+        picture: picture?.uri ? picture : null, // Only include picture if it's a new file
       };
       if (isEditMode) {
         await api.updateWorker(existingWorker.id, payload);
@@ -88,6 +114,8 @@ export function useWorkerForm() {
     icPassport, setIcPassport,
     contact, setContact,
     position, setPosition,
+    picture, setPicture,
+    pickImage,
     employmentStatus, setEmploymentStatus,
     employmentStatusOpen, setEmploymentStatusOpen,
     employmentStatusItems, setEmploymentStatusItems,

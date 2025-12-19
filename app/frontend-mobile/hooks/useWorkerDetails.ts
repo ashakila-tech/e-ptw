@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import * as api from "@/services/api";
+import Constants from "expo-constants";
 
 export function useWorkerDetails(id?: string) {
   const [worker, setWorker] = useState<any | null>(null);
@@ -20,9 +21,18 @@ export function useWorkerDetails(id?: string) {
         ? await api.fetchCompanyById(workerData.company_id)
         : null;
 
+      // Construct full picture URL if picture path exists
+
+      const pictureUrl = workerData.picture
+        ? `${Constants.expoConfig?.extra?.API_BASE_URL}api/${workerData.picture}`
+        : null;
+
+      console.log(pictureUrl);
+
       setWorker({
         ...workerData,
         company_name: company?.name || "-",
+        picture_url: pictureUrl,
       });
     } catch (err: any) {
       console.error("Error fetching worker details:", err);

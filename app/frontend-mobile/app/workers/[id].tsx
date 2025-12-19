@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import {
   SafeAreaView,
   View,
+  Image,
   Text,
   ScrollView,
   TouchableOpacity,
@@ -58,6 +59,16 @@ export default function WorkerDetailsPage() {
         }
       >
         {/* Worker Information */}
+        {worker.picture_url && (
+          <View className="items-center my-4">
+            <Image
+              // source={{ uri: worker.picture_url }}
+              source={{ uri: "workers/1/picture/40768678-9af2-44e5-a511-bb59cab13eb9_55ca8418-15a7-4c02-a8c0-de717ab822bc.png"}}
+              className="w-32 h-32 rounded-full bg-gray-300"
+              resizeMode="cover"
+            />
+          </View>
+        )}
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Worker Information</Text>
           <View className="mb-3">
