@@ -325,3 +325,15 @@ class ApplicationSafetyEquipmentOut(ApplicationSafetyEquipmentBase):
     id: int
     class Config:
         from_attributes = True
+
+# ---------- PushToken ----------
+class PushTokenIn(BaseModel):
+    token: str
+    platform: Optional[str] = None
+
+class PushTokenOut(PushTokenIn):
+    id: int
+    user_id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

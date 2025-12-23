@@ -1,6 +1,6 @@
 # app/routers/_crud_factory.py
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, DeclarativeMeta
 from typing import Type, Optional, Callable, Any
 
 from ..deps import get_db, require_role
@@ -46,13 +46,24 @@ def make_crud_router(
     # --- CREATE ---
     if enable_create:
         _CreateSchema = CreateSchema or InSchema
+
         @router.post("/", response_model=OutSchema)
         def create_item(payload: _CreateSchema, db: Session = Depends(get_db)):
             data = payload.model_dump()
+
             if create_mutator:
-                data = create_mutator(data, db)
+                result = create_mutator(data, db)
+
+                # Allow returning existing model instance
+                if isinstance(result, Model):
+                    return result
+
+                data = result
+
             obj = Model(**data)
-            db.add(obj); db.commit(); db.refresh(obj)
+            db.add(obj)
+            db.commit()
+            db.refresh(obj)
             return obj
 
     # --- UPDATE ---

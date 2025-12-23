@@ -13,7 +13,8 @@ from .routers import (
     applications, location_managers, permit_officers, workers,
     safety_equipments,
     application_workers,
-    application_safety_equipments
+    application_safety_equipments,
+    push_tokens
 )
 # scheduler = BackgroundScheduler()
 
@@ -69,6 +70,7 @@ app.include_router(workers.router, prefix="/api")
 app.include_router(safety_equipments.crud_router, prefix="/api")
 app.include_router(application_workers.crud_router, prefix="/api")
 app.include_router(application_safety_equipments.crud_router, prefix="/api")
+app.include_router(push_tokens.router, prefix="/api")
 
 @app.get("/")
 def root():

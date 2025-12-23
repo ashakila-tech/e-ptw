@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, func
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, func, UniqueConstraint
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -203,3 +203,16 @@ class ApplicationSafetyEquipment(Base):
     id = Column(Integer, primary_key=True, index=True)
     application_id = Column(Integer, ForeignKey("application.id", ondelete="CASCADE"), nullable=False)
     safety_equipment_id = Column(Integer, ForeignKey("safety_equipment.id", ondelete="CASCADE"), nullable=False)
+
+class PushToken(Base):
+    __tablename__ = "push_token"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False, index=True)
+    token = Column(String, nullable=False, unique=True)
+    platform = Column(String, nullable=True)  # ios | android
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "token", name="uq_user_push_token"),
+    )
