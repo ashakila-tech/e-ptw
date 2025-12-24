@@ -6,6 +6,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-secondary);
 }
 
 #root {
@@ -196,4 +197,53 @@ body {
 
 .login-button:hover {
   background-color: var(--color-highlight-hover);
+}
+
+/* Dashboard cards */
+
+.dashboard-container {
+  background-color: white;
+  padding: 1em;
+  border-radius: 8px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (min-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background-color: var(--color-bg1);
+  border-radius: 8px;
+  /* color: var(--color-primary); */
+  color: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.stat-title {
+  font-weight: 500;
+  color: var()
+}
+
+.stat-number {
+  font-weight: 700;
+  font-size: 1.25rem;
 }

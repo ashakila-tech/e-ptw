@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import Sidebar from './components/Sidebar'; // Import the new Sidebar component
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { Colors } from '../../shared/constants/Colors';
+import { Colors, StatusColors } from '../../shared/constants/Colors';
 
 // Import the new page components
 import Dashboard from './pages/Dashboard';
@@ -61,6 +61,15 @@ function App() {
     root.style.setProperty('--color-primary-hover', shadeColor(Colors.primary, 20)); // Lighter
     root.style.setProperty('--color-accent1-hover', shadeColor(Colors.accent1, 20)); // Lighter
     root.style.setProperty('--color-highlight-hover', shadeColor(Colors.highlight, -10)); // Darker
+
+    // Status colors
+    root.style.setProperty('--color-status-approved', StatusColors.approved);
+    root.style.setProperty('--color-status-pending', StatusColors.pending);
+    root.style.setProperty('--color-status-rejected', StatusColors.rejected);
+    root.style.setProperty('--color-status-submitted', StatusColors.submitted);
+    root.style.setProperty('--color-status-waiting', StatusColors.waiting);
+    root.style.setProperty('--color-status-draft', StatusColors.draft);
+    root.style.setProperty('--color-status-exit-pending', StatusColors['exit-pending']);
   }, []);
 
   return (
