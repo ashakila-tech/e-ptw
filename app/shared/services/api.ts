@@ -1,29 +1,10 @@
-import { PermitStatus } from "../constants/Status";
+import { getApiBaseUrlWithOverride, getToken, setToken, removeToken } from './platform';
 
-export interface ApiConfig {
-  API_BASE_URL: string;
-  storage: {
-    getItem: (key: string) => Promise<string | null>;
-    setItem: (key: string, value: string) => Promise<void>;
-  };
-}
-
-let apiConfig: ApiConfig;
-
-export function initializeApi(config: ApiConfig) {
-  apiConfig = config;
-}
-
-const getApiConfig = () => {
-  if (!apiConfig) {
-    throw new Error("API not initialized. Call initializeApi(config) first.");
-  }
-  return apiConfig;
-};
+// Prefer Vite/Cra env for web and allow runtime overrides; for Expo, platform.getApiBaseUrlWithOverride() will resolve it at runtime.
+const API_BASE_URL = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) || (typeof window !== 'undefined' ? (window as any).API_BASE_URL : '') || '';
 
 // -------------------- Auth --------------------
 export async function login(email: string, password: string) {
-  const { API_BASE_URL, storage } = getApiConfig();
   const formData = new FormData();
   formData.append("username", email);
   formData.append("password", password);
@@ -34,12 +15,11 @@ export async function login(email: string, password: string) {
     throw new Error(err.detail || "Login failed");
   }
   const data = await res.json();
-  await storage.setItem("access_token", data.access_token);
+  await setToken(data.access_token);
   return data.access_token;
 }
 
 export async function registerUser(payload: { company_id: number; name: string; email: string; user_type: string; password: string }) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -50,7 +30,6 @@ export async function registerUser(payload: { company_id: number; name: string; 
 }
 
 export async function registerApplicant(payload: { company_id: number; name: string; email: string; user_type: number; password: string }) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}auth/register-applicant`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -61,53 +40,58 @@ export async function registerApplicant(payload: { company_id: number; name: str
 }
 
 export async function getCurrentUser() {
-  const { API_BASE_URL, storage } = getApiConfig();
-  const token = await storage.getItem("access_token");
+  const token = await getToken();
   if (!token) throw new Error("No token found");
   const res = await fetch(`${API_BASE_URL}auth/me`, { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error(`Failed to fetch user: ${await res.text()}`);
   return res.json();
-}
+} 
 
 // -------------------- Users --------------------
 export async function fetchUsers() {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/users/`);
   if (!res.ok) throw new Error("Failed to fetch users");
   return res.json();
 }
 
 export async function fetchUserById(userId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/users/${userId}`);
   if (!res.ok) throw new Error(`Failed to fetch user (${res.status})`);
   return res.json();
 }
 
 export async function fetchUsersByGroupName(groupName: string) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/users/by-group-name/${groupName}`);
   if (!res.ok) throw new Error(`Failed to fetch users for group ${groupName}`);
   return res.json();
 }
 
 export async function fetchUsersByGroupId(groupId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/users/by-group-id/${groupId}`);
   if (!res.ok) throw new Error(`Failed to fetch users for group ID ${groupId}`);
   return res.json();
 }
 
 export async function fetchUserGroups() {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/user-groups/`);
   if (!res.ok) throw new Error("Failed to fetch user groups");
   return res.json();
 }
 
+// Fetch selectable groups (value/label) from the backend. Used by admin dropdowns and the dashboard.
+export async function fetchGroupsOptions(params?: { company_id?: number; q?: string; page_size?: number }) {
+  const query = [] as string[];
+  if (params?.company_id) query.push(`company_id=${params.company_id}`);
+  if (params?.q) query.push(`q=${encodeURIComponent(params.q)}`);
+  if (params?.page_size) query.push(`page_size=${params.page_size}`);
+  const qs = query.length ? `?${query.join('&')}` : '';
+  const res = await fetch(`${API_BASE_URL}api/groups/options${qs}`);
+  if (!res.ok) throw new Error('Failed to fetch groups');
+  return res.json();
+}
+
 // -------------------- Companies --------------------
 export async function fetchCompanyById(companyId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/companies/${companyId}`);
   if (!res.ok) throw new Error(`Failed to fetch company (${res.status})`);
   return res.json();
@@ -115,29 +99,27 @@ export async function fetchCompanyById(companyId: number) {
 
 // -------------------- Locations --------------------
 export async function fetchLocations() {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/locations/`);
   if (!res.ok) throw new Error("Failed to fetch locations");
   return res.json();
 }
 
 export async function fetchLocationById(locationId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/locations/${locationId}`);
   if (!res.ok) throw new Error(`Failed to fetch location (${res.status})`);
   return res.json();
 }
 
 export async function fetchLocationManagersByLocation(locationId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/location-managers/filter?location_id=${locationId}`);
   if (!res.ok) throw new Error(`Failed to fetch location managers: ${res.statusText}`);
   return res.json();
 }
 
 export async function fetchLocationForSiteManager(userId: number) {
-  const { API_BASE_URL } = getApiConfig();
-  const res = await fetch(`${API_BASE_URL}api/location-managers/filter?user_id=${userId}`);
+  const res = await fetch(
+    `${API_BASE_URL}api/location-managers/filter?user_id=${userId}`
+  );
 
   if (!res.ok) throw new Error("Failed to fetch location for Site Manager");
 
@@ -160,29 +142,27 @@ export async function fetchLocationForSiteManager(userId: number) {
 
 // -------------------- Permit Types --------------------
 export async function fetchPermitTypes() {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/permit-types/`);
   if (!res.ok) throw new Error("Failed to fetch permit types");
   return res.json();
 }
 
 export async function fetchPermitTypeById(permitTypeId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/permit-types/${permitTypeId}`);
   if (!res.ok) throw new Error(`Failed to fetch permit type (${res.status})`);
   return res.json();
 }
 
 export async function fetchPermitOfficersByPermitType(permitTypeId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/permit-officers/filter?permit_type_id=${permitTypeId}`);
   if (!res.ok) throw new Error(`Failed to fetch permit officers: ${res.statusText}`);
   return res.json();
 }
 
 export async function fetchPermitTypeForSafetyOfficer(userId: number) {
-  const { API_BASE_URL } = getApiConfig();
-  const res = await fetch(`${API_BASE_URL}api/permit-officers/filter?user_id=${userId}`);
+  const res = await fetch(
+    `${API_BASE_URL}api/permit-officers/filter?user_id=${userId}`
+  );
 
   if (!res.ok) throw new Error("Failed to fetch permit type for Safety Officer");
 
@@ -205,44 +185,69 @@ export async function fetchPermitTypeForSafetyOfficer(userId: number) {
 
 // -------------------- Workers --------------------
 export async function fetchWorkers(companyId?: number) {
-  const { API_BASE_URL } = getApiConfig();
-  const url = companyId ? `${API_BASE_URL}api/workers/filter?company_id=${companyId}` : `${API_BASE_URL}api/workers/`;
+  const url = companyId
+    ? `${API_BASE_URL}api/workers/filter?company_id=${companyId}`
+    : `${API_BASE_URL}api/workers/`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch workers: ${await res.text()}`);
   return res.json();
 }
 
 export async function fetchWorkerById(id: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/workers/${id}`);
   if (!res.ok) throw new Error(`Failed to fetch worker: ${await res.text()}`);
   return res.json();
 }
 
 export async function createWorker(payload: any) {
-  const { API_BASE_URL } = getApiConfig();
+  const formData = new FormData();
+
+  // Append all fields from the payload to formData
+  for (const key in payload) {
+    if (payload[key] !== null && payload[key] !== undefined) {
+      // Handle file object for picture
+      if (key === 'picture' && payload.picture.uri) {
+        formData.append('picture', {
+          uri: payload.picture.uri,
+          name: payload.picture.name,
+          type: payload.picture.mimeType || 'image/jpeg',
+        } as any);
+      } else if (key !== 'picture') {
+        formData.append(key, payload[key]);
+      }
+    }
+  }
+
   const res = await fetch(`${API_BASE_URL}api/workers/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: formData,
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (!res.ok) throw new Error(`Failed to create worker: ${await res.text()}`);
   return res.json();
 }
 
 export async function updateWorker(id: number, payload: any) {
-  const { API_BASE_URL } = getApiConfig();
+  const formData = new FormData();
+  for (const key in payload) {
+    if (payload[key] !== null && payload[key] !== undefined) {
+      if (key === 'picture' && payload.picture?.uri) {
+        formData.append('picture', { uri: payload.picture.uri, name: payload.picture.name, type: payload.picture.mimeType || 'image/jpeg' } as any);
+      } else if (key !== 'picture') {
+        formData.append(key, payload[key]);
+      }
+    }
+  }
   const res = await fetch(`${API_BASE_URL}api/workers/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: formData,
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (!res.ok) throw new Error(`Failed to update worker: ${await res.text()}`);
   return res.json();
 }
 
 export async function deleteWorker(id: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/workers/${id}`, {
     method: "DELETE",
   });
@@ -252,7 +257,6 @@ export async function deleteWorker(id: number) {
 
 // -------------------- Safety Equipment --------------------
 export async function fetchSafetyEquipments() {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/safety-equipments/`);
   if (!res.ok) {
     throw new Error(`Failed to fetch safety equipment: ${await res.text()}`);
@@ -261,7 +265,6 @@ export async function fetchSafetyEquipments() {
 }
 
 export async function createSafetyEquipment(payload: any) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/safety-equipments/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -272,26 +275,54 @@ export async function createSafetyEquipment(payload: any) {
 }
 
 // -------------------- Documents --------------------
+// export async function uploadDocument(file: any, companyId: number = 1) {
+//   const formData = new FormData();
+//   formData.append("file", { uri: file.uri, type: file.mimeType || "application/octet-stream", name: file.name } as any);
+//   const query = `?company_id=${encodeURIComponent(companyId)}&name=${encodeURIComponent(file.name)}`;
+//   const res = await fetch(`${API_BASE_URL}api/documents/upload${query}`, { method: "POST", body: formData, headers: { Accept: "application/json" } });
+//   if (!res.ok) throw new Error(`Failed to upload document (${res.status})`);
+//   return res.json();
+// }
 export async function uploadDocument(file: any, companyId: number = 1) {
-  const { API_BASE_URL } = getApiConfig();
+  // Platform-specific file handling for FormData
+  // On web, `file` is a File object. On native, it's an object with `uri`.
   const formData = new FormData();
-  formData.append("file", { uri: file.uri, type: file.mimeType || "application/octet-stream", name: file.name } as any);
-  const query = `?company_id=${encodeURIComponent(companyId)}&name=${encodeURIComponent(file.name)}`;
-  const res = await fetch(`${API_BASE_URL}api/documents/upload${query}`, { method: "POST", body: formData, headers: { Accept: "application/json" } });
+  if (file instanceof File) {
+    // Web environment
+    formData.append("file", file, file.name);
+  } else {
+    // React Native environment
+    formData.append("file", {
+      uri: file.uri,
+      type: file.mimeType || "application/octet-stream",
+      name: file.name,
+    } as any);
+  }
+  // Add form fields here
+  formData.append("company_id", String(companyId));
+  formData.append("name", file.name);
+
+  const res = await fetch(`${API_BASE_URL}api/documents/upload`, {
+    method: "POST",
+    body: formData,
+    headers: {
+      Accept: "application/json",
+      // "Content-Type": "multipart/form-data", // Let React Native set this with the boundary
+    },
+  });
+
   if (!res.ok) throw new Error(`Failed to upload document (${res.status})`);
   return res.json();
 }
 
 export async function fetchDocumentById(documentId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/documents/${documentId}`);
   if (!res.ok) throw new Error(`Failed to fetch document (${res.status})`);
   return res.json();
 }
 
 export async function downloadDocumentById(documentId: number) {
-  const { API_BASE_URL, storage } = getApiConfig();
-  const token = await storage.getItem("access_token");
+  const token = await getToken();
   if (!token) throw new Error("No token found");
 
   const res = await fetch(`${API_BASE_URL}api/documents/${documentId}/download`, {
@@ -305,7 +336,6 @@ export async function downloadDocumentById(documentId: number) {
 
 // -------------------- Workflows --------------------
 export async function createWorkflow(name: string, company_id: number, permit_type_id: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/workflows/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -318,7 +348,6 @@ export async function createWorkflow(name: string, company_id: number, permit_ty
 export const fetchAllWorkflowData = () => fetchPaginatedData("api/workflow-data/");
 
 export async function createWorkflowData(payload: any) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/workflow-data/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -329,7 +358,6 @@ export async function createWorkflowData(payload: any) {
 }
 
 export async function updateWorkflowData(id: number, payload: any) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/workflow-data/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -340,16 +368,14 @@ export async function updateWorkflowData(id: number, payload: any) {
 }
 
 export async function fetchWorkflowDataById(workflowDataId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/workflow-data/${workflowDataId}`);
   if (!res.ok) throw new Error(`Failed to fetch workflow data (${res.status})`);
   return res.json();
 }
 
 export async function extendWorkEndTime(workflowDataId: number, newEndTime: string) {
-  const { API_BASE_URL, storage } = getApiConfig();
   if (!workflowDataId) throw new Error("Workflow Data ID is required");
-  const token = await storage.getItem("access_token");
+  const token = await getToken();
   if (!token) throw new Error("Authentication token not found.");
 
   const res = await fetch(`${API_BASE_URL}api/workflow-data/${workflowDataId}`, {
@@ -360,12 +386,11 @@ export async function extendWorkEndTime(workflowDataId: number, newEndTime: stri
     },
     body: JSON.stringify({ end_time: newEndTime }),
   });
-  if (!res.ok) throw new Error((await res.text()) || "Failed to extend work end time");
+  if (!res.ok) throw new Error(await res.text() || "Failed to extend work end time");
   return res.json();
 }
 
 export async function checkExtensionEligibility(permitId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/check-extension-eligibility`);
   if (!res.ok) throw new Error("Failed to check extension eligibility");
   return res.json();
@@ -373,7 +398,6 @@ export async function checkExtensionEligibility(permitId: number) {
 
 // -------------------- Applications --------------------
 export async function saveApplication(id: number | null, payload: any, isUpdate: boolean) {
-  const { API_BASE_URL } = getApiConfig();
   const url = id && isUpdate ? `${API_BASE_URL}api/applications/${id}` : `${API_BASE_URL}api/applications/`;
   const method = id && isUpdate ? "PUT" : "POST";
   const { created_time, updated_time, ...cleanPayload } = payload;
@@ -383,20 +407,17 @@ export async function saveApplication(id: number | null, payload: any, isUpdate:
 }
 
 export async function fetchApplicationById(id: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/applications/${id}`);
   if (!res.ok) throw new Error(`Failed to fetch application (${res.status})`);
   return res.json();
 }
 
 export async function fetchApplicationsByApplicant(applicantId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/applications/filter?applicant_id=${applicantId}`);
   return res.ok ? res.json() : [];
 }
 
 export async function fetchApplicationsByWorkflowData(workflowDataId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/applications/filter?workflow_data_id=${workflowDataId}`);
   return res.ok ? res.json() : [];
 }
@@ -406,7 +427,6 @@ export async function fetchAllApplications() {
 }
 
 export async function deleteApplication(id: number) {
-  const { API_BASE_URL } = getApiConfig();
   if (!id) throw new Error("Permit ID is required");
 
   const res = await fetch(`${API_BASE_URL}api/applications/${id}`, { method: "DELETE" });
@@ -423,14 +443,12 @@ export async function deleteApplication(id: number) {
 export const fetchAllApprovals = () => fetchPaginatedData("api/approvals/");
 
 export async function createApproval(approval: any) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/approvals/`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(approval) });
   if (!res.ok) throw new Error(`Failed to create approval (${res.status})`);
   return res.json();
 }
 
 export async function fetchApprovalsByWorkflow(workflowId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/approvals/filter?workflow_id=${workflowId}`);
   return res.ok ? res.json() : [];
 }
@@ -439,31 +457,31 @@ export async function fetchApprovalsByWorkflow(workflowId: number) {
 export const fetchAllApprovalData = () => fetchPaginatedData("api/approval-data/");
 
 export async function createApprovalData(approvalData: any) {
-  const { API_BASE_URL } = getApiConfig();
-  const res = await fetch(`${API_BASE_URL}api/approval-data/`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(approvalData) });
+  const res = await fetch(`${API_BASE_URL}api/approval-data/`, {
+    method: "POST", 
+    headers: { "Content-Type": "application/json" }, 
+    body: JSON.stringify(approvalData)
+  });
   if (!res.ok) throw new Error(`Failed to create approval data (${res.status})`);
   return res.json();
 }
 
 export async function fetchApprovalDataByWorkflow(workflowDataId: number) {
-  const { API_BASE_URL } = getApiConfig();
   const res = await fetch(`${API_BASE_URL}api/approval-data/filter?workflow_data_id=${workflowDataId}`);
   return res.ok ? res.json() : [];
 }
 
-export async function updateApprovalData(data: { id: number; status: string; time: string; [key: string]: any }) {
-  const { API_BASE_URL } = getApiConfig();
+export async function updateApprovalData(data: { id: number; status: string; time: string; remarks?: string; [key: string]: any }) {
   if (!data.id) throw new Error("ApprovalData ID is required");
   const res = await fetch(`${API_BASE_URL}api/approval-data/${data.id}/`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-  if (!res.ok) throw new Error((await res.text()) || "Failed to update approval data");
+  if (!res.ok) throw new Error(await res.text() || "Failed to update approval data");
   return res.json();
 }
 
 // -------------------- Security --------------------
-export async function confirmSecurity(permitId: number) {
-  const { API_BASE_URL } = getApiConfig();
+export async function securityConfirmEntry(permitId: number) {
   if (!permitId) throw new Error("Permit ID is required");
-  const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/confirm-security`, { method: "POST", headers: { "Content-Type": "application/json" } });
+  const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/security-confirm-entry`, { method: "POST", headers: { "Content-Type": "application/json" } });
   if (!res.ok) {
     let message = "";
     try {
@@ -472,32 +490,67 @@ export async function confirmSecurity(permitId: number) {
     } catch {
       message = await res.text();
     }
-    throw new Error(message || "Failed to confirm security");
+    throw new Error(message || "Failed to confirm entry");
   }
+  const result = await res.json();
+  return result;
+}
+
+export async function confirmJobDone(permitId: number) {
+  if (!permitId) throw new Error("Permit ID is required");
+  const token = await getToken();
+  if (!token) throw new Error("Authentication token not found.");
+
+  const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/job-done`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: "Failed to confirm job done" }));
+    throw new Error(errorData.detail);
+  }
+  return res.json();
+} 
+
+export async function securityConfirmExit(permitId: number) {
+  if (!permitId) throw new Error("Permit ID is required");
+  const res = await fetch(`${API_BASE_URL}api/applications/${permitId}/security-confirm-exit`, { method: "POST", headers: { "Content-Type": "application/json" } });
+  if (!res.ok) {
+    let message = "";
+    try {
+      const data = await res.json();
+      message = data.message || data.detail || "";
+    } catch {
+      message = await res.text();
+    }
+    throw new Error(message || "Failed to confirm exit");
+  }
+  return res.json();
+}
+
+export async function fetchServerTime() {
+  const res = await fetch(`${API_BASE_URL}api/applications/server-time`);
+  if (!res.ok) throw new Error("Failed to fetch server time");
   return res.json();
 }
 
 // -------------------- Utility: Paginated Fetch --------------------
 export async function fetchPaginatedData<T = any>(endpoint: string): Promise<T[]> {
-  const { API_BASE_URL } = getApiConfig();
   const results: T[] = [];
-  let nextUrl: string | null = `${API_BASE_URL}${endpoint}?page=1&page_size=100`;
+  let base = API_BASE_URL || await getApiBaseUrlWithOverride();
+  let nextUrl: string | null = `${base + endpoint}?page=1&page_size=100`;
   while (nextUrl) {
     try {
       const res = await fetch(nextUrl);
       if (!res.ok) break;
       const data: any = await res.json();
-      if (Array.isArray(data)) {
-        results.push(...data);
-        break;
-      }
-      if (data && Array.isArray(data.results)) {
-        results.push(...data.results);
-        nextUrl = data.next ? (data.next.startsWith("http") ? data.next : `${API_BASE_URL}${data.next}`) : null;
-      } else break;
-    } catch {
-      break;
-    }
+      if (Array.isArray(data)) { results.push(...data); break; }
+      if (data && Array.isArray(data.results)) { results.push(...data.results); nextUrl = data.next ? (data.next.startsWith("http") ? data.next : `${base}${data.next}`) : null; }
+      else break;
+    } catch { break; }
   }
   return results;
 }
