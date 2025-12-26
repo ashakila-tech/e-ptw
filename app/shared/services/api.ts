@@ -110,6 +110,24 @@ export async function fetchLocationById(locationId: number) {
   return res.json();
 }
 
+export async function createLocation(name: string, company_id: number = 1) {
+  const res = await fetch(`${API_BASE_URL}api/locations/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, company_id }),
+  });
+  if (!res.ok) throw new Error(`Failed to create location: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteLocation(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/locations/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete location: ${await res.text()}`);
+  return true;
+}
+
 export async function fetchLocationManagersByLocation(locationId: number) {
   const res = await fetch(`${API_BASE_URL}api/location-managers/filter?location_id=${locationId}`);
   if (!res.ok) throw new Error(`Failed to fetch location managers: ${res.statusText}`);
@@ -151,6 +169,24 @@ export async function fetchPermitTypeById(permitTypeId: number) {
   const res = await fetch(`${API_BASE_URL}api/permit-types/${permitTypeId}`);
   if (!res.ok) throw new Error(`Failed to fetch permit type (${res.status})`);
   return res.json();
+}
+
+export async function createPermitType(name: string, company_id: number = 1) {
+  const res = await fetch(`${API_BASE_URL}api/permit-types/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, company_id }),
+  });
+  if (!res.ok) throw new Error(`Failed to create permit type: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deletePermitType(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/permit-types/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete permit type: ${await res.text()}`);
+  return true;
 }
 
 export async function fetchPermitOfficersByPermitType(permitTypeId: number) {

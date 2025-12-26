@@ -357,3 +357,14 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+.manage-btn {
+  background-color: var(--color-bg1);
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-left: 10px;
+}

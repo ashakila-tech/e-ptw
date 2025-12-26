@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
     fetchLocations, fetchPermitTypes, fetchUsers, fetchAllApplications, fetchUsersByGroupId, fetchGroupsOptions, fetchUserGroups
 } from "../../../shared/services/api";
@@ -6,6 +6,7 @@ import {
 export function useDashboardData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [data, setData] = useState({
     locations: [] as any[],
     permits: [] as any[],
@@ -16,8 +17,11 @@ export function useDashboardData() {
     roleCounts: {} as Record<string, number>,
   });
 
+  const refetch = useCallback(() => setRefreshKey(prev => prev + 1), []);
+
   useEffect(() => {
     let mounted = true;
+    setLoading(true);
     (async () => {
       try {
         const [locations, permits, users, apps, groups, userGroups] = await Promise.all([
@@ -129,7 +133,7 @@ export function useDashboardData() {
       }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [refreshKey]);
 
-  return { loading, error, data };
+  return { loading, error, data, refetch };
 } 
