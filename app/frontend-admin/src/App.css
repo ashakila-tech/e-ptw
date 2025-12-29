@@ -215,6 +215,82 @@ body {
   margin: 1em 0em;
 }
 
+/* Users page styles */
+.users-toolbar {
+  display: flex;
+  justify-content: flex-end; /* align to right */
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.table-search-bar {
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: var(--color-primary);
+  border-radius: 4px;
+  /* width: 360px; wider search bar */
+  max-width: 100%;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+/* Companies and Workers specific searches */
+
+.companies-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.refresh-btn {
+  background-color: var(--color-bg1);
+  color: white;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-left: 10px;
+}
+
+.card-border {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.card-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.users-table thead {
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+
+.users-table th {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #eaeaea;
+  cursor: pointer;
+}
+
+.users-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
 .dashboard-row {
   display: grid;
   grid-template-columns: 1fr;
