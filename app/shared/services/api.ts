@@ -1,7 +1,7 @@
 import { getApiBaseUrlWithOverride, getToken, setToken, removeToken } from './platform';
 
 // Prefer Vite/Cra env for web and allow runtime overrides; for Expo, platform.getApiBaseUrlWithOverride() will resolve it at runtime.
-const API_BASE_URL = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) || (typeof window !== 'undefined' ? (window as any).API_BASE_URL : '') || '';
+export const API_BASE_URL = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) || (typeof window !== 'undefined' ? (window as any).API_BASE_URL : '') || '';
 
 // -------------------- Auth --------------------
 export async function login(email: string, password: string) {
@@ -91,6 +91,12 @@ export async function fetchGroupsOptions(params?: { company_id?: number; q?: str
 }
 
 // -------------------- Companies --------------------
+export async function fetchCompanies() {
+  const res = await fetch(`${API_BASE_URL}api/companies/`);
+  if (!res.ok) throw new Error("Failed to fetch companies");
+  return res.json();
+}
+
 export async function fetchCompanyById(companyId: number) {
   const res = await fetch(`${API_BASE_URL}api/companies/${companyId}`);
   if (!res.ok) throw new Error(`Failed to fetch company (${res.status})`);
@@ -242,13 +248,17 @@ export async function createWorker(payload: any) {
   for (const key in payload) {
     if (payload[key] !== null && payload[key] !== undefined) {
       // Handle file object for picture
-      if (key === 'picture' && payload.picture.uri) {
-        formData.append('picture', {
-          uri: payload.picture.uri,
-          name: payload.picture.name,
-          type: payload.picture.mimeType || 'image/jpeg',
-        } as any);
-      } else if (key !== 'picture') {
+      if (key === 'picture') {
+        if (payload.picture.uri) {
+          formData.append('picture', {
+            uri: payload.picture.uri,
+            name: payload.picture.name,
+            type: payload.picture.mimeType || 'image/jpeg',
+          } as any);
+        } else {
+          formData.append('picture', payload.picture);
+        }
+      } else {
         formData.append(key, payload[key]);
       }
     }
@@ -257,7 +267,6 @@ export async function createWorker(payload: any) {
   const res = await fetch(`${API_BASE_URL}api/workers/`, {
     method: "POST",
     body: formData,
-    headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (!res.ok) throw new Error(`Failed to create worker: ${await res.text()}`);
   return res.json();
@@ -267,9 +276,13 @@ export async function updateWorker(id: number, payload: any) {
   const formData = new FormData();
   for (const key in payload) {
     if (payload[key] !== null && payload[key] !== undefined) {
-      if (key === 'picture' && payload.picture?.uri) {
-        formData.append('picture', { uri: payload.picture.uri, name: payload.picture.name, type: payload.picture.mimeType || 'image/jpeg' } as any);
-      } else if (key !== 'picture') {
+      if (key === 'picture') {
+        if (payload.picture?.uri) {
+          formData.append('picture', { uri: payload.picture.uri, name: payload.picture.name, type: payload.picture.mimeType || 'image/jpeg' } as any);
+        } else {
+          formData.append('picture', payload.picture);
+        }
+      } else {
         formData.append(key, payload[key]);
       }
     }
@@ -277,7 +290,6 @@ export async function updateWorker(id: number, payload: any) {
   const res = await fetch(`${API_BASE_URL}api/workers/${id}`, {
     method: "PUT",
     body: formData,
-    headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (!res.ok) throw new Error(`Failed to update worker: ${await res.text()}`);
   return res.json();
