@@ -1,9 +1,12 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useUsers } from '../hooks/useUsers';
-import { fetchWorkers, createWorker, updateWorker, deleteWorker, API_BASE_URL } from '../../../shared/services/api';
+import { fetchWorkers, deleteWorker, deleteUser, fetchCompanies, deleteCompany } from '../../../shared/services/api';
 import WorkerModal from '../components/WorkerModal';
+import UserModal from '../components/UserModal';
+import CompanyModal from '../components/CompanyModal';
 import UserTable from '../components/UserTable';
 import WorkerTable from '../components/WorkerTable';
+import CompanyTable from '../components/CompanyTable';
 
 const Users: React.FC = () => {
   const { users, loading, error, refetch } = useUsers();
@@ -14,11 +17,36 @@ const Users: React.FC = () => {
   const [workersError, setWorkersError] = useState<string | null>(null);
   const [workersRefresh, setWorkersRefresh] = useState(0);
 
+  // Companies state
+  const [companies, setCompanies] = useState<{ id: number; name: string }[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(false);
+
   // Modal & editing state
   const [workerModalOpen, setWorkerModalOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState<any | null>(null);
   const [selectedCompanyForModal, setSelectedCompanyForModal] = useState<number | null>(null);
 
+  // User Modal state
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+
+  // Company Modal state
+  const [companyModalOpen, setCompanyModalOpen] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<{ id: number; name: string } | null>(null);
+
+  const loadCompanies = useCallback(async () => {
+    setCompaniesLoading(true);
+    try {
+      const data = await fetchCompanies();
+      setCompanies(data.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+    } catch (e) {
+      console.error("Failed to load companies", e);
+    } finally {
+      setCompaniesLoading(false);
+    }
+  }, []);
+
+  // Worker handlers
   const openAddWorker = (companyId: number | null) => { setSelectedCompanyForModal(companyId); setEditingWorker(null); setWorkerModalOpen(true); };
   const openEditWorker = (w: any) => { setEditingWorker(w); setWorkerModalOpen(true); };
   const closeWorkerModal = () => { setEditingWorker(null); setWorkerModalOpen(false); };
@@ -34,14 +62,38 @@ const Users: React.FC = () => {
     }
   };
 
-  const companies = useMemo(() => {
-    const map = new Map<number, string>();
-    (users || []).forEach((u: any) => {
-      if (!u?.company_id) return;
-      if (!map.has(u.company_id)) map.set(u.company_id, u.company_name || `Company ${u.company_id}`);
-    });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => String(a.name).localeCompare(String(b.name)));
-  }, [users]);
+  // User handlers
+  const openAddUser = () => { setEditingUser(null); setUserModalOpen(true); };
+  const openEditUser = (u: any) => { setEditingUser(u); setUserModalOpen(true); };
+  const closeUserModal = () => { setEditingUser(null); setUserModalOpen(false); };
+  const handleUserSaved = () => { refetch(); };
+
+  const handleDeleteUser = async (id: number) => {
+    if (!confirm('Delete this user? This action cannot be undone.')) return;
+    try {
+      await deleteUser(id);
+      refetch();
+    } catch (e: any) {
+      alert(e?.message || String(e) || 'Failed to delete user');
+    }
+  };
+
+  // Company handlers
+  const openAddCompany = () => { setEditingCompany(null); setCompanyModalOpen(true); };
+  const openEditCompany = (c: any) => { setEditingCompany(c); setCompanyModalOpen(true); };
+  const closeCompanyModal = () => { setEditingCompany(null); setCompanyModalOpen(false); };
+  
+  const handleCompanySaved = () => { loadCompanies(); };
+
+  const handleDeleteCompany = async (id: number) => {
+    if (!confirm('Delete this company? This will fail if the company has associated users or workers.')) return;
+    try {
+      await deleteCompany(id);
+      loadCompanies();
+    } catch (e: any) {
+      alert(e?.message || String(e) || 'Failed to delete company');
+    }
+  };
 
   const contractors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'contractor')), [users]);
   const supervisors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'supervisor')), [users]);
@@ -82,49 +134,26 @@ const Users: React.FC = () => {
 
   useEffect(() => {
     loadAllWorkers();
-  }, [workersRefresh, loadAllWorkers]);
+    loadCompanies();
+  }, [workersRefresh, loadAllWorkers, loadCompanies]);
 
   return (
     <div className="content-area">
       <h1 className="page-title">Users</h1>
 
-      <div className="dashboard-container" style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <h3 style={{ margin: 0 }}>Companies</h3>
-          <div className="users-toolbar">
-            <button className="manage-btn" onClick={() => { refetch(); setWorkersRefresh(k => k + 1); }} disabled={loading || workersLoading}>
-              Refresh
-            </button>
-          </div>
-        </div>
-        <div className="card-border">
-          <div className="card-scroll">
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Contractors</th>
-                  <th>Workers</th>
-                </tr>
-              </thead>
-              <tbody>
-                {companies.length === 0 ? (
-                  <tr><td colSpan={4} style={{ padding: 16 }}>No companies found.</td></tr>
-                ) : (
-                  companies.map((c) => (
-                    <tr key={c.id}>
-                      <td className="users-td">{c.id}</td>
-                      <td className="users-td">{c.name}</td>
-                      <td className="users-td">{contractorCounts.get(c.id) || 0}</td>
-                      <td className="users-td">{workerCounts.get(c.id) || 0}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <CompanyTable
+        companies={companies}
+        loading={companiesLoading}
+        contractorCounts={contractorCounts}
+        workerCounts={workerCounts}
+        onAdd={openAddCompany}
+        onRefresh={() => { loadCompanies(); refetch(); setWorkersRefresh(k => k + 1); }}
+        onEdit={openEditCompany}
+        onDelete={handleDeleteCompany}
+      />
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+        <button className="manage-btn" onClick={openAddUser}>Add User</button>
       </div>
 
       <UserTable
@@ -135,12 +164,46 @@ const Users: React.FC = () => {
         enableCompanyFilter={true}
         allCompanies={companies}
         onRefresh={refetch}
+        onEdit={openEditUser}
+        onDelete={handleDeleteUser}
       />
 
-      <UserTable title="Supervisors" users={supervisors} loading={loading} error={error} onRefresh={refetch} />
-      <UserTable title="Area Owners" users={areaOwners} loading={loading} error={error} onRefresh={refetch} />
-      <UserTable title="Site Managers" users={siteManagers} loading={loading} error={error} onRefresh={refetch} />
-      <UserTable title="Safety Officers" users={safetyOfficers} loading={loading} error={error} onRefresh={refetch} />
+      <UserTable 
+        title="Supervisors" 
+        users={supervisors} 
+        loading={loading} 
+        error={error} 
+        onRefresh={refetch}
+        onEdit={openEditUser}
+        onDelete={handleDeleteUser}
+      />
+      <UserTable 
+        title="Area Owners" 
+        users={areaOwners} 
+        loading={loading} 
+        error={error} 
+        onRefresh={refetch}
+        onEdit={openEditUser}
+        onDelete={handleDeleteUser}
+      />
+      <UserTable 
+        title="Site Managers" 
+        users={siteManagers} 
+        loading={loading} 
+        error={error} 
+        onRefresh={refetch}
+        onEdit={openEditUser}
+        onDelete={handleDeleteUser}
+      />
+      <UserTable 
+        title="Safety Officers" 
+        users={safetyOfficers} 
+        loading={loading} 
+        error={error} 
+        onRefresh={refetch}
+        onEdit={openEditUser}
+        onDelete={handleDeleteUser}
+      />
 
       {/* Workers table */}
       <WorkerTable
@@ -160,6 +223,20 @@ const Users: React.FC = () => {
         initial={editingWorker}
         companyId={selectedCompanyForModal}
         onSaved={handleWorkerSaved}
+      />
+
+      <UserModal
+        open={userModalOpen}
+        onClose={closeUserModal}
+        initial={editingUser}
+        onSaved={handleUserSaved}
+      />
+
+      <CompanyModal
+        open={companyModalOpen}
+        onClose={closeCompanyModal}
+        initial={editingCompany}
+        onSaved={handleCompanySaved}
       />
     </div>
   );

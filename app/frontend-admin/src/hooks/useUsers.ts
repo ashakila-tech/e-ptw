@@ -9,7 +9,11 @@ export type User = {
   user_type?: number | null;
 };
 
-export type EnrichedUser = User & { groups: string[]; company_name?: string | null };
+export type EnrichedUser = User & { 
+  groups: string[]; 
+  company_name?: string | null;
+  user_group_objects?: { id: number; group_id: number; group_name: string }[];
+};
 
 export function useUsers(companyId?: number) {
   const [users, setUsers] = useState<EnrichedUser[]>([]);
@@ -37,13 +41,13 @@ export function useUsers(companyId?: number) {
         const groupMap = new Map<number, string>();
         (groups || []).forEach((g: any) => { if (g?.value) groupMap.set(g.value, g.label); });
 
-        // Build map user_id -> [group names]
-        const userGroupsMap = new Map<number, string[]>();
+        // Build map user_id -> [{ id, group_id, group_name }]
+        const userGroupsMap = new Map<number, { id: number; group_id: number; group_name: string }[]>();
         (userGroups || []).forEach((ug: any) => {
           if (!ug?.user_id) return;
           const arr = userGroupsMap.get(ug.user_id) || [];
           const name = groupMap.get(ug.group_id) || `Group ${ug.group_id}`;
-          arr.push(name);
+          arr.push({ id: ug.id, group_id: ug.group_id, group_name: name });
           userGroupsMap.set(ug.user_id, arr);
         });
 
@@ -55,15 +59,19 @@ export function useUsers(companyId?: number) {
         const companyMap = new Map<number, string>();
         companyResults.forEach((c: any, idx: number) => { if (c && c.id) companyMap.set(companyIds[idx], c.name); });
 
-        const enriched = (rawUsers || []).map((u: any) => ({
-          id: u.id,
-          company_id: u.company_id,
-          company_name: companyMap.get(u.company_id) || null,
-          name: u.name,
-          email: u.email,
-          user_type: u.user_type,
-          groups: userGroupsMap.get(u.id) || [],
-        }));
+        const enriched = (rawUsers || []).map((u: any) => {
+          const uGroups = userGroupsMap.get(u.id) || [];
+          return {
+            id: u.id,
+            company_id: u.company_id,
+            company_name: companyMap.get(u.company_id) || null,
+            name: u.name,
+            email: u.email,
+            user_type: u.user_type,
+            groups: uGroups.map(g => g.group_name),
+            user_group_objects: uGroups,
+          };
+        });
 
         setUsers(enriched);
       } catch (err: any) {

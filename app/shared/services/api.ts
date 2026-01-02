@@ -54,6 +54,34 @@ export async function fetchUsers() {
   return res.json();
 }
 
+export async function createUser(payload: any) {
+  const res = await fetch(`${API_BASE_URL}api/users/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to create user: ${await res.text()}`);
+  return res.json();
+}
+
+export async function updateUser(id: number, payload: any) {
+  const res = await fetch(`${API_BASE_URL}api/users/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to update user: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteUser(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/users/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete user: ${await res.text()}`);
+  return true;
+}
+
 export async function fetchUserById(userId: number) {
   const res = await fetch(`${API_BASE_URL}api/users/${userId}`);
   if (!res.ok) throw new Error(`Failed to fetch user (${res.status})`);
@@ -78,6 +106,24 @@ export async function fetchUserGroups() {
   return res.json();
 }
 
+export async function createUserGroup(payload: { user_id: number; group_id: number }) {
+  const res = await fetch(`${API_BASE_URL}api/user-groups/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to assign group: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteUserGroup(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/user-groups/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to remove group: ${await res.text()}`);
+  return true;
+}
+
 // Fetch selectable groups (value/label) from the backend. Used by admin dropdowns and the dashboard.
 export async function fetchGroupsOptions(params?: { company_id?: number; q?: string; page_size?: number }) {
   const query = [] as string[];
@@ -95,6 +141,34 @@ export async function fetchCompanies() {
   const res = await fetch(`${API_BASE_URL}api/companies/`);
   if (!res.ok) throw new Error("Failed to fetch companies");
   return res.json();
+}
+
+export async function createCompany(name: string) {
+  const res = await fetch(`${API_BASE_URL}api/companies/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error(`Failed to create company: ${await res.text()}`);
+  return res.json();
+}
+
+export async function updateCompany(id: number, name: string) {
+  const res = await fetch(`${API_BASE_URL}api/companies/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error(`Failed to update company: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteCompany(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/companies/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete company: ${await res.text()}`);
+  return true;
 }
 
 export async function fetchCompanyById(companyId: number) {
