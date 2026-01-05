@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface Company {
   id: number;
@@ -26,6 +26,12 @@ const CompanyTable: React.FC<Props> = ({
   onEdit,
   onDelete,
 }) => {
+  const sortedCompanies = useMemo(() => {
+    const list = [...companies];
+    list.sort((a, b) => a.id - b.id);
+    return list;
+  }, [companies]);
+
   return (
     <div className="dashboard-container" style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -52,10 +58,10 @@ const CompanyTable: React.FC<Props> = ({
             <tbody>
               {loading ? (
                 <tr><td colSpan={5} style={{ padding: 16 }}>Loading companies...</td></tr>
-              ) : companies.length === 0 ? (
+              ) : sortedCompanies.length === 0 ? (
                 <tr><td colSpan={5} style={{ padding: 16 }}>No companies found.</td></tr>
               ) : (
-                companies.map((c) => (
+                sortedCompanies.map((c) => (
                   <tr key={c.id}>
                     <td className="users-td">{c.id}</td>
                     <td className="users-td">{c.name}</td>

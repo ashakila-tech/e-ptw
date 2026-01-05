@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from .. import models
 from ..deps import get_db
+
+from ._crud_factory import make_crud_router
+from .. import models, schemas
 
 # Create the base router
 router = APIRouter(prefix="/groups", tags=["Groups"])
@@ -27,3 +29,14 @@ def group_options(
              .all()
     )
     return [{"value": g.id, "label": g.name} for g in rows]
+
+crud_router = make_crud_router(
+    Model=models.Group,
+    InSchema=schemas.GroupIn,
+    OutSchema=schemas.GroupOut,
+    prefix="",
+    tag="Groups",
+    write_roles=["admin"],
+)
+
+router.include_router(crud_router)

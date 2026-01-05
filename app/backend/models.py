@@ -59,7 +59,8 @@ class Approval(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)  # auto
     company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
     workflow_id = Column(Integer, ForeignKey("workflow.id"), nullable=False)
-    user_group_id = Column(Integer, ForeignKey("user_group.id"), nullable=True)
+    # user_group_id = Column(Integer, ForeignKey("user_group.id"), nullable=True)
+    group_id = Column(Integer, ForeignKey("group.id"), nullable=True)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
     name = Column(String, nullable=False)
     role_name = Column(String, nullable=True)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createUser, updateUser, fetchCompanies, fetchGroupsOptions, createUserGroup, deleteUserGroup } from '../../../shared/services/api';
+import { createUser, updateUser, fetchCompanies, fetchGroupsOptions, createUserGroup, deleteUserGroup, fetchUserGroups } from '../../../shared/services/api';
 
 type Props = {
   open: boolean;
@@ -17,6 +17,8 @@ const UserModal: React.FC<Props> = ({ open, onClose, initial = null, onSaved }) 
   const [password, setPassword] = useState('');
   const [groupId, setGroupId] = useState<number | ''>('');
   const [companyId, setCompanyId] = useState<number | ''>('');
+  const [loadedGroupId, setLoadedGroupId] = useState<number | null>(null);
+  const [currentMappingId, setCurrentMappingId] = useState<number | null>(null);
   
   const [companies, setCompanies] = useState<{ id: number; name: string }[]>([]);
   const [groupOptions, setGroupOptions] = useState<{ value: number; label: string }[]>([]);
@@ -38,15 +40,30 @@ const UserModal: React.FC<Props> = ({ open, onClose, initial = null, onSaved }) 
       if (initial) {
         setName(initial.name || '');
         setEmail(initial.email || '');
-        setGroupId(initial.user_group_objects?.[0]?.group_id || '');
         setCompanyId(initial.company_id || '');
         setPassword(''); // Reset password field for security
+
+        // Fetch user's current group mapping to populate dropdown and prepare for update
+        try {
+          const res = await fetchUserGroups();
+          const allMappings = Array.isArray(res) ? res : (res.results || []);
+          const mapping = allMappings.find((m: any) => m.user_id === initial.id);
+          if (mapping) {
+            setGroupId(mapping.group_id);
+            setLoadedGroupId(mapping.group_id);
+            setCurrentMappingId(mapping.id);
+          }
+        } catch (e) {
+          console.error('Failed to fetch user group mapping', e);
+        }
       } else {
         setName('');
         setEmail('');
         setGroupId('');
         setCompanyId('');
         setPassword('');
+        setLoadedGroupId(null);
+        setCurrentMappingId(null);
       }
     };
 
@@ -60,6 +77,7 @@ const UserModal: React.FC<Props> = ({ open, onClose, initial = null, onSaved }) 
       fetchGroupsOptions({ company_id: Number(companyId), page_size: 100 })
         .then((res: any) => setGroupOptions(res))
         .catch((e: any) => console.error('Failed to load groups', e));
+      console.log("Group options:", groupOptions);
     } else {
       setGroupOptions([]);
     }
@@ -88,15 +106,15 @@ const UserModal: React.FC<Props> = ({ open, onClose, initial = null, onSaved }) 
         savedUser = await updateUser(initial.id, payload);
         
         // Handle Group Update
-        const oldGroupObj = initial.user_group_objects?.[0];
         const newGroupId = groupId ? Number(groupId) : null;
         
-        if (oldGroupObj && oldGroupObj.group_id !== newGroupId) {
-            await deleteUserGroup(oldGroupObj.id);
-        }
-        
-        if (newGroupId && (!oldGroupObj || oldGroupObj.group_id !== newGroupId)) {
+        if (loadedGroupId !== newGroupId) {
+          if (currentMappingId) {
+            await deleteUserGroup(currentMappingId);
+          }
+          if (newGroupId) {
             await createUserGroup({ user_id: initial.id, group_id: newGroupId });
+          }
         }
       } else {
         if (!password) throw new Error("Password is required for new users.");

@@ -124,6 +124,23 @@ export async function deleteUserGroup(id: number) {
   return true;
 }
 
+export async function fetchGroups(companyId: number) {
+  const res = await fetch(`${API_BASE_URL}api/groups/?company_id=${companyId}`);
+  if (!res.ok) throw new Error("Failed to fetch groups");
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.results || []);
+}
+
+export async function createGroup(payload: { company_id: number; name: string }) {
+  const res = await fetch(`${API_BASE_URL}api/groups/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to create group: ${await res.text()}`);
+  return res.json();
+}
+
 // Fetch selectable groups (value/label) from the backend. Used by admin dropdowns and the dashboard.
 export async function fetchGroupsOptions(params?: { company_id?: number; q?: string; page_size?: number }) {
   const query = [] as string[];

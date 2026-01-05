@@ -42,8 +42,8 @@ const UserTable: React.FC<Props> = ({
       );
     }
 
-    // Sort by ID desc by default
-    list.sort((a, b) => b.id - a.id);
+    // Sort by ID asc by default
+    list.sort((a, b) => a.id - b.id);
     return list;
   }, [users, searchQuery, selectedCompanyId, enableCompanyFilter]);
 
