@@ -7,41 +7,45 @@ from ._crud_factory import make_crud_router
 
 router = APIRouter(prefix="/push-tokens", tags=["Push Tokens"])
 
-
-def push_token_create_mutator(data: dict, db: Session):
-    """
-    - Inject authenticated user_id
-    - Prevent duplicate token inserts
-    - Behaves like UPSERT
-    """
-    user = get_current_user()
-
-    existing = (
-        db.query(models.PushToken)
-        .filter(models.PushToken.token == data["token"])
-        .first()
-    )
-
-    if existing:
-        # Return existing model instance
-        return existing
-
-    data["user_id"] = user.id
-    return data
-
-
 crud_router = make_crud_router(
     Model=models.PushToken,
     InSchema=schemas.PushTokenIn,
     OutSchema=schemas.PushTokenOut,
     prefix="",
     tag="Push Tokens",
-    create_mutator=push_token_create_mutator,
-
+    enable_create=False,
     enable_list=False,
     enable_get=False,
     enable_update=False,
     enable_delete=False,
 )
+
+@router.post("/", response_model=schemas.PushTokenOut)
+def create_push_token(
+    data: schemas.PushTokenIn,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Register a push token for the current user.
+    Behaves like UPSERT (returns existing if found).
+    """
+    existing = (
+        db.query(models.PushToken)
+        .filter(models.PushToken.token == data.token)
+        .first()
+    )
+    if existing:
+        return existing
+
+    new_token = models.PushToken(
+        user_id=current_user.id,
+        token=data.token,
+        platform=data.platform
+    )
+    db.add(new_token)
+    db.commit()
+    db.refresh(new_token)
+    return new_token
 
 router.include_router(crud_router)
