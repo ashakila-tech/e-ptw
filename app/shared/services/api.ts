@@ -124,11 +124,35 @@ export async function deleteUserGroup(id: number) {
   return true;
 }
 
+export async function updateGroup(id: number, payload: { name: string; company_id?: number }) {
+  const res = await fetch(`${API_BASE_URL}api/groups/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to update group: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteGroup(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/groups/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete group: ${await res.text()}`);
+  return true;
+}
+
+export async function fetchAllGroups() {
+  const res = await fetch(`${API_BASE_URL}api/groups/`);
+  if (!res.ok) throw new Error("Failed to fetch groups");
+  return res.json();
+}
+
 export async function fetchGroups(companyId: number) {
-  const res = await fetch(`${API_BASE_URL}api/groups/?company_id=${companyId}`);
+  const res = await fetch(`${API_BASE_URL}api/groups/options?company_id=${companyId}&page_size=1000`);
   if (!res.ok) throw new Error("Failed to fetch groups");
   const data = await res.json();
-  return Array.isArray(data) ? data : (data.results || []);
+  return data.map((item: any) => ({ id: item.value, name: item.label }));
 }
 
 export async function createGroup(payload: { company_id: number; name: string }) {

@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useUsers } from '../hooks/useUsers';
-import { fetchWorkers, deleteWorker, deleteUser, fetchCompanies, deleteCompany } from '../../../shared/services/api';
+import { fetchWorkers, deleteWorker, deleteUser, fetchCompanies, deleteCompany, fetchAllGroups, deleteGroup } from '../../../shared/services/api';
 import WorkerModal from '../components/WorkerModal';
 import UserModal from '../components/UserModal';
 import CompanyModal from '../components/CompanyModal';
+import GroupModal from '../components/GroupModal';
 import UserTable from '../components/UserTable';
 import WorkerTable from '../components/WorkerTable';
 import CompanyTable from '../components/CompanyTable';
+import GroupTable from '../components/GroupTable';
 
 const Users: React.FC = () => {
   const { users, loading, error, refetch } = useUsers();
@@ -21,6 +23,10 @@ const Users: React.FC = () => {
   const [companies, setCompanies] = useState<{ id: number; name: string }[]>([]);
   const [companiesLoading, setCompaniesLoading] = useState(false);
 
+  // Groups state
+  const [groups, setGroups] = useState<any[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+
   // Modal & editing state
   const [workerModalOpen, setWorkerModalOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState<any | null>(null);
@@ -34,6 +40,10 @@ const Users: React.FC = () => {
   const [companyModalOpen, setCompanyModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<{ id: number; name: string } | null>(null);
 
+  // Group Modal state
+  const [groupModalOpen, setGroupModalOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<any | null>(null);
+
   const loadCompanies = useCallback(async () => {
     setCompaniesLoading(true);
     try {
@@ -43,6 +53,18 @@ const Users: React.FC = () => {
       console.error("Failed to load companies", e);
     } finally {
       setCompaniesLoading(false);
+    }
+  }, []);
+
+  const loadGroups = useCallback(async () => {
+    setGroupsLoading(true);
+    try {
+      const data = await fetchAllGroups();
+      setGroups(data);
+    } catch (e) {
+      console.error("Failed to load groups", e);
+    } finally {
+      setGroupsLoading(false);
     }
   }, []);
 
@@ -95,6 +117,17 @@ const Users: React.FC = () => {
     }
   };
 
+  // Group handlers
+  const openAddGroup = () => { setEditingGroup(null); setGroupModalOpen(true); };
+  const openEditGroup = (g: any) => { setEditingGroup(g); setGroupModalOpen(true); };
+  const closeGroupModal = () => { setEditingGroup(null); setGroupModalOpen(false); };
+  const handleGroupSaved = () => { loadGroups(); };
+  const handleDeleteGroup = async (id: number) => {
+    if (!confirm('Delete this group?')) return;
+    try { await deleteGroup(id); loadGroups(); }
+    catch (e: any) { alert(e?.message || String(e)); }
+  };
+
   const contractors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'contractor')), [users]);
   const supervisors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'supervisor')), [users]);
   const areaOwners = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'area owner')), [users]);
@@ -135,7 +168,8 @@ const Users: React.FC = () => {
   useEffect(() => {
     loadAllWorkers();
     loadCompanies();
-  }, [workersRefresh, loadAllWorkers, loadCompanies]);
+    loadGroups();
+  }, [workersRefresh, loadAllWorkers, loadCompanies, loadGroups]);
 
   return (
     <div className="content-area">
@@ -150,6 +184,16 @@ const Users: React.FC = () => {
         onRefresh={() => { loadCompanies(); refetch(); setWorkersRefresh(k => k + 1); }}
         onEdit={openEditCompany}
         onDelete={handleDeleteCompany}
+      />
+
+      <GroupTable
+        groups={groups}
+        loading={groupsLoading}
+        companies={companies}
+        onAdd={openAddGroup}
+        onRefresh={loadGroups}
+        onEdit={openEditGroup}
+        onDelete={handleDeleteGroup}
       />
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
@@ -237,6 +281,14 @@ const Users: React.FC = () => {
         onClose={closeCompanyModal}
         initial={editingCompany}
         onSaved={handleCompanySaved}
+      />
+
+      <GroupModal
+        open={groupModalOpen}
+        onClose={closeGroupModal}
+        initial={editingGroup}
+        companies={companies}
+        onSaved={handleGroupSaved}
       />
     </div>
   );

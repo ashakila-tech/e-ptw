@@ -37,6 +37,14 @@ const UserModal: React.FC<Props> = ({ open, onClose, initial = null, onSaved }) 
         setError('Could not load company list.');
       }
 
+      // Load all groups (Global)
+      try {
+        const groups = await fetchGroupsOptions({ page_size: 100 });
+        setGroupOptions(groups || []);
+      } catch (e) {
+        console.error('Failed to fetch groups', e);
+      }
+
       if (initial) {
         setName(initial.name || '');
         setEmail(initial.email || '');
@@ -72,6 +80,7 @@ const UserModal: React.FC<Props> = ({ open, onClose, initial = null, onSaved }) 
     }
   }, [initial, open]);
 
+  /*
   useEffect(() => {
     if (companyId) {
       fetchGroupsOptions({ company_id: Number(companyId), page_size: 100 })
@@ -82,6 +91,7 @@ const UserModal: React.FC<Props> = ({ open, onClose, initial = null, onSaved }) 
       setGroupOptions([]);
     }
   }, [companyId]);
+  */
 
   if (!open) return null;
 
