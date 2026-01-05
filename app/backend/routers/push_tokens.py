@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app import models, schemas
+from .. import models, schemas
 from ..deps import get_db, get_current_user
 from ._crud_factory import make_crud_router
 
@@ -38,7 +38,6 @@ crud_router = make_crud_router(
     tag="Push Tokens",
     create_mutator=push_token_create_mutator,
 
-    # 🔒 Lock down routes (recommended)
     enable_list=False,
     enable_get=False,
     enable_update=False,
