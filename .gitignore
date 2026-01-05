@@ -15,17 +15,3 @@ env/
 venv/
 ENV/
 .Python
-
-# .env
-APP_NAME=PTW Backend
-APP_ENV=dev
-DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/ptw #for compose
-DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/ptw #for local run
-CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
-FCM_PROJECT_ID=your-project-id
-FCM_SA_EMAIL=ashakilaa@gmail.com
-FCM_SA_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-SECRET_KEY=super-secret-dev-key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-
