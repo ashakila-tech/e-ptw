@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 
 interface Group {
   id: number;
@@ -25,23 +25,41 @@ const GroupTable: React.FC<Props> = ({
   onEdit,
   onDelete,
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   const companyMap = useMemo(() => {
     const map = new Map<number, string>();
     companies.forEach(c => map.set(c.id, c.name));
     return map;
   }, [companies]);
 
-  const sortedGroups = useMemo(() => {
+  const filteredGroups = useMemo(() => {
     const list = [...groups];
-    list.sort((a, b) => a.id - b.id);
-    return list;
-  }, [groups]);
+    let result = list.sort((a, b) => a.id - b.id);
+    
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(g => g.name.toLowerCase().includes(q));
+    }
+    return result;
+  }, [groups, searchQuery]);
+
+  const totalPages = Math.ceil(filteredGroups.length / itemsPerPage);
+  const paginatedGroups = filteredGroups.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="dashboard-container" style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <h3 style={{ margin: 0 }}>Groups</h3>
         <div className="users-toolbar">
+          <input
+            placeholder="Search groups..."
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            className="table-search-bar"
+          />
           <button className="manage-btn" onClick={onAdd}>Add Group</button>
           <button className="manage-btn" onClick={onRefresh} disabled={loading}>
             Refresh
@@ -62,10 +80,10 @@ const GroupTable: React.FC<Props> = ({
             <tbody>
               {loading ? (
                 <tr><td colSpan={4} style={{ padding: 16 }}>Loading groups...</td></tr>
-              ) : sortedGroups.length === 0 ? (
+              ) : paginatedGroups.length === 0 ? (
                 <tr><td colSpan={4} style={{ padding: 16 }}>No groups found.</td></tr>
               ) : (
-                sortedGroups.map((g) => (
+                paginatedGroups.map((g) => (
                   <tr key={g.id}>
                     <td className="users-td">{g.id}</td>
                     <td className="users-td">{g.name}</td>
@@ -83,6 +101,13 @@ const GroupTable: React.FC<Props> = ({
           </table>
         </div>
       </div>
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
+          <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
+          <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+          <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
+        </div>
+      )}
     </div>
   );
 };

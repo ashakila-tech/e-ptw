@@ -289,12 +289,12 @@ body {
 .card-border {
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  overflow: hidden;
+  /* overflow: hidden; */
+  overflow-x: auto;
 }
 
 .card-scroll {
-  max-height: 60vh;
-  overflow-y: auto;
+  overflow-x: auto;
 }
 
 .users-table {
@@ -314,11 +314,13 @@ body {
   padding: 12px;
   border-bottom: 1px solid #eaeaea;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .users-table td {
   padding: 12px;
   border-bottom: 1px solid #f3f4f6;
+  white-space: nowrap;
 }
 
 .dashboard-row {
@@ -550,4 +552,85 @@ body {
   font-size: 14px;
   color: var(--color-primary);
   background-color: white;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+  .content-area {
+    margin-left: 0 !important;
+    padding: 15px;
+  }
+
+  /* Sidebar becomes a floating button when collapsed on mobile */
+  .sidebar.collapsed {
+    width: 50px;
+    height: 50px;
+    bottom: 20px;
+    right: 20px;
+    top: auto;
+    left: auto;
+    position: fixed;
+    border-radius: 50%;
+    overflow: hidden;
+    padding: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    background-color: var(--color-highlight);
+  }
+
+  .sidebar.collapsed .sidebar-top,
+  .sidebar.collapsed .sidebar-bottom,
+  .sidebar.collapsed .sidebar-title {
+    display: none; /* Hide all content */
+  }
+
+  .sidebar.collapsed .toggle-btn {
+    position: static; /* Button fills the container */
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: none;
+    border-radius: 50%;
+    right: 0; /* reset */
+    top: 0; /* reset */
+  }
+
+  /* Sidebar expands to full screen when not collapsed */
+  .sidebar:not(.collapsed) {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    z-index: 1000;
+    padding: 20px;
+    border-right: none;
+  }
+
+  .sidebar:not(.collapsed) .toggle-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    left: auto;
+  }
+}
+
+/* --- Responsive Grid (Bootstrap-like behavior) --- */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* col-sm-12 */
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr); /* col-md-6 */
+  }
+}
+
+@media (min-width: 1200px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr); /* col-lg-4 */
+  }
 }

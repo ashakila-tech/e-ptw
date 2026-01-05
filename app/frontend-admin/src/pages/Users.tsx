@@ -128,7 +128,21 @@ const Users: React.FC = () => {
     catch (e: any) { alert(e?.message || String(e)); }
   };
 
-  const contractors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'contractor')), [users]);
+  const contractors = useMemo(() => {
+    const realContractors = users.filter(u => u.groups.some(g => g.toLowerCase() === 'contractor'));
+    
+    // Dummy data for testing pagination
+    const dummyContractors = Array.from({ length: 25 }, (_, i) => ({
+      id: 1000 + i,
+      name: `Dummy Contractor ${i + 1}`,
+      email: `dummy${i + 1}@test.com`,
+      company_id: 1,
+      company_name: 'Dummy Test Company',
+      groups: ['contractor'],
+      user_group_objects: [],
+    }));
+    return [...realContractors, ...dummyContractors];
+  }, [users]);
   const supervisors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'supervisor')), [users]);
   const areaOwners = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'area owner')), [users]);
   const siteManagers = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'site manager')), [users]);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { EnrichedUser } from '../hooks/useUsers';
 
 interface Props {
@@ -26,6 +26,8 @@ const UserTable: React.FC<Props> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   const displayedUsers = useMemo(() => {
     let list = [...users];
@@ -46,6 +48,13 @@ const UserTable: React.FC<Props> = ({
     list.sort((a, b) => a.id - b.id);
     return list;
   }, [users, searchQuery, selectedCompanyId, enableCompanyFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCompanyId]);
+
+  const totalPages = Math.ceil(displayedUsers.length / itemsPerPage);
+  const paginatedUsers = displayedUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="dashboard-container" style={{ marginBottom: 20 }}>
@@ -114,8 +123,8 @@ const UserTable: React.FC<Props> = ({
             <tbody>
               {loading ? <tr><td colSpan={6} style={{padding:16}}>Loading...</td></tr> :
                error ? <tr><td colSpan={6} style={{padding:16, color:'red'}}>{error}</td></tr> :
-               displayedUsers.length === 0 ? <tr><td colSpan={6} style={{padding:16}}>No users found.</td></tr> :
-               displayedUsers.map(u => (
+               paginatedUsers.length === 0 ? <tr><td colSpan={6} style={{padding:16}}>No users found.</td></tr> :
+               paginatedUsers.map(u => (
                  <tr key={u.id}>
                    <td className="users-td">{u.id}</td>
                    <td className="users-td">{u.company_name || u.company_id}</td>
@@ -136,6 +145,13 @@ const UserTable: React.FC<Props> = ({
           </table>
         </div>
       </div>
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
+          <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
+          <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+          <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
+        </div>
+      )}
     </div>
   );
 };

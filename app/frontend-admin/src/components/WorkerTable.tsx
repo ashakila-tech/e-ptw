@@ -60,6 +60,9 @@ const WorkerTable: React.FC<Props> = ({
   const [sortKey, setSortKey] = useState<'id'|'name'|'ic'|'contact'|'position'|'status'|'company'>('id');
   const [sortDir, setSortDir] = useState<'asc'|'desc'>('asc');
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   const handleSort = (key: typeof sortKey) => {
     if (key === sortKey) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortKey(key); setSortDir('asc'); }
@@ -108,6 +111,13 @@ const WorkerTable: React.FC<Props> = ({
     });
     return list;
   }, [workers, searchQuery, selectedCompanyId, sortKey, sortDir, companyIdToNameMap]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCompanyId, companySearchQuery, sortKey, sortDir]);
+
+  const totalPages = Math.ceil(displayedWorkers.length / itemsPerPage);
+  const paginatedWorkers = displayedWorkers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="dashboard-container">
@@ -182,10 +192,10 @@ const WorkerTable: React.FC<Props> = ({
                 <tr><td colSpan={9} style={{ padding: 16 }}>Loading workers…</td></tr>
               ) : error ? (
                 <tr><td colSpan={9} style={{ padding: 16, color: 'red' }}>Error: {error}</td></tr>
-              ) : displayedWorkers.length === 0 ? (
+              ) : paginatedWorkers.length === 0 ? (
                 <tr><td colSpan={9} style={{ padding: 16 }}>No workers found.</td></tr>
               ) : (
-                displayedWorkers.map((w) => (
+                paginatedWorkers.map((w) => (
                   <tr key={w.id}>
                     <td className="users-td">{w.id}</td>
                     <td className="users-td">{companyIdToNameMap.get(w.company_id) || '-'}</td>
@@ -210,6 +220,13 @@ const WorkerTable: React.FC<Props> = ({
           </table>
         </div>
       </div>
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
+          <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
+          <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+          <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
+        </div>
+      )}
     </div>
   );
 };
