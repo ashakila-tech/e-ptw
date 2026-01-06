@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import Sidebar from './components/Sidebar'; // Import the new Sidebar component
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { Colors, StatusColors } from '../../shared/constants/Colors';
+import { getCurrentUser, logout } from '../../shared/services/api';
 
 // Import the new page components
 import Dashboard from './pages/Dashboard';
@@ -33,6 +34,32 @@ const shadeColor = (color: string, percent: number) => {
  */
 const MainLayout = () => {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const user = await getCurrentUser();
+        // Assuming '9' is the user_type for admins based on backend schema
+        if (user.user_type !== 9) {
+          throw new Error("Access denied. Not an administrator.");
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Authentication check failed, redirecting to login.");
+        await logout(); // Ensure token is cleared before redirecting
+        navigate('/login', { replace: true });
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  if (isLoading) {
+    // You can replace this with a more sophisticated spinner component
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw' }}>Loading...</div>;
+  }
+
   return (
     <div className={`app-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <Sidebar
@@ -80,6 +107,7 @@ function App() {
 
         {/* Nested routes that will use the MainLayout (with sidebar) */}
         <Route path="/" element={<MainLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="permits" element={<Permits />} />
           <Route path="users" element={<Users />} />

@@ -19,6 +19,11 @@ export async function login(email: string, password: string) {
   return data.access_token;
 }
 
+export async function logout() {
+  // No API call needed for simple token-based auth, just remove the token.
+  await removeToken();
+}
+
 export async function registerUser(payload: { company_id: number; name: string; email: string; user_type: string; password: string }) {
   const res = await fetch(`${API_BASE_URL}auth/register`, {
     method: "POST",

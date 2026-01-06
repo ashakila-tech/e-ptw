@@ -50,6 +50,10 @@ const PermitTable: React.FC<Props> = ({
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
   const [companySearchQuery, setCompanySearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [selectedPermitTypeId, setSelectedPermitTypeId] = useState<number | null>(null);
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const [viewApprovalsPermit, setViewApprovalsPermit] = useState<Permit | null>(null);
   const [viewWorkersPermit, setViewWorkersPermit] = useState<Permit | null>(null);
@@ -87,6 +91,25 @@ const PermitTable: React.FC<Props> = ({
       list = list.filter(p => (p.status || 'DRAFT') === selectedStatus);
     }
 
+    if (selectedPermitTypeId) {
+      list = list.filter(p => p.permit_type_id === selectedPermitTypeId);
+    }
+
+    if (selectedLocationId) {
+      list = list.filter(p => p.location_id === selectedLocationId);
+    }
+
+    if (startDate && endDate) {
+      const start = new Date(startDate).getTime();
+      const end = new Date(new Date(endDate).setHours(23, 59, 59, 999)).getTime();
+      list = list.filter(p => {
+        if (!p.workflow_data?.start_time || !p.workflow_data?.end_time) return false;
+        const permitStart = new Date(p.workflow_data.start_time).getTime();
+        const permitEnd = new Date(p.workflow_data.end_time).getTime();
+        return permitStart <= end && permitEnd >= start;
+      });
+    }
+
     if (selectedCompanyId !== null) {
       list = list.filter(p => {
         const applicantId = p.applicant_id;
@@ -122,11 +145,11 @@ const PermitTable: React.FC<Props> = ({
     });
 
     return list;
-  }, [permits, searchQuery, sortKey, sortDir, permitTypeMap, locationMap, applicantMap, applicantDataMap, selectedStatus, selectedCompanyId]);
+  }, [permits, searchQuery, sortKey, sortDir, permitTypeMap, locationMap, applicantMap, applicantDataMap, selectedStatus, selectedCompanyId, selectedPermitTypeId, selectedLocationId, startDate, endDate]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedStatus, selectedCompanyId]);
+  }, [searchQuery, selectedStatus, selectedCompanyId, selectedPermitTypeId, selectedLocationId, startDate, endDate]);
 
   const handleViewDocument = async (p: Permit) => {
     if (!p.document?.id) return;
@@ -202,7 +225,7 @@ const PermitTable: React.FC<Props> = ({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <h3 style={{ margin: 0 }}>Permits</h3>
         
-        <div className="users-toolbar">
+        <div className="users-toolbar" style={{ flexWrap: 'wrap' }}>
           <select 
             className="table-search-bar" 
             style={{ width: 'auto', minWidth: 120 }}
@@ -216,6 +239,45 @@ const PermitTable: React.FC<Props> = ({
             <option value="REJECTED">REJECTED</option>
             <option value="COMPLETED">COMPLETED</option>
           </select>
+
+          <select
+            className="table-search-bar"
+            style={{ width: 'auto', minWidth: 120 }}
+            value={selectedPermitTypeId === null ? '' : selectedPermitTypeId}
+            onChange={(e) => setSelectedPermitTypeId(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">All Types</option>
+            {permitTypes.map(pt => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
+          </select>
+
+          <select
+            className="table-search-bar"
+            style={{ width: 'auto', minWidth: 120 }}
+            value={selectedLocationId === null ? '' : selectedLocationId}
+            onChange={(e) => setSelectedLocationId(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">All Locations</option>
+            {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
+          </select>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', border: '1px solid #d1d5db', borderRadius: '4px', padding: '0 8px' }}>
+            <label style={{ fontSize: '0.85em', whiteSpace: 'nowrap', color: '#6b7280' }}>Period:</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="table-search-bar"
+              style={{ border: 'none', padding: '6px 0' }}
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="table-search-bar"
+              style={{ border: 'none', padding: '6px 0' }}
+              min={startDate}
+            />
+          </div>
 
           <input
             placeholder="Search permits..."
@@ -275,11 +337,11 @@ const PermitTable: React.FC<Props> = ({
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} style={{ padding: 16 }}>Loading permits...</td></tr>
+                <tr><td colSpan={11} style={{ padding: 16 }}>Loading permits...</td></tr>
               ) : error ? (
-                <tr><td colSpan={8} style={{ padding: 16, color: 'red' }}>Error: {error}</td></tr>
+                <tr><td colSpan={11} style={{ padding: 16, color: 'red' }}>Error: {error}</td></tr>
               ) : paginatedPermits.length === 0 ? (
-                <tr><td colSpan={8} style={{ padding: 16 }}>No permits found.</td></tr>
+                <tr><td colSpan={11} style={{ padding: 16 }}>No permits found.</td></tr>
               ) : (
                 paginatedPermits.map((p) => (
                   <tr key={p.id}>

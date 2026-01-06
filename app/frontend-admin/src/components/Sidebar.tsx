@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { logout } from '../../../shared/services/api';
 
 /**
  * Defines the props for the Sidebar component.
@@ -18,6 +19,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
     { name: 'Permits', path: '/permits' },
     { name: 'Users', path: '/users' },
   ];
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <nav className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -46,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
       </div>
       <div className="sidebar-bottom">
         <button
-          onClick={() => navigate('/login')}
+          onClick={handleLogout}
           className="logout-button"
           title={isCollapsed ? 'Logout' : ''}
         >

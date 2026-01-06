@@ -1,22 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { login, getCurrentUser, logout } from '../../../shared/services/api';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // In a real app, you'd have authentication logic here.
-    // For now, we'll just navigate to the dashboard.
-    navigate('/dashboard');
+  const handleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await login(email, password); 
+      const user = await getCurrentUser();
+      // Assuming '9' is the user_type for admins based on backend schema
+      if (user.user_type !== 9) {
+        await logout(); // Log them out immediately
+        throw new Error("Access to this portal is restricted to administrators.");
+      }
+      navigate('/dashboard');
+    } catch (err: any) {
+      await logout(); // Ensure any partial login state is cleared
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="login-container">
       <div className="login-box">
         <h2>Admin Portal Login</h2>
-        <p>Please log in to continue.</p>
-        <button onClick={handleLogin} className="login-button">
-          Login
+
+        <div style={{ textAlign: 'left', marginTop: '20px' }}>
+          <label className="form-label">Email</label>
+          <input
+            type="email"
+            className="form-input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin@email.com"
+          />
+        </div>
+        <div style={{ textAlign: 'left', marginTop: '10px' }}>
+          <label className="form-label">Password</label>
+          <input
+            type="password"
+            className="form-input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="********"
+          />
+        </div>
+
+        {error && <div style={{ color: 'var(--color-status-rejected)', marginTop: '15px', fontSize: '0.9em' }}>{error}</div>}
+
+        <button onClick={handleLogin} className="login-button" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </div>
     </div>
