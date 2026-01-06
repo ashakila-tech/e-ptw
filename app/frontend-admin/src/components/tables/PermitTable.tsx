@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { downloadDocumentById } from '../../../shared/services/api';
-import { ApprovalsModal, WorkersModal, SafetyEquipmentModal } from './PermitModals';
+import { downloadDocumentById } from '../../../../shared/services/api';
+import { ApprovalsModal, WorkersModal, SafetyEquipmentModal } from '../modals/PermitModals';
 
 interface Permit {
   id: number;
@@ -129,14 +129,27 @@ const PermitTable: React.FC<Props> = ({
 
   const handleViewDocument = async (p: Permit) => {
     if (!p.document?.id) return;
+    
+    // Open tab immediately to avoid popup blocker
+    const newTab = window.open('', '_blank');
+    if (newTab) {
+      newTab.document.write('Loading document...');
+    }
+
     try {
       const blob = await downloadDocumentById(p.document.id);
       const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      // Clean up the URL object after a delay to allow the tab to load
-      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      
+      if (newTab) {
+        newTab.location.href = url;
+      } else {
+        window.open(url, '_blank');
+      }
+      
+      setTimeout(() => window.URL.revokeObjectURL(url), 30000);
     } catch (err) {
       console.error("Failed to download document", err);
+      if (newTab) newTab.close();
       alert("Failed to open document.");
     }
   };

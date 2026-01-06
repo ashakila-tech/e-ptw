@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchApprovalDataByWorkflow } from '../../../shared/services/api';
+import { fetchApprovalDataByWorkflow } from '../../../../shared/services/api';
 
 interface ModalProps {
   onClose: () => void;

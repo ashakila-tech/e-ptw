@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { createWorker, updateWorker, API_BASE_URL, fetchCompanies } from '../../../shared/services/api';
-import { employmentStatusItems, employmentTypeItems } from '../../../shared/constants/workerOptions';
+import { createWorker, updateWorker, API_BASE_URL, fetchCompanies } from '../../../../shared/services/api';
+import { employmentStatusItems, employmentTypeItems } from '../../../../shared/constants/workerOptions';
 
 type Props = {
   open: boolean;

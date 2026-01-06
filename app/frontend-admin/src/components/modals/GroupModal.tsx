@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createGroup, updateGroup } from '../../../shared/services/api';
+import { createGroup, updateGroup } from '../../../../shared/services/api';
 
 type Props = {
   open: boolean;

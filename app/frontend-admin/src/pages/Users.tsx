@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useUsers } from '../hooks/useUsers';
 import { fetchWorkers, deleteWorker, deleteUser, fetchCompanies, deleteCompany, fetchAllGroups, deleteGroup } from '../../../shared/services/api';
-import WorkerModal from '../components/WorkerModal';
-import UserModal from '../components/UserModal';
-import CompanyModal from '../components/CompanyModal';
-import GroupModal from '../components/GroupModal';
-import UserTable from '../components/UserTable';
-import WorkerTable from '../components/WorkerTable';
-import CompanyTable from '../components/CompanyTable';
-import GroupTable from '../components/GroupTable';
+import WorkerModal from '../components/modals/WorkerModal';
+import UserModal from '../components/modals/UserModal';
+import CompanyModal from '../components/modals/CompanyModal';
+import GroupModal from '../components/modals/GroupModal';
+import UserTable from '../components/tables/UserTable';
+import WorkerTable from '../components/tables/WorkerTable';
+import CompanyTable from '../components/tables/CompanyTable';
+import GroupTable from '../components/tables/GroupTable';
 
 const Users: React.FC = () => {
   const { users, loading, error, refetch } = useUsers();

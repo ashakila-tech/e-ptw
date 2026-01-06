@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { EnrichedUser } from '../hooks/useUsers';
+import { EnrichedUser } from '../../hooks/useUsers';
 
 interface Props {
   title?: string;
@@ -145,13 +145,13 @@ const UserTable: React.FC<Props> = ({
           </table>
         </div>
       </div>
-      {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
-          <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
-          <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
-          <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
-        </div>
-      )}
+
+      {/* Display pagination number */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
+        <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
+        <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+        <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
+      </div>
     </div>
   );
 };
