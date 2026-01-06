@@ -4,13 +4,15 @@ import {
   fetchPermitTypes, 
   fetchLocations, 
   fetchUsers, 
-  fetchCompanies 
+  fetchCompanies,
+  fetchSafetyEquipment
 } from '../../../shared/services/api';
 
 export function usePermits() {
   const [permits, setPermits] = useState<any[]>([]);
   const [permitTypes, setPermitTypes] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
+  const [safetyEquipment, setSafetyEquipment] = useState<any[]>([]);
   const [applicants, setApplicants] = useState<any[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -26,12 +28,13 @@ export function usePermits() {
 
     (async () => {
       try {
-        const [permitsData, typesData, locsData, usersData, companiesData] = await Promise.all([
+        const [permitsData, typesData, locsData, usersData, companiesData, safetyData] = await Promise.all([
           fetchAllApplications(),
           fetchPermitTypes(),
           fetchLocations(),
           fetchUsers(),
-          fetchCompanies()
+          fetchCompanies(),
+          fetchSafetyEquipment()
         ]);
 
         if (!mounted) return;
@@ -39,6 +42,7 @@ export function usePermits() {
         setPermits(permitsData);
         setPermitTypes(typesData);
         setLocations(locsData);
+        setSafetyEquipment(safetyData);
         setApplicants(Array.isArray(usersData) ? usersData : (usersData.results || []));
         setCompanies(companiesData);
       } catch (err: any) {
@@ -53,7 +57,7 @@ export function usePermits() {
   }, [refreshKey]);
 
   return { 
-    permits, permitTypes, locations, applicants, companies, 
+    permits, permitTypes, locations, applicants, companies, safetyEquipment,
     loading, error, refetch 
   };
 }

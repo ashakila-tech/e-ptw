@@ -419,7 +419,7 @@ export async function deleteWorker(id: number) {
 }
 
 // -------------------- Safety Equipment --------------------
-export async function fetchSafetyEquipments() {
+export async function fetchSafetyEquipment() {
   const res = await fetch(`${API_BASE_URL}api/safety-equipments/`);
   if (!res.ok) {
     throw new Error(`Failed to fetch safety equipment: ${await res.text()}`);
@@ -427,14 +427,32 @@ export async function fetchSafetyEquipments() {
   return res.json();
 }
 
-export async function createSafetyEquipment(payload: any) {
+export async function createSafetyEquipment(name: string, company_id: number = 1) {
   const res = await fetch(`${API_BASE_URL}api/safety-equipments/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ name, company_id }),
   });
   if (!res.ok) throw new Error(`Failed to create safety equipment: ${await res.text()}`);
   return res.json();
+}
+
+export async function updateSafetyEquipment(id: number, name: string, company_id: number = 1) {
+  const res = await fetch(`${API_BASE_URL}api/safety-equipments/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, company_id }),
+  });
+  if (!res.ok) throw new Error(`Failed to update safety equipment: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteSafetyEquipment(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/safety-equipments/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete safety equipment: ${await res.text()}`);
+  return true;
 }
 
 // -------------------- Documents --------------------

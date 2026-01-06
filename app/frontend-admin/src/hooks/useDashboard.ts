@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
-    fetchLocations, fetchPermitTypes, fetchUsers, fetchAllApplications, fetchUsersByGroupId, fetchGroupsOptions, fetchUserGroups
+    fetchUsers, fetchAllApplications, fetchUsersByGroupId, fetchGroupsOptions, fetchUserGroups
 } from "../../../shared/services/api";
 
 export function useDashboardData() {
@@ -8,8 +8,6 @@ export function useDashboardData() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [data, setData] = useState({
-    locations: [] as any[],
-    permits: [] as any[],
     groups: [] as any[],
     usersCount: 0,
     totalApplications: 0,
@@ -24,9 +22,7 @@ export function useDashboardData() {
     setLoading(true);
     (async () => {
       try {
-        const [locations, permits, users, apps, groups, userGroups] = await Promise.all([
-          fetchLocations(),
-          fetchPermitTypes(),
+        const [users, apps, groups, userGroups] = await Promise.all([
           fetchUsers(),
           fetchAllApplications(),
           fetchGroupsOptions({ page_size: 200 }),
@@ -117,8 +113,6 @@ export function useDashboardData() {
         roleCounts['All'] = allCount;
 
         setData({
-          locations,
-          permits,
           groups: visibleGroups,
           usersCount: (users || []).length,
           totalApplications: (apps || []).length,

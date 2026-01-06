@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '../../../../shared/services/api';
+import TablePagination from './TablePagination';
 
 interface Worker {
   id: number;
@@ -220,11 +221,11 @@ const WorkerTable: React.FC<Props> = ({
           </table>
         </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
-        <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
-        <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
-        <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
-      </div>
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

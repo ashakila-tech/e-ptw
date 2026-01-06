@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { downloadDocumentById } from '../../../../shared/services/api';
 import { ApprovalsModal, WorkersModal, SafetyEquipmentModal } from '../modals/PermitModals';
+import TablePagination from './TablePagination';
 
 interface Permit {
   id: number;
@@ -154,6 +155,45 @@ const PermitTable: React.FC<Props> = ({
     }
   };
 
+  const formatWorkPeriod = (startTimeStr?: string, endTimeStr?: string) => {
+    if (!startTimeStr || !endTimeStr) return '-';
+    try {
+      const startDate = new Date(startTimeStr);
+      const endDate = new Date(endTimeStr);
+      const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+      const timeOptions: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+
+      return (
+        <>
+          <div>{startDate.toLocaleDateString(undefined, dateOptions)}</div>
+          <div>
+            {`${startDate.toLocaleTimeString([], timeOptions)} to ${endDate.toLocaleTimeString([], timeOptions)}`}
+          </div>
+        </>
+      );
+    } catch (e) {
+      return '-';
+    }
+  };
+
+  const formatSingleDate = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+      const timeOptions: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+
+      return (
+        <>
+          <div>{date.toLocaleDateString(undefined, dateOptions)}</div>
+          <div>{date.toLocaleTimeString([], timeOptions)}</div>
+        </>
+      );
+    } catch (e) {
+      return '-';
+    }
+  };
+
   const totalPages = Math.ceil(displayedPermits.length / itemsPerPage);
   const paginatedPermits = displayedPermits.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -253,14 +293,10 @@ const PermitTable: React.FC<Props> = ({
                         {p.status || 'DRAFT'}
                       </span>
                     </td>
-                    <td className="users-td">{p.created_time ? new Date(p.created_time).toLocaleDateString() : '-'}</td>
+                    <td className="users-td" style={{ fontSize: '0.85em' }}>{formatSingleDate(p.created_time)}</td>
                     <td className="users-td" style={{ fontSize: '0.85em' }}>
                       {p.workflow_data?.start_time ? (
-                        <>
-                          <div>{new Date(p.workflow_data.start_time).toLocaleString()}</div>
-                          <div style={{ textAlign: 'center' }}>to</div>
-                          <div>{new Date(p.workflow_data.end_time!).toLocaleString()}</div>
-                        </>
+                        formatWorkPeriod(p.workflow_data.start_time, p.workflow_data.end_time)
                       ) : '-'}
                     </td>
                     <td className="users-td">
@@ -299,13 +335,14 @@ const PermitTable: React.FC<Props> = ({
           </table>
         </div>
       </div>
-      {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
-          <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
-          <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
-          <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
-        </div>
-      )}
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
+
+      {/* Modals for some column data */}
 
       {viewApprovalsPermit && viewApprovalsPermit.workflow_data?.id && (
         <ApprovalsModal 
