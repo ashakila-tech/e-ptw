@@ -281,6 +281,10 @@ class ApplicationOut(ApplicationBase):
     workers: List[WorkerOut] = []
     safety_equipment: List[SafetyEquipmentOut] = []
 
+    # Added for frontend display
+    workflow_data: Optional[WorkflowDataOut] = None
+    document: Optional[DocumentOut] = None
+
     model_config = ConfigDict(from_attributes=True)
 
 class ApplicationUpdate(BaseModel):

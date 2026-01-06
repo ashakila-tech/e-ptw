@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { downloadDocumentById } from '../../../shared/services/api';
+import { ApprovalsModal, WorkersModal, SafetyEquipmentModal } from './PermitModals';
 
 interface Permit {
   id: number;
@@ -9,6 +11,10 @@ interface Permit {
   location_id?: number;
   applicant_id?: number;
   permit_type?: { name: string };
+  workflow_data?: { id: number; start_time?: string; end_time?: string };
+  document?: { id: number; name: string; path: string };
+  workers?: any[];
+  safety_equipment?: any[];
   location?: { name: string };
   applicant?: { name: string };
   [key: string]: any;
@@ -43,6 +49,10 @@ const PermitTable: React.FC<Props> = ({
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
   const [companySearchQuery, setCompanySearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
+
+  const [viewApprovalsPermit, setViewApprovalsPermit] = useState<Permit | null>(null);
+  const [viewWorkersPermit, setViewWorkersPermit] = useState<Permit | null>(null);
+  const [viewSafetyPermit, setViewSafetyPermit] = useState<Permit | null>(null);
 
   const [sortKey, setSortKey] = useState<'id' | 'name' | 'type' | 'location' | 'applicant' | 'status' | 'created'>('id');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
@@ -117,6 +127,20 @@ const PermitTable: React.FC<Props> = ({
     setCurrentPage(1);
   }, [searchQuery, selectedStatus, selectedCompanyId]);
 
+  const handleViewDocument = async (p: Permit) => {
+    if (!p.document?.id) return;
+    try {
+      const blob = await downloadDocumentById(p.document.id);
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      // Clean up the URL object after a delay to allow the tab to load
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    } catch (err) {
+      console.error("Failed to download document", err);
+      alert("Failed to open document.");
+    }
+  };
+
   const totalPages = Math.ceil(displayedPermits.length / itemsPerPage);
   const paginatedPermits = displayedPermits.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -190,6 +214,9 @@ const PermitTable: React.FC<Props> = ({
                 <th onClick={() => handleSort('applicant')}>Applicant {sortKey === 'applicant' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
                 <th onClick={() => handleSort('status')}>Status {sortKey === 'status' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
                 <th onClick={() => handleSort('created')}>Created {sortKey === 'created' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                <th>Work Period</th>
+                <th>Doc</th>
+                <th>Details</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -214,6 +241,38 @@ const PermitTable: React.FC<Props> = ({
                       </span>
                     </td>
                     <td className="users-td">{p.created_time ? new Date(p.created_time).toLocaleDateString() : '-'}</td>
+                    <td className="users-td" style={{ fontSize: '0.85em' }}>
+                      {p.workflow_data?.start_time ? (
+                        <>
+                          <div>{new Date(p.workflow_data.start_time).toLocaleString()}</div>
+                          <div style={{ textAlign: 'center' }}>to</div>
+                          <div>{new Date(p.workflow_data.end_time!).toLocaleString()}</div>
+                        </>
+                      ) : '-'}
+                    </td>
+                    <td className="users-td">
+                      {p.document ? (
+                        <button className="manage-btn view" onClick={() => handleViewDocument(p)}>View</button>
+                      ) : '-'}
+                    </td>
+                    <td className="users-td">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <button 
+                          className="manage-btn" 
+                          onClick={() => setViewApprovalsPermit(p)}
+                          disabled={!p.workflow_data?.id}
+                          style={{ opacity: !p.workflow_data?.id ? 0.5 : 1 }}
+                        >
+                          Approvals
+                        </button>
+                        <button className="manage-btn" onClick={() => setViewWorkersPermit(p)}>
+                          Workers ({p.workers?.length || 0})
+                        </button>
+                        <button className="manage-btn" onClick={() => setViewSafetyPermit(p)}>
+                          Safety ({p.safety_equipment?.length || 0})
+                        </button>
+                      </div>
+                    </td>
                     <td className="users-td">
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button className="manage-btn edit" onClick={() => onEdit(p)}>Edit</button>
@@ -233,6 +292,27 @@ const PermitTable: React.FC<Props> = ({
           <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
           <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
         </div>
+      )}
+
+      {viewApprovalsPermit && viewApprovalsPermit.workflow_data?.id && (
+        <ApprovalsModal 
+          workflowDataId={viewApprovalsPermit.workflow_data.id} 
+          onClose={() => setViewApprovalsPermit(null)} 
+        />
+      )}
+
+      {viewWorkersPermit && (
+        <WorkersModal 
+          workers={viewWorkersPermit.workers || []} 
+          onClose={() => setViewWorkersPermit(null)} 
+        />
+      )}
+
+      {viewSafetyPermit && (
+        <SafetyEquipmentModal 
+          equipment={viewSafetyPermit.safety_equipment || []} 
+          onClose={() => setViewSafetyPermit(null)} 
+        />
       )}
     </div>
   );
