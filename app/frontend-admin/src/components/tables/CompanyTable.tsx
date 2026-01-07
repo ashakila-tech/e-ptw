@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
 
 interface Company {
   id: number;
@@ -56,8 +58,8 @@ const CompanyTable: React.FC<Props> = ({
             className="table-search-bar"
           />
           <button className="manage-btn" onClick={onAdd}>Add Company</button>
-          <button className="manage-btn" onClick={onRefresh} disabled={loading}>
-            Refresh
+          <button className="icon-btn refresh" onClick={onRefresh} disabled={loading} title="Refresh">
+            <FontAwesomeIcon icon={faSync} spin={loading} />
           </button>
         </div>
       </div>
@@ -87,8 +89,12 @@ const CompanyTable: React.FC<Props> = ({
                     <td className="users-td">{workerCounts.get(c.id) || 0}</td>
                     <td className="users-td">
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="manage-btn edit" onClick={() => onEdit(c)}>Edit</button>
-                        <button className="manage-btn delete" onClick={() => onDelete(c.id)}>Delete</button>
+                        <button className="icon-btn edit" onClick={() => onEdit(c)} title="Edit">
+                          <FontAwesomeIcon icon={faPencilAlt} />
+                        </button>
+                        <button className="icon-btn delete" onClick={() => onDelete(c.id)} title="Delete">
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
                       </div>
                     </td>
                   </tr>

@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
 
 interface Group {
   id: number;
@@ -61,8 +63,8 @@ const GroupTable: React.FC<Props> = ({
             className="table-search-bar"
           />
           <button className="manage-btn" onClick={onAdd}>Add Group</button>
-          <button className="manage-btn" onClick={onRefresh} disabled={loading}>
-            Refresh
+          <button className="icon-btn refresh" onClick={onRefresh} disabled={loading} title="Refresh">
+            <FontAwesomeIcon icon={faSync} spin={loading} />
           </button>
         </div>
       </div>
@@ -90,8 +92,12 @@ const GroupTable: React.FC<Props> = ({
                     <td className="users-td">{companyMap.get(g.company_id) || g.company_id}</td>
                     <td className="users-td">
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="manage-btn edit" onClick={() => onEdit(g)}>Edit</button>
-                        <button className="manage-btn delete" onClick={() => onDelete(g.id)}>Delete</button>
+                        <button className="icon-btn edit" onClick={() => onEdit(g)} title="Edit">
+                          <FontAwesomeIcon icon={faPencilAlt} />
+                        </button>
+                        <button className="icon-btn delete" onClick={() => onDelete(g.id)} title="Delete">
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
                       </div>
                     </td>
                   </tr>

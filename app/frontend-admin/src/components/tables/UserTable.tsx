@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
 import { EnrichedUser } from '../../hooks/useUsers';
 
 interface Props {
@@ -57,7 +59,7 @@ const UserTable: React.FC<Props> = ({
   const paginatedUsers = displayedUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="dashboard-container" style={{ marginBottom: 20 }}>
+    <div className="" style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <h3 style={{ margin: 0 }}>
           {title || 'Users'}
@@ -74,8 +76,8 @@ const UserTable: React.FC<Props> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="table-search-bar"
           />
-          <button className="manage-btn" onClick={onRefresh} disabled={loading}>
-            {loading ? '...' : 'Refresh'}
+          <button className="icon-btn refresh" onClick={onRefresh} disabled={loading} title="Refresh">
+            <FontAwesomeIcon icon={faSync} spin={loading} />
           </button>
         </div>
       </div>
@@ -134,8 +136,16 @@ const UserTable: React.FC<Props> = ({
                    {(onEdit || onDelete) && (
                      <td className="users-td">
                        <div style={{ display: 'flex', gap: 8 }}>
-                         {onEdit && <button className="manage-btn edit" onClick={() => onEdit(u)}>Edit</button>}
-                         {onDelete && <button className="manage-btn delete" onClick={() => onDelete(u.id)}>Delete</button>}
+                         {onEdit && (
+                           <button className="icon-btn edit" onClick={() => onEdit(u)} title="Edit">
+                             <FontAwesomeIcon icon={faPencilAlt} />
+                           </button>
+                         )}
+                         {onDelete && (
+                           <button className="icon-btn delete" onClick={() => onDelete(u.id)} title="Delete">
+                             <FontAwesomeIcon icon={faTrash} />
+                           </button>
+                         )}
                        </div>
                      </td>
                    )}

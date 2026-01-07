@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faPencilAlt, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 interface Item {
   id: number;
@@ -18,10 +20,6 @@ interface ManageListProps {
 const ManageList: React.FC<ManageListProps> = ({ title, items, loading, onAdd, onEdit, onDelete }) => {
   const [isManaging, setIsManaging] = useState(false);
 
-  const iconButtonStyle = {
-    background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center'
-  };
-
   return (
     <div className="dashboard-container">
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
@@ -30,8 +28,8 @@ const ManageList: React.FC<ManageListProps> = ({ title, items, loading, onAdd, o
           {isManaging ? 'Done' : 'Manage'}
         </button>
         {isManaging && (
-          <button onClick={onAdd} style={{ ...iconButtonStyle, color: '#10b981', marginLeft: 5 }} title={`Add ${title}`}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <button onClick={onAdd} className="icon-btn add" style={{ marginLeft: 5 }} title={`Add ${title}`}>
+            <FontAwesomeIcon icon={faPlus} />
           </button>
         )}
       </div>
@@ -47,11 +45,11 @@ const ManageList: React.FC<ManageListProps> = ({ title, items, loading, onAdd, o
                 <span>{item.name}</span>
                 {isManaging && (
                   <div style={{ display: 'flex', gap: '5px' }}>
-                    <button onClick={() => onEdit(item)} style={{ ...iconButtonStyle, color: '#3b82f6' }} title="Edit">
-                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <button onClick={() => onEdit(item)} className="icon-btn edit" title="Edit">
+                      <FontAwesomeIcon icon={faPencilAlt} />
                     </button>
-                    <button onClick={() => onDelete(item.id)} style={{ ...iconButtonStyle, color: '#ef4444' }} title="Remove">
-                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <button onClick={() => onDelete(item.id)} className="icon-btn delete" title="Remove">
+                      <FontAwesomeIcon icon={faTrash} />
                     </button>
                   </div>
                 )}

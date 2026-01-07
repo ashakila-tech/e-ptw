@@ -1,6 +1,16 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { logout } from '../../../shared/services/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faChartLine, 
+  faFileSignature, 
+  faUsers, 
+  faCog, 
+  faSignOutAlt, 
+  faChevronLeft, 
+  faChevronRight 
+} from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Defines the props for the Sidebar component.
@@ -15,9 +25,9 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
   const navigate = useNavigate();
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Permits', path: '/permits' },
-    { name: 'Users', path: '/users' },
+    { name: 'Dashboard', path: '/dashboard', icon: faChartLine },
+    { name: 'Permits', path: '/permits', icon: faFileSignature },
+    { name: 'Users', path: '/users', icon: faUsers },
   ];
 
   const handleLogout = async () => {
@@ -28,12 +38,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
   return (
     <nav className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {/* Button to toggle the sidebar's collapsed state */}
-      <button onClick={() => setIsCollapsed(!isCollapsed)} className="toggle-btn">
-        {isCollapsed ? '»' : '«'} {/* Changed arrows for better visual */}
-      </button>
       <div className="sidebar-top">
         <h3 className="sidebar-title">{!isCollapsed && 'Navigation'}</h3>
-
+        <button onClick={() => setIsCollapsed(!isCollapsed)} className="toggle-btn">
+          <FontAwesomeIcon icon={isCollapsed ? faChevronRight : faChevronLeft} />
+        </button>
+      </div>
+      <div className="sidebar-middle">
         {/* Map over the navItems to create NavLink components */}
         {navItems.map(item => (
           <NavLink
@@ -43,9 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
             title={isCollapsed ? item.name : ''} // Show full name on hover when collapsed
             end={item.path === '/dashboard'} // 'end' prop for exact match on dashboard
           >
-            <span className="tab-text">
-              {isCollapsed ? item.name.charAt(0) : item.name}
-            </span>
+            <FontAwesomeIcon icon={item.icon} fixedWidth />
+            {!isCollapsed && <span className="tab-text">{item.name}</span>}
           </NavLink>
         ))}
       </div>
@@ -56,18 +66,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
           title={isCollapsed ? "Settings" : ''} // Show full name on hover when collapsed
           // end={item.path === '/dashboard'} // 'end' prop for exact match on dashboard
         >
-          <span className="tab-text">
-            {isCollapsed ? "S" : "Settings"}
-          </span>
+          <FontAwesomeIcon icon={faCog} fixedWidth />
+          {!isCollapsed && <span className="tab-text">Settings</span>}
         </NavLink>
         <button
           onClick={handleLogout}
           className="logout-button"
           title={isCollapsed ? 'Logout' : ''}
         >
-          <span className="tab-text">
-            {isCollapsed ? 'L' : 'Logout'}
-          </span>
+          <FontAwesomeIcon icon={faSignOutAlt} fixedWidth />
+          {!isCollapsed && <span className="tab-text">Logout</span>}
         </button>
       </div>
     </nav>

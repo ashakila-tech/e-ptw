@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useUsers } from '../hooks/useUsers';
 import { fetchWorkers, deleteWorker, deleteUser, fetchCompanies, deleteCompany, fetchAllGroups, deleteGroup } from '../../../shared/services/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import WorkerModal from '../components/modals/WorkerModal';
 import UserModal from '../components/modals/UserModal';
 import CompanyModal from '../components/modals/CompanyModal';
@@ -128,21 +130,7 @@ const Users: React.FC = () => {
     catch (e: any) { alert(e?.message || String(e)); }
   };
 
-  const contractors = useMemo(() => {
-    const realContractors = users.filter(u => u.groups.some(g => g.toLowerCase() === 'contractor'));
-    
-    // Dummy data for testing pagination
-    const dummyContractors = Array.from({ length: 25 }, (_, i) => ({
-      id: 1000 + i,
-      name: `Dummy Contractor ${i + 1}`,
-      email: `dummy${i + 1}@test.com`,
-      company_id: 1,
-      company_name: 'Dummy Test Company',
-      groups: ['contractor'],
-      user_group_objects: [],
-    }));
-    return [...realContractors, ...dummyContractors];
-  }, [users]);
+  const contractors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'contractor')), [users]);
   const supervisors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'supervisor')), [users]);
   const areaOwners = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'area owner')), [users]);
   const siteManagers = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'site manager')), [users]);
@@ -210,58 +198,66 @@ const Users: React.FC = () => {
         onDelete={handleDeleteGroup}
       />
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-        <button className="manage-btn" onClick={openAddUser}>Add User</button>
+      <div className="dashboard-container">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+          <button className="manage-btn" onClick={openAddUser}>
+            <FontAwesomeIcon icon={faPlus} style={{paddingRight:"1em"}} />
+            Add User
+          </button>
+        </div>
+        
+        <UserTable
+          title="Contractors"
+          users={contractors}
+          loading={loading}
+          error={error}
+          enableCompanyFilter={true}
+          allCompanies={companies}
+          onRefresh={refetch}
+          onEdit={openEditUser}
+          onDelete={handleDeleteUser}
+        />
+
+        <UserTable 
+          title="Supervisors" 
+          users={supervisors} 
+          loading={loading} 
+          error={error} 
+          onRefresh={refetch}
+          onEdit={openEditUser}
+          onDelete={handleDeleteUser}
+        />
+
+        <UserTable 
+          title="Area Owners" 
+          users={areaOwners} 
+          loading={loading} 
+          error={error} 
+          onRefresh={refetch}
+          onEdit={openEditUser}
+          onDelete={handleDeleteUser}
+        />
+        
+        <UserTable 
+          title="Site Managers" 
+          users={siteManagers} 
+          loading={loading} 
+          error={error} 
+          onRefresh={refetch}
+          onEdit={openEditUser}
+          onDelete={handleDeleteUser}
+        />
+        
+        <UserTable 
+          title="Safety Officers" 
+          users={safetyOfficers} 
+          loading={loading} 
+          error={error} 
+          onRefresh={refetch}
+          onEdit={openEditUser}
+          onDelete={handleDeleteUser}
+        />
       </div>
-
-      <UserTable
-        title="Contractors"
-        users={contractors}
-        loading={loading}
-        error={error}
-        enableCompanyFilter={true}
-        allCompanies={companies}
-        onRefresh={refetch}
-        onEdit={openEditUser}
-        onDelete={handleDeleteUser}
-      />
-
-      <UserTable 
-        title="Supervisors" 
-        users={supervisors} 
-        loading={loading} 
-        error={error} 
-        onRefresh={refetch}
-        onEdit={openEditUser}
-        onDelete={handleDeleteUser}
-      />
-      <UserTable 
-        title="Area Owners" 
-        users={areaOwners} 
-        loading={loading} 
-        error={error} 
-        onRefresh={refetch}
-        onEdit={openEditUser}
-        onDelete={handleDeleteUser}
-      />
-      <UserTable 
-        title="Site Managers" 
-        users={siteManagers} 
-        loading={loading} 
-        error={error} 
-        onRefresh={refetch}
-        onEdit={openEditUser}
-        onDelete={handleDeleteUser}
-      />
-      <UserTable 
-        title="Safety Officers" 
-        users={safetyOfficers} 
-        loading={loading} 
-        error={error} 
-        onRefresh={refetch}
-        onEdit={openEditUser}
-        onDelete={handleDeleteUser}
-      />
 
       {/* Workers table */}
       <WorkerTable

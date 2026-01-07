@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
 import { API_BASE_URL } from '../../../../shared/services/api';
 import TablePagination from './TablePagination';
 
@@ -140,8 +142,8 @@ const WorkerTable: React.FC<Props> = ({
             className="table-search-bar"
           />
           <button className="manage-btn" onClick={() => onAddWorker(selectedCompanyId)}>Add Worker</button>
-          <button className="manage-btn" onClick={onRefresh} disabled={loading}>
-            {loading ? 'Refreshing...' : 'Refresh'}
+          <button className="icon-btn refresh" onClick={onRefresh} disabled={loading} title="Refresh">
+            <FontAwesomeIcon icon={faSync} spin={loading} />
           </button>
         </div>
       </div>
@@ -210,8 +212,12 @@ const WorkerTable: React.FC<Props> = ({
                     <td className="users-td">{w.employment_status ?? '-'}</td>
                     <td className="users-td">
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="manage-btn edit" onClick={() => onEditWorker(w)}>Edit</button>
-                        <button className="manage-btn delete" onClick={() => onDeleteWorker(w.id)}>Delete</button>
+                        <button className="icon-btn edit" onClick={() => onEditWorker(w)} title="Edit">
+                          <FontAwesomeIcon icon={faPencilAlt} />
+                        </button>
+                        <button className="icon-btn delete" onClick={() => onDeleteWorker(w.id)} title="Delete">
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
                       </div>
                     </td>
                   </tr>

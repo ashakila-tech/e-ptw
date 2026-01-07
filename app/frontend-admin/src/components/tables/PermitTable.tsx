@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPencilAlt, faTrash, faSync, faEye } from '@fortawesome/free-solid-svg-icons';
 import { downloadDocumentById } from '../../../../shared/services/api';
 import { ApprovalsModal, WorkersModal, SafetyEquipmentModal } from '../modals/PermitModals';
 import TablePagination from './TablePagination';
@@ -285,8 +287,8 @@ const PermitTable: React.FC<Props> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="table-search-bar"
           />
-          <button className="manage-btn" onClick={onRefresh} disabled={loading}>
-            {loading ? 'Refreshing...' : 'Refresh'}
+          <button className="icon-btn refresh" onClick={onRefresh} disabled={loading} title="Refresh">
+            <FontAwesomeIcon icon={faSync} spin={loading} />
           </button>
         </div>
       </div>
@@ -363,7 +365,12 @@ const PermitTable: React.FC<Props> = ({
                     </td>
                     <td className="users-td">
                       {p.document ? (
-                        <button className="manage-btn view" onClick={() => handleViewDocument(p)}>View</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '0.9em' }}>{p.document.name}</span>
+                          <button className="icon-btn edit" onClick={() => handleViewDocument(p)} title="View Document">
+                            <FontAwesomeIcon icon={faEye} />
+                          </button>
+                        </div>
                       ) : '-'}
                     </td>
                     <td className="users-td">
@@ -386,8 +393,12 @@ const PermitTable: React.FC<Props> = ({
                     </td>
                     <td className="users-td">
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="manage-btn edit" onClick={() => onEdit(p)}>Edit</button>
-                        <button className="manage-btn delete" onClick={() => onDelete(p.id)}>Delete</button>
+                        <button className="icon-btn edit" onClick={() => onEdit(p)} title="Edit">
+                          <FontAwesomeIcon icon={faPencilAlt} />
+                        </button>
+                        <button className="icon-btn delete" onClick={() => onDelete(p.id)} title="Delete">
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
                       </div>
                     </td>
                   </tr>
