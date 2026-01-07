@@ -27,12 +27,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
 
   return (
     <nav className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+      {/* Button to toggle the sidebar's collapsed state */}
+      <button onClick={() => setIsCollapsed(!isCollapsed)} className="toggle-btn">
+        {isCollapsed ? '»' : '«'} {/* Changed arrows for better visual */}
+      </button>
       <div className="sidebar-top">
-        {/* Button to toggle the sidebar's collapsed state */}
-        <button onClick={() => setIsCollapsed(!isCollapsed)} className="toggle-btn">
-          {isCollapsed ? '»' : '«'} {/* Changed arrows for better visual */}
-        </button>
-
         <h3 className="sidebar-title">{!isCollapsed && 'Navigation'}</h3>
 
         {/* Map over the navItems to create NavLink components */}
@@ -51,6 +50,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
         ))}
       </div>
       <div className="sidebar-bottom">
+        <NavLink
+          to={"/settings"}
+          className={({ isActive }) => (isActive ? 'active' : '')}
+          title={isCollapsed ? "Settings" : ''} // Show full name on hover when collapsed
+          // end={item.path === '/dashboard'} // 'end' prop for exact match on dashboard
+        >
+          <span className="tab-text">
+            {isCollapsed ? "S" : "Settings"}
+          </span>
+        </NavLink>
         <button
           onClick={handleLogout}
           className="logout-button"

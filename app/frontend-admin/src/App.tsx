@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Permits from './pages/Permits';
 import Users from './pages/Users';
 import Login from './pages/Login';
+import Settings from './pages/Settings';
 
 /**
  * A simple utility to lighten or darken a hex color.
@@ -111,6 +112,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="permits" element={<Permits />} />
           <Route path="users" element={<Users />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {/* Default redirect to the login page */}
@@ -120,4 +122,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

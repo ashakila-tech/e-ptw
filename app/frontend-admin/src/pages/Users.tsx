@@ -187,7 +187,7 @@ const Users: React.FC = () => {
 
   return (
     <div className="content-area">
-      <h1 className="page-title">Users</h1>
+      <h1 className="page-title">Users Management</h1>
 
       <CompanyTable
         companies={companies}

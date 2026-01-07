@@ -12,7 +12,6 @@ const stats = Object.values(PermitStatus).filter(s => !excludedStatuses.has(Stri
   return { statusKey: raw.toUpperCase(), title };
 });
 
-
 const Dashboard: React.FC = () => {
   const { loading, error, data, refetch } = useDashboardData();
   const navigate = useNavigate();
@@ -24,8 +23,6 @@ const Dashboard: React.FC = () => {
     const key = status.toLowerCase().replace(/\s+/g, '-');
     return (StatusColors as any)[key] || '#6b7280'; // fallback gray
   }
-
-  
 
   return (
     <div className="content-area">
