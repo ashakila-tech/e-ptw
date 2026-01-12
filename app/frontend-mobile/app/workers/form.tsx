@@ -112,6 +112,7 @@ export default function WorkerForm() {
             <Image
               source={{ uri: picture.uri }}
               className="w-20 h-20 rounded-full mr-4"
+              resizeMode="cover"
             />
           )}
           <TouchableOpacity

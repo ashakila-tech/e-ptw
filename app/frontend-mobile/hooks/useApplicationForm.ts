@@ -26,7 +26,7 @@ import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { useUser } from "@/contexts/UserContext";
 import { PermitStatus } from "@/constants/Status";
 
-const APPROVER_GROUP_NAME = Constants.expoConfig?.extra?.APPROVER_GROUP_NAME;
+const APPROVER_GROUP_NAME = Constants.expoConfig?.extra?.APPROVER_GROUP_NAME || process.env.EXPO_PUBLIC_APPROVER_GROUP_NAME || "Supervisor";
 const PLACEHOLDER_THRESHOLD = 3;
 const PLACEHOLDER_ID = 1;
 

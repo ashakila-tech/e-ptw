@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import * as api from "../../shared/services/api";
-import Constants from "expo-constants";
 
 export function useWorkerDetails(id?: string) {
   const [worker, setWorker] = useState<any | null>(null);
@@ -24,7 +23,7 @@ export function useWorkerDetails(id?: string) {
       // Construct full picture URL if picture path exists
 
       const pictureUrl = workerData.picture
-        ? `${Constants.expoConfig?.extra?.API_BASE_URL}api/workers/${workerData.id}/picture?timestamp=${new Date().getTime()}`
+        ? `${api.API_BASE_URL}api/workers/${workerData.id}/picture?timestamp=${new Date().getTime()}`
         : null;
 
       console.log(pictureUrl);

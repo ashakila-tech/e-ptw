@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, Pressable, ScrollView, TextInput } from "react-native";
+import { View, Text, Pressable, ScrollView, TextInput, Image } from "react-native";
 import { useRouter } from "expo-router";
+import { API_BASE_URL } from "../../shared/services/api";
 
 interface WorkerTableProps {
   workers: any[];
@@ -17,6 +18,7 @@ const WorkerTable: React.FC<WorkerTableProps> = ({ workers, isEditable = false, 
         {/* Table Header */}
         <View className="flex-row bg-gray-50 border-b border-gray-200">
           <Text className="p-3 w-16 font-semibold text-primary">#</Text>
+          <Text className="p-3 w-20 font-semibold text-primary">Photo</Text>
           <Text className="p-3 w-40 font-semibold text-primary">Name</Text>
           <Text className="p-3 w-40 font-semibold text-primary">IC/Passport</Text>
           <Text className="p-3 w-32 font-semibold text-primary">Contact</Text>
@@ -30,6 +32,17 @@ const WorkerTable: React.FC<WorkerTableProps> = ({ workers, isEditable = false, 
         {workers.map((worker: any, index: number) => (
           <View key={worker.id} className="flex-row border-b border-gray-200 items-center">
             <Text className="p-3 w-16 text-primary">{index + 1}</Text>
+            <View className="p-3 w-20 justify-center">
+              {worker.picture ? (
+                <Image
+                  source={{ uri: `${API_BASE_URL}api/workers/${worker.id}/picture?v=${encodeURIComponent(worker.picture)}` }}
+                  className="w-10 h-10 rounded-full bg-gray-200"
+                  resizeMode="cover"
+                />
+              ) : (
+                <View className="w-10 h-10 rounded-full bg-gray-200" />
+              )}
+            </View>
             <Text className="p-3 w-40 text-primary">{worker.name}</Text>
             <Text className="p-3 w-40 text-primary">{worker.ic_passport}</Text>
             <Text className="p-3 w-32 text-primary">{worker.contact}</Text>

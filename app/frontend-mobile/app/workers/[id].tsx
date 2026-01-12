@@ -62,15 +62,19 @@ export default function WorkerDetailsPage() {
         <View className="bg-white rounded-xl p-4 mb-4">
           <Text className="text-xl font-bold text-primary mb-3">Worker Information</Text>
 
-          {worker.picture_url && (
-            <View className="items-center my-4">
+          <View className="items-center my-4">
+            {worker.picture_url ? (
               <Image
                 source={{ uri: worker.picture_url }}
                 className="w-32 h-32 rounded-full bg-gray-300"
                 resizeMode="cover"
               />
-            </View>
-          )}
+            ) : (
+              <View className="w-32 h-32 rounded-full bg-gray-200 items-center justify-center">
+                <Text className="text-gray-400">No Photo</Text>
+              </View>
+            )}
+          </View>
           
           <View className="mb-3">
             <Text className="text-base text-primary">Name:</Text>

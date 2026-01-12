@@ -5,7 +5,6 @@ import { Alert } from "react-native";
 import { useProfile } from "./useProfile";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import * as ImagePicker from "expo-image-picker";
-import Constants from "expo-constants";
 
 export function useWorkerForm() {
   const router = useRouter();
@@ -47,7 +46,7 @@ export function useWorkerForm() {
       setEmploymentStatus(existingWorker.employment_status || null);
       setEmploymentType(existingWorker.employment_type || null);
       if (existingWorker.picture) {
-        const pictureUrl = `${Constants.expoConfig?.extra?.API_BASE_URL}api/workers/${existingWorker.id}/picture?timestamp=${new Date().getTime()}`;
+        const pictureUrl = `${api.API_BASE_URL}api/workers/${existingWorker.id}/picture?timestamp=${new Date().getTime()}`;
         setPicture({ 
           name: existingWorker.picture.split('/').pop(), 
           uri: pictureUrl, 

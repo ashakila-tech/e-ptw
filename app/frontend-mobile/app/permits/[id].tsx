@@ -123,9 +123,9 @@ export default function PermitDetails() {
   const isWithinWorkWindow = workStartTime && workEndTime && now >= workStartTime && now <= workEndTime;
 
   const canExtend = userId === permit?.applicantId && extension;
-  const canApproveReject = isApproval && myApproval; // && myApproval.level < 98;
+  const canApproveReject = isApproval && myApproval && myApproval.level !== 98;
   const canConfirmSecurity = isSecurity && permit.status === PermitStatus.APPROVED;
-  const canConfirmJobDone = isApproval && permit.status === PermitStatus.ACTIVE && myApproval; // && myApproval.level === 98;
+  const canConfirmJobDone = isApproval && permit.status === PermitStatus.ACTIVE && myApproval && myApproval.level === 98;
   const canConfirmExit = isSecurity && permit.status === PermitStatus.EXIT_PENDING;
 
   const mimeType = getMimeType(permit.document);
@@ -403,7 +403,7 @@ export default function PermitDetails() {
         {/* ---------------------------------- Action Buttons ------------------------------- */}
 
         {/* Job Done Button (Supervisor) */}
-        {canConfirmJobDone && (
+        {canConfirmJobDone && !canApproveReject &&(
           <View className="my-6">
             <Pressable onPress={confirmJobDoneAction} className="py-3 rounded-xl items-center bg-green-600">
               <Text className="text-white font-semibold text-base">Confirm Job Done</Text>

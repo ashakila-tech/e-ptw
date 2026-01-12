@@ -26,7 +26,7 @@ export default function ApplicationForm() {
     documentId, documentName, uploading, pickAndUploadDocument, handleDownloadDocument,
     permitTypeOpen, permitType, permitTypeItems, setPermitTypeOpen, setPermitType, setPermitTypeItems,
     locationOpen, location, locationItems, setLocationOpen, setLocation, setLocationItems,
-    jobAssignerOpen, jobAssigner, jobAssignerItems, setJobAssignerOpen, setJobAssigner,
+    jobAssignerOpen, jobAssigner, jobAssignerItems, setJobAssignerOpen, setJobAssigner, setJobAssignerItems,
     workersOpen, setWorkersOpen, workerIds, setWorkerIds, workerItems,
     safetyEquipmentOpen, setSafetyEquipmentOpen, safetyEquipmentIds, setSafetyEquipmentIds, safetyEquipmentItems,
     startTime, setStartTime, endTime, setEndTime, loading,
@@ -133,6 +133,7 @@ export default function ApplicationForm() {
           items={jobAssignerItems}
           setOpen={setJobAssignerOpen}
           setValue={setJobAssigner}
+          setItems={setJobAssignerItems}
           placeholder="Select job assigner"
           zIndex={30}
         />
