@@ -74,6 +74,7 @@ class WorkflowData(Base):
     name = Column(String, nullable=False)
     start_time = Column(DateTime, nullable=True)
     end_time = Column(DateTime, nullable=True)
+    approval_data = relationship("ApprovalData", backref="workflow_data")
 
 class Document(Base):
     __tablename__ = "document"
@@ -121,6 +122,10 @@ class Application(Base):
         secondary="application_safety_equipment",
         back_populates="applications"
     )
+
+    @property
+    def approval_data(self):
+        return self.workflow_data.approval_data if self.workflow_data else []
 
 
 class ApprovalData(Base):

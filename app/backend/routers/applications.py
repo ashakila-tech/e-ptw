@@ -121,7 +121,7 @@ def filter_applications(
         joinedload(models.Application.document),
         joinedload(models.Application.location),
         joinedload(models.Application.permit_type),
-        joinedload(models.Application.workflow_data),
+        joinedload(models.Application.workflow_data).joinedload(models.WorkflowData.approval_data),
         joinedload(models.Application.workers),
         joinedload(models.Application.safety_equipment),
     )
