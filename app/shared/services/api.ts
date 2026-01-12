@@ -1,7 +1,9 @@
-import { getApiBaseUrlWithOverride, getToken, setToken, removeToken } from './platform';
+// import { getApiBaseUrlWithOverride, getToken, setToken, removeToken } from './platform';
+import { API_BASE_URL as PLATFORM_BASE_URL, getApiBaseUrlWithOverride, getToken, setToken, removeToken } from './platform';
 
 // Prefer Vite/Cra env for web and allow runtime overrides; for Expo, platform.getApiBaseUrlWithOverride() will resolve it at runtime.
-export const API_BASE_URL = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) || (typeof window !== 'undefined' ? (window as any).API_BASE_URL : '') || '';
+// export const API_BASE_URL = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) || (typeof window !== 'undefined' ? (window as any).API_BASE_URL : '') || '';
+export const API_BASE_URL = PLATFORM_BASE_URL;
 
 // -------------------- Auth --------------------
 export async function login(email: string, password: string) {

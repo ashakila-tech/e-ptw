@@ -7,7 +7,6 @@ import LoadingScreen from "@/components/LoadingScreen";
 import { Ionicons } from "@expo/vector-icons";
 import WorkerTable from "@/components/WorkerTable";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
-import * as api from "@/services/api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@/contexts/UserContext";
 
@@ -15,7 +14,7 @@ export default function ProfileTab() {
   const router = useRouter();
   const { logout } = useAuth();
   const { isApproval, isSecurity } = useUser();
-  const { profile, loading, error, workers, refresh: refreshProfile } = useProfile();
+  const { profile, loading, error, workers, refresh: refreshProfile, removeWorker } = useProfile();
     
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
@@ -53,7 +52,7 @@ export default function ProfileTab() {
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: async () => {
           try {
-            await api.deleteWorker(worker.id);
+            await removeWorker(worker.id);
             crossPlatformAlert("Success", "Worker has been deleted.");
             refreshProfile();
           } catch (err: any) {

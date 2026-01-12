@@ -1,7 +1,8 @@
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Alert, Platform } from 'react-native';
-import * as api from '@/services/api';
+// import * as api from '@/services/api';
+import * as api from "../../shared/services/api";
 
 export const downloadDocument = async (documentId: number, fileName: string) => {
   let loadingAlertDisplayed = false;

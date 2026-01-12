@@ -7,7 +7,7 @@ import {
   fetchPermitTypes,
   fetchLocations,
   fetchWorkers,
-  fetchSafetyEquipments,
+  fetchSafetyEquipment,
   uploadDocument,
   createWorker,
   createSafetyEquipment,
@@ -20,7 +20,7 @@ import {
   fetchPermitOfficersByPermitType,
   fetchLocationManagersByLocation,
   downloadDocumentById,
-} from "@/services/api";
+} from "../../shared/services/api";
 import Constants from "expo-constants";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { useUser } from "@/contexts/UserContext";
@@ -115,7 +115,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         }
 
         // Fetch all safety equipment
-        const equipmentData = await fetchSafetyEquipments();
+        const equipmentData = await fetchSafetyEquipment();
         setSafetyEquipmentItems(
           equipmentData.map((e: any) => ({ label: e.name, value: e.id }))
         );
@@ -325,7 +325,7 @@ export function useApplicationForm(existingApp: any, router: any) {
           }
           if (typeof idOrName === "string") {
             try {
-              const newEquipment = await createSafetyEquipment({ name: idOrName, company_id: companyId });
+              const newEquipment = await createSafetyEquipment(idOrName, companyId);
               return newEquipment.id;
             } catch (err) {
               console.error(`Failed to create safety equipment: ${idOrName}`, err);

@@ -4,6 +4,13 @@
 
 /**
  * Return the API base URL. Order of precedence:
+ * 1. Vite env VITE_API_BASE_URL
+ * 2. window.API_BASE_URL
+ */
+export const API_BASE_URL = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) || (typeof window !== 'undefined' ? (window as any).API_BASE_URL : '') || '';
+
+/**
+ * Return the API base URL. Order of precedence:
  * 1. Runtime override via setBaseUrlForRuntime
  * 2. Vite env VITE_API_BASE_URL or REACT_APP_API_BASE_URL
  * 3. window.API_BASE_URL
@@ -11,20 +18,33 @@
  */
 export async function getApiBaseUrl(): Promise<string> {
   if ((globalThis as any).__API_BASE_URL) return (globalThis as any).__API_BASE_URL;
+  // if ((globalThis as any).__API_BASE_URL) return (globalThis as any).__API_BASE_URL;
 
-  try {
-    const env = (import.meta as any).env || {};
-    const url = env.VITE_API_BASE_URL || env.REACT_APP_API_BASE_URL;
-    if (url) return url;
-  } catch (e) {
-    // ignore
-  }
+  // try {
+  //   const env = (import.meta as any).env || {};
+  //   const url = env.VITE_API_BASE_URL || env.REACT_APP_API_BASE_URL;
+  //   if (url) return url;
+  // } catch (e) {
+  //   // ignore
+  // }
+  // try {
+  //   const env = (import.meta as any).env || {};
+  //   const url = env.VITE_API_BASE_URL || env.REACT_APP_API_BASE_URL;
+  //   if (url) return url;
+  // } catch (e) {
+  //   // ignore
+  // }
 
-  if (typeof window !== 'undefined' && (window as any).API_BASE_URL) {
-    return (window as any).API_BASE_URL;
-  }
+  // if (typeof window !== 'undefined' && (window as any).API_BASE_URL) {
+  //   return (window as any).API_BASE_URL;
+  // }
+  // if (typeof window !== 'undefined' && (window as any).API_BASE_URL) {
+  //   return (window as any).API_BASE_URL;
+  // }
 
-  return '';
+  // return '';
+  // return '';
+  return API_BASE_URL;
 }
 
 /**

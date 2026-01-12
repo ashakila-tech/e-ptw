@@ -21,12 +21,13 @@ import { getStatusClass } from "@/utils/class";
 import { formatDate } from "@/utils/date";
 import { PermitStatus } from "@/constants/Status";
 import { getMimeType } from "@/utils/file";
-import * as api from "@/services/api";
+// import * as api from "@/services/api";
+import * as api from "../../../shared/services/api";
 import { Colors } from "@/constants/Colors";
 import CustomHeader from "@/components/CustomHeader";
 import WorkerTable from "@/components/WorkerTable";
 import { TextInput } from "react-native";
-import Constants from "expo-constants";
+// import Constants from "expo-constants";
 import * as Linking from "expo-linking";
 
 export default function PermitDetails() {
@@ -311,8 +312,8 @@ export default function PermitDetails() {
                   onPress={() => {
                     if (!permit.documentId || isOffice) return;
 
-                    const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
-                    const fileUrl = `${API_BASE_URL}api/documents/${permit.documentId}/view`;
+                    // const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+                    const fileUrl = `${api.API_BASE_URL}api/documents/${permit.documentId}/view`;
 
                     if (Platform.OS === "android") {
                       Linking.openURL(fileUrl);

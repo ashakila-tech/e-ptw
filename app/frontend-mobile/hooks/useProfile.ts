@@ -5,8 +5,9 @@ import {
   fetchCompanyById,
   fetchLocationForSiteManager,
   fetchPermitTypeForSafetyOfficer,
-  fetchWorkers
-} from "@/services/api";
+  fetchWorkers,
+  deleteWorker
+} from "../../shared/services/api";
 
 const SAFETY_OFFICER = "Safety Officer";
 const SITE_MANAGER = "Site Manager";
@@ -48,6 +49,10 @@ export function useProfile() {
     }
   }
 
+  async function removeWorker(id: number) {
+    return await deleteWorker(id);
+  }
+
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -58,5 +63,6 @@ export function useProfile() {
     error,
     refresh: fetchProfile,
     workers,
+    removeWorker,
   };
 }

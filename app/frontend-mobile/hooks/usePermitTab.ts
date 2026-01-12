@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Alert } from "react-native";
 import { useUser } from "@/contexts/UserContext";
 import PermitData from "@/interfaces/interfaces";
-import * as api from "@/services/api";
+import * as api from "../../shared/services/api";
 import { PermitStatus } from "@/constants/Status";
 
 const PLACEHOLDER_THRESHOLD = 3;
@@ -90,6 +90,8 @@ export function usePermitTab() {
       // Enrich permit data
       const enrichedPermits: PermitData[] = await Promise.all(
         permitsData.map(async (p) => {
+          const safeFetch = (promise: Promise<any>) => promise.catch(() => null);
+
           const [
             document,
             location,
@@ -97,11 +99,11 @@ export function usePermitTab() {
             applicant,
             workflowData,
           ] = await Promise.all([
-            p.document_id ? api.fetchDocumentById(p.document_id) : null,
-            p.location_id ? api.fetchLocationById(p.location_id) : null,
-            p.permit_type_id ? api.fetchPermitTypeById(p.permit_type_id) : null,
-            p.applicant_id ? api.fetchUserById(p.applicant_id) : null,
-            p.workflow_data_id ? api.fetchWorkflowDataById(p.workflow_data_id) : null,
+            p.document_id ? safeFetch(api.fetchDocumentById(p.document_id)) : null,
+            p.location_id ? safeFetch(api.fetchLocationById(p.location_id)) : null,
+            p.permit_type_id ? safeFetch(api.fetchPermitTypeById(p.permit_type_id)) : null,
+            p.applicant_id ? safeFetch(api.fetchUserById(p.applicant_id)) : null,
+            p.workflow_data_id ? safeFetch(api.fetchWorkflowDataById(p.workflow_data_id)) : null,
           ]);
 
           const wfId = Number(p.workflow_data_id);

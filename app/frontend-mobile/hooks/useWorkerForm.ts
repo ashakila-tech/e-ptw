@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import * as api from "@/services/api";
+import * as api from "../../shared/services/api";
 import { Alert } from "react-native";
 import { useProfile } from "./useProfile";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";

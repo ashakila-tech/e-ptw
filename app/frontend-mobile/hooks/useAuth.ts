@@ -1,5 +1,5 @@
 import { useUser } from "@/contexts/UserContext";
-import * as api from "@/services/api";
+import * as api from "../../shared/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function useAuth() {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PermitStatus } from "@/constants/Status";
-import * as api from "@/services/api";
+// import * as api from "@/services/api";
+import * as api from "../../shared/services/api";
 
 import { useUser } from "@/contexts/UserContext";
 const PLACEHOLDER_THRESHOLD = 3;

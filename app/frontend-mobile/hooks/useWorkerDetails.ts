@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import * as api from "@/services/api";
+import * as api from "../../shared/services/api";
 import Constants from "expo-constants";
 
 export function useWorkerDetails(id?: string) {
