@@ -88,28 +88,16 @@ export function usePermitTab() {
       }
 
       // Enrich permit data
-      const enrichedPermits: PermitData[] = await Promise.all(
-        permitsData.map(async (p) => {
-          const safeFetch = (promise: Promise<any>) => promise.catch(() => null);
+      const enrichedPermits: PermitData[] = permitsData.map((p) => {
+          // Use nested data directly from the application response
+          const document = p.document;
+          const location = p.location;
+          const permitType = p.permit_type;
+          const applicant = p.applicant;
+          const workflowData = p.workflow_data;
 
-          const [
-            document,
-            location,
-            permitType,
-            applicant,
-            workflowData,
-          ] = await Promise.all([
-            p.document_id ? safeFetch(api.fetchDocumentById(p.document_id)) : null,
-            p.location_id ? safeFetch(api.fetchLocationById(p.location_id)) : null,
-            p.permit_type_id ? safeFetch(api.fetchPermitTypeById(p.permit_type_id)) : null,
-            p.applicant_id ? safeFetch(api.fetchUserById(p.applicant_id)) : null,
-            p.workflow_data_id ? safeFetch(api.fetchWorkflowDataById(p.workflow_data_id)) : null,
-          ]);
-
-          const wfId = Number(p.workflow_data_id);
-          const approvalRows = allApprovalData.filter(
-            (ad: any) => Number(ad.workflow_data_id) === wfId
-          );
+          // Use nested approval_data if available
+          const approvalRows = workflowData?.approval_data || [];
 
           const myApprovalRow = approvalRows.find((ad: any) =>
             myApprovalIds.includes(Number(ad.approval_id))
@@ -157,8 +145,7 @@ export function usePermitTab() {
             permitTypeId: p.permit_type_id,
             workflowDataId: p.workflow_data_id,
           };
-        })
-      );
+        });
 
       // Sort permits by created time descending
       enrichedPermits.sort(
