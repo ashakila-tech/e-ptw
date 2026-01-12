@@ -284,6 +284,8 @@ class ApplicationOut(ApplicationBase):
     # Added for frontend display
     workflow_data: Optional[WorkflowDataOut] = None
     document: Optional[DocumentOut] = None
+    location: Optional[LocationOut] = None
+    approval_data: List[ApprovalDataOut] = []
 
     model_config = ConfigDict(from_attributes=True)
 

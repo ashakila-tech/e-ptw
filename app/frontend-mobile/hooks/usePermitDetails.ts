@@ -28,22 +28,41 @@ export function usePermitDetails(id?: string) {
       const permitData = await api.fetchApplicationById(Number(id));
       const timeRes = await api.fetchServerTime();
 
+      console.log("Fetched permit data:", permitData);
+
+      // Helper to log errors for troubleshooting
+      const fetchWithLog = async (promise: Promise<any>, name: string) => {
+        try {
+          return await promise;
+        } catch (e: any) {
+          console.warn(`[usePermitDetails] Failed to fetch ${name}:`, e.message || e);
+          return null;
+        }
+      };
+
+      // Use nested data if available
+      const preloadedDocument = permitData.document;
+      const preloadedWorkflowData = permitData.workflow_data;
+
       // Fetch related resources in parallel
       const [
         applicant,
-        document,
+        fetchedDocument,
         location,
         permitType,
-        workflowData,
+        fetchedWorkflowData,
         jobAssigner,
       ] = await Promise.all([
-        api.fetchUserById(permitData.applicant_id),
-        permitData.document_id ? api.fetchDocumentById(permitData.document_id) : Promise.resolve(null),
-        permitData.location_id ? api.fetchLocationById(permitData.location_id) : Promise.resolve(null),
-        permitData.permit_type_id ? api.fetchPermitTypeById(permitData.permit_type_id) : Promise.resolve(null),
-        permitData.workflow_data_id ? api.fetchWorkflowDataById(permitData.workflow_data_id) : Promise.resolve(null),
-        permitData.job_assigner_id ? api.fetchUserById(permitData.job_assigner_id) : Promise.resolve(null),
+        permitData.applicant_id ? fetchWithLog(api.fetchUserById(permitData.applicant_id), "applicant") : Promise.resolve(null),
+        (!preloadedDocument && permitData.document_id) ? fetchWithLog(api.fetchDocumentById(permitData.document_id), "document") : Promise.resolve(null),
+        permitData.location_id ? fetchWithLog(api.fetchLocationById(permitData.location_id), "location") : Promise.resolve(null),
+        permitData.permit_type_id ? fetchWithLog(api.fetchPermitTypeById(permitData.permit_type_id), "permitType") : Promise.resolve(null),
+        (!preloadedWorkflowData && permitData.workflow_data_id) ? fetchWithLog(api.fetchWorkflowDataById(permitData.workflow_data_id), "workflowData") : Promise.resolve(null),
+        permitData.job_assigner_id ? fetchWithLog(api.fetchUserById(permitData.job_assigner_id), "jobAssigner") : Promise.resolve(null),
       ]);
+
+      const document = preloadedDocument || fetchedDocument;
+      const workflowData = preloadedWorkflowData || fetchedWorkflowData;
 
       // Fetch approvals and approval data
       let approvalsList: any[] = [];
