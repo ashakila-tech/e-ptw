@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
 import { API_BASE_URL } from '../../../../shared/services/api';

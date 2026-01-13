@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
-import { EnrichedUser } from '../../hooks/useUsers';
+import type { EnrichedUser } from '../../hooks/useUsers';
 
 interface Props {
   title?: string;

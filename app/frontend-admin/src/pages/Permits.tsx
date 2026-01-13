@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { deleteApplication, createSafetyEquipment, deleteSafetyEquipment, updateSafetyEquipment, createLocation, deleteLocation, createPermitType, deletePermitType } from '../../../shared/services/api';
 import PermitTable from '../components/tables/PermitTable';
 import { usePermits } from '../hooks/usePermits';

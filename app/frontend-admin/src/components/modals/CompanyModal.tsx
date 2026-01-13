@@ -75,28 +75,15 @@ const CompanyModal: React.FC<Props> = ({ open, onClose, initial = null, onSaved 
     }
     setLoading(true);
     setError(null);
+    
     try {
-      let companyId = initial?.id;
-
       if (initial) {
         await updateCompany(initial.id, name);
       } else {
-        const newComp = await createCompany(name);
-        companyId = newComp.id;
+        await createCompany(name);
       }
 
-      /*
-      if (companyId) {
-        const promises = groups.map(g => {
-          if (g.status === 'new') return createGroup({ company_id: companyId!, name: g.name });
-          if (g.status === 'modified' && g.id) return updateGroup(g.id, { name: g.name, company_id: companyId! });
-          if (g.status === 'deleted' && g.id) return deleteGroup(g.id);
-          return Promise.resolve();
-        });
-        await Promise.all(promises);
-      }
-      */
-      onSaved && onSaved();
+      onSaved?.();
       onClose();
     } catch (e: any) {
       setError(e?.message || String(e) || 'Failed to save company');

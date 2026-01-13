@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StatusColors } from '../../../shared/constants/Colors';
 import { useDashboardData } from '../hooks/useDashboard';
@@ -13,7 +13,7 @@ const stats = Object.values(PermitStatus).filter(s => !excludedStatuses.has(Stri
 });
 
 const Dashboard: React.FC = () => {
-  const { loading, error, data, refetch } = useDashboardData();
+  const { loading, error, data } = useDashboardData();
   const navigate = useNavigate();
 
   // show error banner when load fails
