@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
+import TablePagination from './TablePagination';
 
 interface Group {
   id: number;
@@ -53,8 +54,8 @@ const GroupTable: React.FC<Props> = ({
 
   return (
     <div className="dashboard-container" style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <h3 style={{ margin: 0 }}>Groups</h3>
+      <div className="table-header">
+        <h3 className="table-header-title">Groups</h3>
         <div className="users-toolbar">
           <input
             placeholder="Search groups..."
@@ -81,9 +82,9 @@ const GroupTable: React.FC<Props> = ({
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} style={{ padding: 16 }}>Loading groups...</td></tr>
+                <tr><td colSpan={4} className="table-message-cell">Loading groups...</td></tr>
               ) : paginatedGroups.length === 0 ? (
-                <tr><td colSpan={4} style={{ padding: 16 }}>No groups found.</td></tr>
+                <tr><td colSpan={4} className="table-message-cell">No groups found.</td></tr>
               ) : (
                 paginatedGroups.map((g) => (
                   <tr key={g.id}>
@@ -91,7 +92,7 @@ const GroupTable: React.FC<Props> = ({
                     <td className="users-td">{g.name}</td>
                     <td className="users-td">{companyMap.get(g.company_id) || g.company_id}</td>
                     <td className="users-td">
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div className="actions-cell">
                         <button className="icon-btn edit" onClick={() => onEdit(g)} title="Edit">
                           <FontAwesomeIcon icon={faPencilAlt} />
                         </button>
@@ -107,11 +108,11 @@ const GroupTable: React.FC<Props> = ({
           </table>
         </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
-        <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
-        <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
-        <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
-      </div>
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

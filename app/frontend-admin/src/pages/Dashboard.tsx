@@ -17,7 +17,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   // show error banner when load fails
-  const errorBanner = error ? <div className="error-banner" style={{ color: '#b91c1c', marginBottom: 10 }}>{error}</div> : null;
+  const errorBanner = error ? <div className="form-error-text" style={{ marginBottom: 10 }}>{error}</div> : null;
 
   const getBg = (status: string) => {
     const key = status.toLowerCase().replace(/\s+/g, '-');
@@ -31,11 +31,11 @@ const Dashboard: React.FC = () => {
 
       {/* Container for Permit Statuses */}
       <div className="dashboard-container">
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-          <h3 style={{ margin: 0 }}>Permit Status</h3>
+        <div className="table-header">
+          <h3 className="table-header-title">Permit Status</h3>
           <button className="manage-btn" onClick={() => navigate('/permits')}>Manage</button>
         </div>
-        <div className="dashboard-grid" style={{ marginTop: 20 }}>
+        <div className="dashboard-grid">
           <div className="stat-card all">
             <div className="stat-title all">All</div>
             <div className="stat-number">{loading ? '...' : data.totalApplications}</div>
@@ -49,12 +49,7 @@ const Dashboard: React.FC = () => {
               <div 
                 key={key} 
                 className="stat-card status-card" 
-                style={{ 
-                  borderLeft: `6px solid ${bg}`,
-                  borderRight: `1px solid ${bg}`,
-                  borderTop: `1px solid ${bg}`,
-                  borderBottom: `1px solid ${bg}`,
-                }}>
+                style={{ borderColor: bg }}>
                 <div className="stat-title">{s.title}</div>
                 <div className="stat-number">{count}</div>
               </div>
@@ -65,11 +60,11 @@ const Dashboard: React.FC = () => {
 
       {/* Container for Users */}
       <div className="dashboard-container">
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-          <h3 style={{ margin: 0 }}>Users</h3>
+        <div className="table-header">
+          <h3 className="table-header-title">Users</h3>
           <button className="manage-btn" onClick={() => navigate('/users')}>Manage</button>
         </div>
-        <div className="dashboard-grid" style={{ marginTop: 20 }}>
+        <div className="dashboard-grid">
             {/* All and None cards first (hide while loading to avoid placeholders) */}
           {!loading && (
             <>

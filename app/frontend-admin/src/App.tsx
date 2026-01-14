@@ -58,7 +58,7 @@ const MainLayout = () => {
 
   if (isLoading) {
     // You can replace this with a more sophisticated spinner component
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw' }}>Loading...</div>;
+    return <div className="loading-overlay">Loading...</div>;
   }
 
   return (

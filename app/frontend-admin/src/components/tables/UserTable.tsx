@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
 import type { EnrichedUser } from '../../hooks/useUsers';
+import TablePagination from './TablePagination';
 
 interface Props {
   title?: string;
@@ -60,12 +61,12 @@ const UserTable: React.FC<Props> = ({
 
   return (
     <div className="" style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <h3 style={{ margin: 0 }}>
+      <div className="table-header">
+        <h3 className="table-header-title">
           {title || 'Users'}
           {selectedCompanyId && allCompanies && (
-            <span style={{ fontWeight: 'normal', fontSize: '0.9em', marginLeft: 8 }}>
-              - {allCompanies.find(c => c.id === selectedCompanyId)?.name}
+            <span className="table-header-subtitle">
+              - {allCompanies.find(c => c.id === selectedCompanyId)?.name || 'Company'}
             </span>
           )}
         </h3>
@@ -85,7 +86,7 @@ const UserTable: React.FC<Props> = ({
       {enableCompanyFilter && allCompanies && (
         <div style={{ marginBottom: 12 }}>
           <div className="companies-list">
-            <div className="permit-status-item" style={{ justifyContent: 'space-between' }}>
+            <div className="permit-status-item">
               <span>All Companies</span>
               <button 
                 className="manage-btn view" 
@@ -95,7 +96,7 @@ const UserTable: React.FC<Props> = ({
               </button>
             </div>
             {allCompanies.map(c => (
-              <div key={c.id} className="permit-status-item" style={{ justifyContent: 'space-between' }}>
+              <div key={c.id} className="permit-status-item">
                 <span>{c.name}</span>
                 <button 
                   className="manage-btn view"
@@ -123,9 +124,9 @@ const UserTable: React.FC<Props> = ({
               </tr>
             </thead>
             <tbody>
-              {loading ? <tr><td colSpan={6} style={{padding:16}}>Loading...</td></tr> :
-               error ? <tr><td colSpan={6} style={{padding:16, color:'red'}}>{error}</td></tr> :
-               paginatedUsers.length === 0 ? <tr><td colSpan={6} style={{padding:16}}>No users found.</td></tr> :
+              {loading ? <tr><td colSpan={6} className="table-message-cell">Loading...</td></tr> :
+               error ? <tr><td colSpan={6} className="table-error-cell">{error}</td></tr> :
+               paginatedUsers.length === 0 ? <tr><td colSpan={6} className="table-message-cell">No users found.</td></tr> :
                paginatedUsers.map(u => (
                  <tr key={u.id}>
                    <td className="users-td">{u.id}</td>
@@ -135,7 +136,7 @@ const UserTable: React.FC<Props> = ({
                    <td className="users-td">{u.groups.join(', ') || '-'}</td>
                    {(onEdit || onDelete) && (
                      <td className="users-td">
-                       <div style={{ display: 'flex', gap: 8 }}>
+                       <div className="actions-cell">
                          {onEdit && (
                            <button className="icon-btn edit" onClick={() => onEdit(u)} title="Edit">
                              <FontAwesomeIcon icon={faPencilAlt} />
@@ -156,12 +157,11 @@ const UserTable: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Display pagination number */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
-        <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
-        <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
-        <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
-      </div>
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

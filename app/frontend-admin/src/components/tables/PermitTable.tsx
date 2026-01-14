@@ -224,10 +224,9 @@ const PermitTable: React.FC<Props> = ({
 
   return (
     <div className="dashboard-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <h3 style={{ margin: 0 }}>Permits</h3>
-        
-        <div className="users-toolbar" style={{ flexWrap: 'wrap' }}>
+      <div className="table-header">
+        <h3 className="table-header-title">Permits</h3>
+        <div className="users-toolbar">
           <select 
             className="table-search-bar" 
             style={{ width: 'auto', minWidth: 120 }}
@@ -262,21 +261,19 @@ const PermitTable: React.FC<Props> = ({
             {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
           </select>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', border: '1px solid #d1d5db', borderRadius: '4px', padding: '0 8px' }}>
-            <label style={{ fontSize: '0.85em', whiteSpace: 'nowrap', color: '#6b7280' }}>Period:</label>
+          <div className="date-range-picker">
+            <label>Period:</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="table-search-bar"
-              style={{ border: 'none', padding: '6px 0' }}
+              className="date-range-input"
             />
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="table-search-bar"
-              style={{ border: 'none', padding: '6px 0' }}
+              className="date-range-input"
               min={startDate}
             />
           </div>
@@ -294,8 +291,8 @@ const PermitTable: React.FC<Props> = ({
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <strong style={{ color: 'var(--color-primary)' }}>Filter by Company (Applicant)</strong>
+        <div className="table-header" style={{ marginBottom: 8 }}>
+          <strong className="table-header-title">Filter by Company (Applicant)</strong>
           <input
             placeholder="Search companies..."
             value={companySearchQuery}
@@ -305,17 +302,17 @@ const PermitTable: React.FC<Props> = ({
           />
         </div>
         <div className="companies-list">
-          <div className="permit-status-item" style={{ justifyContent: 'space-between' }}>
+          <div className="permit-status-item">
             <span>All Companies</span>
             <button className="manage-btn view" onClick={() => setSelectedCompanyId(null)}>Select</button>
           </div>
           {filteredCompanies.map(c => (
-            <div key={c.id} className="permit-status-item" style={{ justifyContent: 'space-between' }}>
+            <div key={c.id} className="permit-status-item">
               <span>{c.name}</span>
               <button className="manage-btn view" onClick={() => setSelectedCompanyId(c.id)}>Select</button>
             </div>
           ))}
-          {filteredCompanies.length === 0 && <div className="permit-status-item">No companies found.</div>}
+          {filteredCompanies.length === 0 && <div className="permit-status-item" style={{ justifyContent: 'center' }}>No companies found.</div>}
         </div>
       </div>
 
@@ -339,11 +336,11 @@ const PermitTable: React.FC<Props> = ({
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={11} style={{ padding: 16 }}>Loading permits...</td></tr>
+                <tr><td colSpan={11} className="table-message-cell">Loading permits...</td></tr>
               ) : error ? (
-                <tr><td colSpan={11} style={{ padding: 16, color: 'red' }}>Error: {error}</td></tr>
+                <tr><td colSpan={11} className="table-error-cell">Error: {error}</td></tr>
               ) : paginatedPermits.length === 0 ? (
-                <tr><td colSpan={11} style={{ padding: 16 }}>No permits found.</td></tr>
+                <tr><td colSpan={11} className="table-message-cell">No permits found.</td></tr>
               ) : (
                 paginatedPermits.map((p) => (
                   <tr key={p.id}>
@@ -365,7 +362,7 @@ const PermitTable: React.FC<Props> = ({
                     </td>
                     <td className="users-td">
                       {p.document ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className="actions-cell" style={{ alignItems: 'center' }}>
                           <span style={{ fontSize: '0.9em' }}>{p.document.name}</span>
                           <button className="icon-btn edit" onClick={() => handleViewDocument(p)} title="View Document">
                             <FontAwesomeIcon icon={faEye} />
@@ -374,12 +371,11 @@ const PermitTable: React.FC<Props> = ({
                       ) : '-'}
                     </td>
                     <td className="users-td">
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div className="actions-cell-vertical">
                         <button 
                           className="manage-btn" 
                           onClick={() => setViewApprovalsPermit(p)}
                           disabled={!p.workflow_data?.id}
-                          style={{ opacity: !p.workflow_data?.id ? 0.5 : 1 }}
                         >
                           Approvals
                         </button>
@@ -392,7 +388,7 @@ const PermitTable: React.FC<Props> = ({
                       </div>
                     </td>
                     <td className="users-td">
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div className="actions-cell">
                         <button className="icon-btn edit" onClick={() => onEdit(p)} title="Edit">
                           <FontAwesomeIcon icon={faPencilAlt} />
                         </button>

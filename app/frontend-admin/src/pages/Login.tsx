@@ -34,7 +34,7 @@ const Login: React.FC = () => {
       <div className="login-box">
         <h2>Admin Portal Login</h2>
 
-        <div style={{ textAlign: 'left', marginTop: '20px' }}>
+        <div style={{ marginTop: '20px' }}>
           <label className="form-label">Email</label>
           <input
             type="email"
@@ -44,7 +44,7 @@ const Login: React.FC = () => {
             placeholder="admin@email.com"
           />
         </div>
-        <div style={{ textAlign: 'left', marginTop: '10px' }}>
+        <div style={{ marginTop: '10px' }}>
           <label className="form-label">Password</label>
           <input
             type="password"
@@ -55,7 +55,7 @@ const Login: React.FC = () => {
           />
         </div>
 
-        {error && <div style={{ color: 'var(--color-status-rejected)', marginTop: '15px', fontSize: '0.9em' }}>{error}</div>}
+        {error && <div className="form-error-text" style={{ marginTop: '15px' }}>{error}</div>}
 
         <button onClick={handleLogin} className="login-button" disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}

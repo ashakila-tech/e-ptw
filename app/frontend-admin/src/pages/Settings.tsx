@@ -14,7 +14,7 @@ const Settings: React.FC = () => {
       <h1 className="page-title">Settings</h1>
       <div className="dashboard-container">
         <div className="modal-grid">
-          <h3 style={{ margin: 0, gridColumn: '1 / -1'}}>Change Admin Details</h3>
+          <h3 className="modal-full-width" style={{ margin: 0, alignItems: 'flex-start' }}>Change Admin Details</h3>
           <div>
             <label className="form-label">Name</label>
             <input className="form-input" value={name} onChange={(e) => setName(e.target.value)} />
@@ -23,13 +23,13 @@ const Settings: React.FC = () => {
             <label className="form-label">Email</label>
             <input className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
-          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="modal-full-width modal-actions">
             <button className="manage-btn" onClick={saveDetails}>
               Save Details
             </button>
           </div>
 
-          <h3 style={{ margin: '20px 0 0 0', gridColumn: '1 / -1'}}>Change Admin Password</h3>
+          <h3 className="modal-full-width" style={{ margin: '20px 0 0 0', alignItems: 'flex-start' }}>Change Admin Password</h3>
           <div>
             <label className="form-label">New Password</label>
             <input className="form-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
@@ -44,17 +44,16 @@ const Settings: React.FC = () => {
               style={{ borderColor: isPasswordMismatch ? 'var(--color-status-rejected)' : undefined }}
             />
             {isPasswordMismatch && (
-              <div style={{ color: 'var(--color-status-rejected)', marginTop: '5px', fontSize: '0.9em' }}>
+              <div className="form-error-text">
                 Passwords do not match
               </div>
             )}
           </div>
-          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="modal-full-width modal-actions">
             <button 
               className="manage-btn" 
               onClick={savePassword} 
               disabled={!password || password !== confirmPassword}
-              style={{ opacity: (!password || password !== confirmPassword) ? 0.6 : 1 }}
             >
               Save Password
             </button>

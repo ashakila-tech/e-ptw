@@ -124,12 +124,12 @@ const WorkerTable: React.FC<Props> = ({
 
   return (
     <div className="dashboard-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <h3 style={{ margin: 0 }}>
+      <div className="table-header">
+        <h3 className="table-header-title">
           Workers
           {selectedCompanyId && (
-            <span style={{ fontWeight: 'normal', fontSize: '0.9em', marginLeft: 8 }}>
-              - {allCompanies.find(c => c.id === selectedCompanyId)?.name || 'Company'}
+            <span className="table-header-subtitle">
+              - {allCompanies.find(c => c.id === selectedCompanyId)?.name || 'Company' }
             </span>
           )}
         </h3>
@@ -149,8 +149,8 @@ const WorkerTable: React.FC<Props> = ({
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <strong style={{ color: 'var(--color-primary)' }}>Filter by Company</strong>
+        <div className="table-header" style={{ marginBottom: 8 }}>
+          <strong className="table-header-title">Filter by Company</strong>
           <input
             placeholder="Search companies..."
             value={companySearchQuery}
@@ -160,17 +160,17 @@ const WorkerTable: React.FC<Props> = ({
           />
         </div>
         <div className="companies-list">
-          <div className="permit-status-item" style={{ justifyContent: 'space-between' }}>
+          <div className="permit-status-item">
             <span>All Companies</span>
             <button className="manage-btn view" onClick={() => setSelectedCompanyId(null)}>Select</button>
           </div>
           {filteredCompanies.map(c => (
-            <div key={c.id} className="permit-status-item" style={{ justifyContent: 'space-between' }}>
+            <div key={c.id} className="permit-status-item">
               <span>{c.name}</span>
               <button className="manage-btn view" onClick={() => setSelectedCompanyId(c.id)}>Select</button>
             </div>
           ))}
-          {filteredCompanies.length === 0 && <div className="permit-status-item">No companies found.</div>}
+          {filteredCompanies.length === 0 && <div className="permit-status-item" style={{ justifyContent: 'center' }}>No companies found.</div>}
         </div>
       </div>
 
@@ -192,11 +192,11 @@ const WorkerTable: React.FC<Props> = ({
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} style={{ padding: 16 }}>Loading workers…</td></tr>
+                <tr><td colSpan={9} className="table-message-cell">Loading workers…</td></tr>
               ) : error ? (
-                <tr><td colSpan={9} style={{ padding: 16, color: 'red' }}>Error: {error}</td></tr>
+                <tr><td colSpan={9} className="table-error-cell">Error: {error}</td></tr>
               ) : paginatedWorkers.length === 0 ? (
-                <tr><td colSpan={9} style={{ padding: 16 }}>No workers found.</td></tr>
+                <tr><td colSpan={9} className="table-message-cell">No workers found.</td></tr>
               ) : (
                 paginatedWorkers.map((w) => (
                   <tr key={w.id}>
@@ -211,7 +211,7 @@ const WorkerTable: React.FC<Props> = ({
                     <td className="users-td">{w.position ?? '-'}</td>
                     <td className="users-td">{w.employment_status ?? '-'}</td>
                     <td className="users-td">
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div className="actions-cell">
                         <button className="icon-btn edit" onClick={() => onEditWorker(w)} title="Edit">
                           <FontAwesomeIcon icon={faPencilAlt} />
                         </button>

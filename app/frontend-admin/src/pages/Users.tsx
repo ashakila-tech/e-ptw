@@ -199,9 +199,9 @@ const Users: React.FC = () => {
       />
 
       <div className="dashboard-container">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+        <div className="users-toolbar" style={{ marginBottom: 10 }}>
           <button className="manage-btn" onClick={openAddUser}>
-            <FontAwesomeIcon icon={faPlus} style={{paddingRight:"1em"}} />
+            <FontAwesomeIcon icon={faPlus} className="icon-prefix" />
             Add User
           </button>
         </div>

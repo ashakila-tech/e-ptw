@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
+import TablePagination from './TablePagination';
 
 interface Company {
   id: number;
@@ -48,8 +49,8 @@ const CompanyTable: React.FC<Props> = ({
 
   return (
     <div className="dashboard-container" style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <h3 style={{ margin: 0 }}>Companies</h3>
+      <div className="table-header">
+        <h3 className="table-header-title">Companies</h3>
         <div className="users-toolbar">
           <input
             placeholder="Search companies..."
@@ -77,9 +78,9 @@ const CompanyTable: React.FC<Props> = ({
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} style={{ padding: 16 }}>Loading companies...</td></tr>
+                <tr><td colSpan={5} className="table-message-cell">Loading companies...</td></tr>
               ) : paginatedCompanies.length === 0 ? (
-                <tr><td colSpan={5} style={{ padding: 16 }}>No companies found.</td></tr>
+                <tr><td colSpan={5} className="table-message-cell">No companies found.</td></tr>
               ) : (
                 paginatedCompanies.map((c) => (
                   <tr key={c.id}>
@@ -88,7 +89,7 @@ const CompanyTable: React.FC<Props> = ({
                     <td className="users-td">{contractorCounts.get(c.id) || 0}</td>
                     <td className="users-td">{workerCounts.get(c.id) || 0}</td>
                     <td className="users-td">
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div className="actions-cell">
                         <button className="icon-btn edit" onClick={() => onEdit(c)} title="Edit">
                           <FontAwesomeIcon icon={faPencilAlt} />
                         </button>
@@ -104,11 +105,11 @@ const CompanyTable: React.FC<Props> = ({
           </table>
         </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12, alignItems: 'center' }}>
-        <button className="manage-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} style={{ opacity: currentPage === 1 ? 0.5 : 1 }}>Prev</button>
-        <span style={{ fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
-        <button className="manage-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}>Next</button>
-      </div>
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
