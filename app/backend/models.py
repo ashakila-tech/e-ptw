@@ -222,3 +222,12 @@ class PushToken(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "token", name="uq_user_push_token"),
     )
+
+class Feedback(Base):
+    __tablename__ = "feedback"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    title = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+
+    user = relationship("User")

@@ -14,7 +14,7 @@ from .routers import (
     safety_equipments,
     application_workers,
     application_safety_equipments,
-    push_tokens
+    push_tokens, feedbacks
 )
 # scheduler = BackgroundScheduler()
 
@@ -71,6 +71,7 @@ app.include_router(safety_equipments.crud_router, prefix="/api")
 app.include_router(application_workers.crud_router, prefix="/api")
 app.include_router(application_safety_equipments.crud_router, prefix="/api")
 app.include_router(push_tokens.router, prefix="/api")
+app.include_router(feedbacks.router, prefix="/api")
 
 @app.get("/")
 def root():

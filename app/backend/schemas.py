@@ -345,3 +345,21 @@ class PushTokenOut(PushTokenIn):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+# ---------- Feedback ----------
+class FeedbackBase(BaseModel):
+    user_id: int
+    title: str
+    message: str
+
+class FeedbackIn(FeedbackBase):
+    pass
+
+class FeedbackOut(FeedbackBase):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+
+class FeedbackUpdate(BaseModel):
+    user_id: Optional[int] = None
+    title: Optional[str] = None
+    message: Optional[str] = None
