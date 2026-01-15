@@ -8,6 +8,7 @@ import UserModal from '../components/modals/UserModal';
 import CompanyModal from '../components/modals/CompanyModal';
 import GroupModal from '../components/modals/GroupModal';
 import UserTable from '../components/tables/UserTable';
+import UserAssignmentModal from '../components/modals/UserAssignmentModal';
 import WorkerTable from '../components/tables/WorkerTable';
 import CompanyTable from '../components/tables/CompanyTable';
 import GroupTable from '../components/tables/GroupTable';
@@ -45,6 +46,10 @@ const Users: React.FC = () => {
   // Group Modal state
   const [groupModalOpen, setGroupModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any | null>(null);
+
+  // Assignment Modal state
+  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
+  const [assigningUser, setAssigningUser] = useState<any | null>(null);
 
   const loadCompanies = useCallback(async () => {
     setCompaniesLoading(true);
@@ -129,6 +134,12 @@ const Users: React.FC = () => {
     try { await deleteGroup(id); loadGroups(); }
     catch (e: any) { alert(e?.message || String(e)); }
   };
+
+  // Assignment handlers
+  const openAssignmentModal = (u: any) => { setAssigningUser(u); setAssignmentModalOpen(true); };
+  const closeAssignmentModal = () => { setAssigningUser(null); setAssignmentModalOpen(false); };
+  // onSaved can just refetch all users, which might update their displayed roles if we add that later.
+  const handleAssignmentsSaved = () => { refetch(); };
 
   const contractors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'contractor')), [users]);
   const supervisors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'supervisor')), [users]);
@@ -246,6 +257,7 @@ const Users: React.FC = () => {
           onRefresh={refetch}
           onEdit={openEditUser}
           onDelete={handleDeleteUser}
+          onAssign={openAssignmentModal}
         />
         
         <UserTable 
@@ -256,6 +268,7 @@ const Users: React.FC = () => {
           onRefresh={refetch}
           onEdit={openEditUser}
           onDelete={handleDeleteUser}
+          onAssign={openAssignmentModal}
         />
       </div>
 
@@ -299,6 +312,13 @@ const Users: React.FC = () => {
         initial={editingGroup}
         companies={companies}
         onSaved={handleGroupSaved}
+      />
+
+      <UserAssignmentModal
+        open={assignmentModalOpen}
+        onClose={closeAssignmentModal}
+        user={assigningUser}
+        onSaved={handleAssignmentsSaved}
       />
     </div>
   );

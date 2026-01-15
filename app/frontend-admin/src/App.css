@@ -118,6 +118,7 @@ body {
 .icon-btn.add { color: #10b981; }
 .icon-btn.edit { color: #3b82f6; }
 .icon-btn.delete { color: #ef4444; }
+.icon-btn.assign { color: #a8a609; }
 .icon-btn.refresh { color: #739c0a; }
 
 /* ==========================================================================
@@ -658,6 +659,51 @@ input[type="date"] {
   gap: 10px;
   margin-top: 12px;
   align-items: center;
+}
+
+/* User Assignment Modal */
+.modal-body-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.assignment-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.assignment-section h4 {
+  margin: 0 0 8px 0;
+  color: var(--color-bg1);
+}
+
+.assignment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #f9fafb;
+  border-radius: 4px;
+  border: 1px solid #f3f4f6;
+}
+
+.assignment-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.empty-state {
+  font-style: italic;
+  color: #6b7280;
+  padding: 8px;
+  text-align: center;
+  margin: 0;
 }
 /* ==========================================================================
    8. Responsive Design

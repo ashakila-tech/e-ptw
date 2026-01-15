@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPencilAlt, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faPencilAlt, faTrash, faUserTag } from '@fortawesome/free-solid-svg-icons';
 
 interface Item {
   id: number;
@@ -15,9 +15,10 @@ interface ManageListProps {
   onAdd: () => void;
   onEdit: (item: Item) => void;
   onDelete: (id: number) => void;
+  onAssign?: (item: Item) => void;
 }
 
-const ManageList: React.FC<ManageListProps> = ({ title, items, loading, onAdd, onEdit, onDelete }) => {
+const ManageList: React.FC<ManageListProps> = ({ title, items, loading, onAdd, onEdit, onDelete, onAssign }) => {
   const [isManaging, setIsManaging] = useState(false);
 
   return (
@@ -45,6 +46,11 @@ const ManageList: React.FC<ManageListProps> = ({ title, items, loading, onAdd, o
                 <span>{item.name}</span>
                 {isManaging && (
                   <div style={{ display: 'flex', gap: '5px' }}>
+                    {onAssign && (
+                      <button onClick={() => onAssign(item)} className="icon-btn assign" title="Assign Users">
+                        <FontAwesomeIcon icon={faUserTag} />
+                      </button>
+                    )}
                     <button onClick={() => onEdit(item)} className="icon-btn edit" title="Edit">
                       <FontAwesomeIcon icon={faPencilAlt} />
                     </button>

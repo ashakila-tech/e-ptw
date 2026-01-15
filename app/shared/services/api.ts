@@ -256,6 +256,24 @@ export async function deleteLocation(id: number) {
   return true;
 }
 
+export async function createLocationManager(payload: { user_id: number; location_id: number }) {
+  const res = await fetch(`${API_BASE_URL}api/location-managers/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to create location manager: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteLocationManager(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/location-managers/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete location manager: ${await res.text()}`);
+  return true;
+}
+
 export async function fetchLocationManagersByLocation(locationId: number) {
   const res = await fetch(`${API_BASE_URL}api/location-managers/filter?location_id=${locationId}`);
   if (!res.ok) throw new Error(`Failed to fetch location managers: ${res.statusText}`);
@@ -269,7 +287,8 @@ export async function fetchLocationForSiteManager(userId: number) {
 
   if (!res.ok) throw new Error("Failed to fetch location for Site Manager");
 
-  const data = await res.json();
+  const responseData = await res.json();
+  const data = Array.isArray(responseData) ? responseData : responseData.results || [];
 
   // Fetch location names for each manager
   const enriched = await Promise.all(
@@ -317,6 +336,24 @@ export async function deletePermitType(id: number) {
   return true;
 }
 
+export async function createPermitOfficer(payload: { user_id: number; permit_type_id: number }) {
+  const res = await fetch(`${API_BASE_URL}api/permit-officers/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to create permit officer: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deletePermitOfficer(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/permit-officers/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete permit officer: ${await res.text()}`);
+  return true;
+}
+
 export async function fetchPermitOfficersByPermitType(permitTypeId: number) {
   const res = await fetch(`${API_BASE_URL}api/permit-officers/filter?permit_type_id=${permitTypeId}`);
   if (!res.ok) throw new Error(`Failed to fetch permit officers: ${res.statusText}`);
@@ -330,7 +367,8 @@ export async function fetchPermitTypeForSafetyOfficer(userId: number) {
 
   if (!res.ok) throw new Error("Failed to fetch permit type for Safety Officer");
 
-  const data = await res.json();
+  const responseData = await res.json();
+  const data = Array.isArray(responseData) ? responseData : responseData.results || [];
 
   // Fetch permit type names for each officer
   const enriched = await Promise.all(

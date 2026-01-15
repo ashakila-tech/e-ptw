@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
+import { faPencilAlt, faTrash, faSync, faUserTag } from '@fortawesome/free-solid-svg-icons';
 import type { EnrichedUser } from '../../hooks/useUsers';
 import TablePagination from './TablePagination';
 
@@ -14,6 +14,7 @@ interface Props {
   onRefresh: () => void;
   onEdit?: (user: EnrichedUser) => void;
   onDelete?: (id: number) => void;
+  onAssign?: (user: EnrichedUser) => void;
 }
 
 const UserTable: React.FC<Props> = ({
@@ -26,6 +27,7 @@ const UserTable: React.FC<Props> = ({
   onRefresh,
   onEdit,
   onDelete,
+  onAssign,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
@@ -120,7 +122,7 @@ const UserTable: React.FC<Props> = ({
                 <th>Name</th>
                 <th>Email</th>
                 <th>Groups</th>
-                {(onEdit || onDelete) && <th>Actions</th>}
+                {(onEdit || onDelete || onAssign) && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -134,7 +136,7 @@ const UserTable: React.FC<Props> = ({
                    <td className="users-td">{u.name}</td>
                    <td className="users-td">{u.email || '-'}</td>
                    <td className="users-td">{u.groups.join(', ') || '-'}</td>
-                   {(onEdit || onDelete) && (
+                   {(onEdit || onDelete || onAssign) && (
                      <td className="users-td">
                        <div className="actions-cell">
                          {onEdit && (
@@ -145,6 +147,11 @@ const UserTable: React.FC<Props> = ({
                          {onDelete && (
                            <button className="icon-btn delete" onClick={() => onDelete(u.id)} title="Delete">
                              <FontAwesomeIcon icon={faTrash} />
+                           </button>
+                         )}
+                         {onAssign && (
+                           <button className="icon-btn assign" onClick={() => onAssign(u)} title="Assignments">
+                             <FontAwesomeIcon icon={faUserTag} />
                            </button>
                          )}
                        </div>

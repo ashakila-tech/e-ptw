@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { deleteApplication, createSafetyEquipment, deleteSafetyEquipment, updateSafetyEquipment, createLocation, deleteLocation, createPermitType, deletePermitType } from '../../../shared/services/api';
 import PermitTable from '../components/tables/PermitTable';
 import { usePermits } from '../hooks/usePermits';
 import ManageList from '../components/ManageList';
+import ManagerAssignmentModal from '../components/modals/ManagerAssignmentModal';
 
 const Permits: React.FC = () => {
   const { permits, permitTypes, locations, applicants, companies, safetyEquipment, loading, error, refetch } = usePermits();
+
+  // Assignment Modal State
+  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
+  const [assignmentType, setAssignmentType] = useState<'location' | 'permit_type'>('location');
+  const [assignmentItem, setAssignmentItem] = useState<{ id: number; name: string } | null>(null);
 
   const handleAddSafetyEquipment = async () => {
     const name = window.prompt("Enter new safety equipment name:");
@@ -83,6 +89,18 @@ const Permits: React.FC = () => {
     }
   };
 
+  const handleAssignLocation = (item: any) => {
+    setAssignmentType('location');
+    setAssignmentItem(item);
+    setAssignmentModalOpen(true);
+  };
+
+  const handleAssignPermitType = (item: any) => {
+    setAssignmentType('permit_type');
+    setAssignmentItem(item);
+    setAssignmentModalOpen(true);
+  };
+
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this permit?')) return;
     try {
@@ -127,6 +145,7 @@ const Permits: React.FC = () => {
         onAdd={handleAddLocation}
         onEdit={(item) => handleEditItem('location', item)}
         onDelete={handleRemoveLocation}
+        onAssign={handleAssignLocation}
       />
 
       <ManageList
@@ -136,6 +155,7 @@ const Permits: React.FC = () => {
         onAdd={handleAddPermitType}
         onEdit={(item) => handleEditItem('permit', item)}
         onDelete={handleRemovePermitType}
+        onAssign={handleAssignPermitType}
       />
 
       <PermitTable
@@ -149,6 +169,14 @@ const Permits: React.FC = () => {
         onRefresh={refetch}
         onEdit={handleEdit}
         onDelete={handleDelete}
+      />
+
+      <ManagerAssignmentModal
+        open={assignmentModalOpen}
+        onClose={() => setAssignmentModalOpen(false)}
+        type={assignmentType}
+        item={assignmentItem}
+        allUsers={applicants}
       />
     </div>
   );
