@@ -6,6 +6,7 @@ import {
   faChartLine, 
   faFileSignature, 
   faUsers, 
+  faComments,
   faCog, 
   faSignOutAlt, 
   faChevronLeft, 
@@ -28,6 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
     { name: 'Dashboard', path: '/dashboard', icon: faChartLine },
     { name: 'Permits', path: '/permits', icon: faFileSignature },
     { name: 'Users', path: '/users', icon: faUsers },
+    { name: 'Feedbacks', path: '/feedbacks', icon: faComments },
   ];
 
   const handleLogout = async () => {

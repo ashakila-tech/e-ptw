@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Permits from './pages/Permits';
 import Users from './pages/Users';
 import Login from './pages/Login';
+import Feedbacks from './pages/Feedbacks';
 import Settings from './pages/Settings';
 
 /**
@@ -112,6 +113,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="permits" element={<Permits />} />
           <Route path="users" element={<Users />} />
+          <Route path="feedbacks" element={<Feedbacks />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 

@@ -763,6 +763,11 @@ export async function fetchServerTime() {
   return res.json();
 }
 
+// -------------------- Feedbacks --------------------
+export async function fetchFeedbacks() {
+  return fetchPaginatedData("api/feedbacks/");
+}
+
 // -------------------- Utility: Paginated Fetch --------------------
 export async function fetchPaginatedData<T = any>(endpoint: string): Promise<T[]> {
   const results: T[] = [];

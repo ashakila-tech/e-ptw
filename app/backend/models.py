@@ -229,5 +229,6 @@ class Feedback(Base):
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     title = Column(String, nullable=False)
     message = Column(String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
 
     user = relationship("User")
