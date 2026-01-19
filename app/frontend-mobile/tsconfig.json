@@ -15,5 +15,5 @@
     "expo-env.d.ts",
     "nativewind-env.d.ts",
     "env.d.ts"
-  ]
+, "../shared/constants/FeedbackTypes.ts"  ]
 }

@@ -12,6 +12,7 @@ import Users from './pages/Users';
 import Login from './pages/Login';
 import Feedbacks from './pages/Feedbacks';
 import Settings from './pages/Settings';
+import { useInactivityLogout } from './hooks/useInactivityLogout';
 
 /**
  * A simple utility to lighten or darken a hex color.
@@ -38,6 +39,9 @@ const MainLayout = () => {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Force logout after 10 minutes of inactivity
+  // useInactivityLogout(10);
 
   useEffect(() => {
     const checkAuth = async () => {

@@ -93,10 +93,19 @@ export default function Home() {
         {/* Bottom Section: Apply Button */}
         <View className="justify-center items-center px-6 py-6">
           <Link href="/permits/form" asChild>
-            <Pressable className="bg-bg1 w-full py-4 rounded flex-row justify-center items-center">
+            <Pressable className="bg-bg1 w-full py-4 rounded flex-row justify-center items-center mb-4">
               <Entypo name="squared-plus" size={18} color="white" />
               <Text className="text-white text-center font-semibold text-lg ml-2">
                 Apply Permit
+              </Text>
+            </Pressable>
+          </Link>
+
+          <Link href="/feedbacks/form" asChild>
+            <Pressable className="bg-white border border-bg1 w-full py-4 rounded flex-row justify-center items-center">
+              <Entypo name="mail" size={18} color="#000" />
+              <Text className="text-bg1 text-center font-semibold text-lg ml-2">
+                Give Feedback
               </Text>
             </Pressable>
           </Link>

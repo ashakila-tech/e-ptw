@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo } from "react";
+import React, { useCallback, useState, useMemo, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { View, Text, Pressable, ScrollView, RefreshControl, TextInput } from "react-native";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,8 @@ import WorkerTable from "@/components/WorkerTable";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@/contexts/UserContext";
+import FeedbackTable from "@/components/FeedbackTable";
+import { fetchFeedbacks } from "../../../shared/services/api";
 
 export default function ProfileTab() {
   const router = useRouter();
@@ -18,6 +20,13 @@ export default function ProfileTab() {
     
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchFeedbacks()
+      .then(setFeedbacks)
+      .catch((err) => console.error("Failed to fetch feedbacks", err));
+  }, []);
 
   // Memoized list for searching and sorting workers
   const sortedAndFilteredWorkers = useMemo(() => {
@@ -38,7 +47,10 @@ export default function ProfileTab() {
   // Pull-to-refresh handler
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refreshProfile();
+    await Promise.all([
+      refreshProfile(),
+      fetchFeedbacks().then(setFeedbacks).catch(console.error)
+    ]);
     setRefreshing(false);
   }, [refreshProfile]);
 
@@ -194,6 +206,16 @@ export default function ProfileTab() {
                 )}
               </View>
             )}
+
+            {/* Feedbacks Table */}
+            <View className="bg-white rounded-xl p-6 shadow-lg mb-6">
+              <Text className="text-primary text-lg font-bold mb-4">My Feedbacks</Text>
+              {feedbacks.length > 0 ? (
+                <FeedbackTable feedbacks={feedbacks} />
+              ) : (
+                <Text className="text-primary text-center mt-4">No feedback submitted</Text>
+              )}
+            </View>
 
 
           </>

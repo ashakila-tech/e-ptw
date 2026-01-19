@@ -764,18 +764,46 @@ export async function fetchServerTime() {
 }
 
 // -------------------- Feedbacks --------------------
-export async function fetchFeedbacks() {
+export async function fetchFeedbacks(userId?: number) {
+  if (userId) {
+    return fetchPaginatedData(`api/feedbacks/filter?user_id=${userId}`);
+  }
   return fetchPaginatedData("api/feedbacks/");
+}
+
+export async function createFeedback(payload: { user_id: number; title: string; message: string }) {
+  const token = await getToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const res = await fetch(`${API_BASE_URL}api/feedbacks/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: "Failed to submit feedback" }));
+    throw new Error(errorData.detail || "Failed to submit feedback");
+  }
+  return res.json();
 }
 
 // -------------------- Utility: Paginated Fetch --------------------
 export async function fetchPaginatedData<T = any>(endpoint: string): Promise<T[]> {
   const results: T[] = [];
   let base = API_BASE_URL || await getApiBaseUrlWithOverride();
-  let nextUrl: string | null = `${base + endpoint}?page=1&page_size=100`;
+  const separator = endpoint.includes("?") ? "&" : "?";
+  let nextUrl: string | null = `${base + endpoint}${separator}page=1&page_size=100`;
+
+  // Get token for auth
+  const token = await getToken();
+  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
   while (nextUrl) {
     try {
-      const res = await fetch(nextUrl);
+      const res = await fetch(nextUrl, { headers });
       if (!res.ok) break;
       const data: any = await res.json();
       if (Array.isArray(data)) { results.push(...data); break; }

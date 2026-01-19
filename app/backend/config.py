@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # JWT / security
     SECRET_KEY: str = "change-me"           # put a real value in .env
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440 # 24 hours
 
     # Push (optional)
     FCM_PROJECT_ID: Union[str, None] = None
