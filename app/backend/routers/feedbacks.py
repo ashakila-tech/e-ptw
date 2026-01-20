@@ -13,7 +13,6 @@ router = APIRouter(prefix="/feedbacks", tags=["Feedbacks"])
 def filter_feedbacks(
     user_id: int = Query(..., description="Filter feedbacks by user_id"),
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
 ):
     """
     Fetch feedbacks by user_id.
