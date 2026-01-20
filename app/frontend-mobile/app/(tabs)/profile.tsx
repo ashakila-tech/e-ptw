@@ -10,7 +10,7 @@ import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@/contexts/UserContext";
 import FeedbackTable from "@/components/FeedbackTable";
-import { fetchFeedbacks } from "../../../shared/services/api";
+import { fetchFeedbacks, fetchAllApplications } from "../../../shared/services/api";
 
 export default function ProfileTab() {
   const router = useRouter();
@@ -21,12 +21,42 @@ export default function ProfileTab() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [waitingCount, setWaitingCount] = useState(0);
 
   useEffect(() => {
     fetchFeedbacks()
       .then(setFeedbacks)
       .catch((err) => console.error("Failed to fetch feedbacks", err));
-  }, []);
+
+    if (isApproval && profile) {
+      fetchAllApplications()
+        .then((apps) => {
+          if (Array.isArray(apps)) {
+            let pending = 0;
+            let waiting = 0;
+
+            apps.forEach((app: any) => {
+              const approvalData = app.approval_data || [];
+              const userApprovals = approvalData.filter((ad: any) => {
+                const isUser = ad.approver_name === profile.name;
+                const isGroup = profile.groups?.some((g: any) => g.name === ad.role_name);
+                return isUser || isGroup;
+              });
+
+              userApprovals.forEach((ad: any) => {
+                if (ad.status === "PENDING") pending++;
+                if (ad.status === "WAITING") waiting++;
+              });
+            });
+
+            setPendingCount(pending);
+            setWaitingCount(waiting);
+          }
+        })
+        .catch((err) => console.error("Failed to fetch applications stats", err));
+    }
+  }, [isApproval, profile]);
 
   // Memoized list for searching and sorting workers
   const sortedAndFilteredWorkers = useMemo(() => {
@@ -47,12 +77,41 @@ export default function ProfileTab() {
   // Pull-to-refresh handler
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([
+    const promises: Promise<any>[] = [
       refreshProfile(),
       fetchFeedbacks().then(setFeedbacks).catch(console.error)
-    ]);
+    ];
+
+    if (isApproval && profile) {
+      promises.push(
+        fetchAllApplications().then((apps) => {
+          if (Array.isArray(apps)) {
+            let pending = 0;
+            let waiting = 0;
+
+            apps.forEach((app: any) => {
+              const approvalData = app.approval_data || [];
+              const userApprovals = approvalData.filter((ad: any) => {
+                const isUser = ad.approver_name === profile.name;
+                const isGroup = profile.groups?.some((g: any) => g.name === ad.role_name);
+                return isUser || isGroup;
+              });
+
+              userApprovals.forEach((ad: any) => {
+                if (ad.status === "PENDING") pending++;
+                if (ad.status === "WAITING") waiting++;
+              });
+            });
+
+            setPendingCount(pending);
+            setWaitingCount(waiting);
+          }
+        }).catch(console.error)
+      );
+    }
+    await Promise.all(promises);
     setRefreshing(false);
-  }, [refreshProfile]);
+  }, [refreshProfile, isApproval, profile]);
 
   const handleSignOut = async () => {
     await logout();
@@ -204,6 +263,23 @@ export default function ProfileTab() {
                 ) : (                
                   <Text className="text-primary text-center mt-4">No worker added</Text>                
                 )}
+              </View>
+            )}
+
+            {/* Approver Stats */}
+            {isApproval && (
+              <View className="bg-white rounded-xl p-6 shadow-lg mb-6">
+                <Text className="text-primary text-lg font-bold mb-4">Permit Status Overview</Text>
+                <View className="flex-row justify-around">
+                  <View className="items-center">
+                    <Text className="text-3xl font-bold text-pending">{pendingCount}</Text>
+                    <Text className="text-gray-500 font-medium">PENDING</Text>
+                  </View>
+                  <View className="items-center">
+                    <Text className="text-3xl font-bold text-waiting">{waitingCount}</Text>
+                    <Text className="text-gray-500 font-medium">WAITING</Text>
+                  </View>
+                </View>
               </View>
             )}
 

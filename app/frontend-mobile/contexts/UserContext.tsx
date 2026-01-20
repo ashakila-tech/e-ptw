@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as api from "../../shared/services/api";
 
 type UserContextType = {
+  profile: any | null;
   userId: number | null;
   setUserId: (id: number | null) => void;
   userName: string | null;
@@ -19,6 +20,7 @@ type UserContextType = {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
+  const [profile, setProfile] = useState<any | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<number | null>(null);
@@ -31,6 +33,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const token = await AsyncStorage.getItem("access_token");
         if (token) {
           const user = await api.getCurrentUser();
+          setProfile(user);
           setUserId(user.id);
           setUserName(user.name);
           setCompanyId(user.company_id);
@@ -49,6 +52,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   return (
     <UserContext.Provider
       value={{
+        profile,
         userId,
         setUserId,
         userName,

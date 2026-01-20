@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff } from "lucide-react-native";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
+import { fetchCompanies } from "../../shared/services/api";
+import DropdownField from "@/components/DropdownField";
 
 export default function Register() {
   const router = useRouter();
@@ -15,10 +17,20 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [companyId] = useState(1);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [companyOpen, setCompanyOpen] = useState(false);
+  const [companyItems, setCompanyItems] = useState<{ label: string; value: number }[]>([]);
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  useEffect(() => {
+    fetchCompanies()
+      .then((data) => {
+        setCompanyItems(data.map((c: any) => ({ label: c.name, value: c.id })));
+      })
+      .catch((err) => console.error("Failed to fetch companies", err));
+  }, []);
 
   const handleEmailChange = (text: string) => {
     setEmail(text);
@@ -37,10 +49,12 @@ export default function Register() {
   };
 
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword || !companyId) {
       crossPlatformAlert("Error", "All fields are required.");
       return;
     }
+
+    console.log(name, email, companyId, password, confirmPassword);
 
     if (password !== confirmPassword) {
       crossPlatformAlert("Error", "Passwords do not match.");
@@ -50,7 +64,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register({
-        company_id: companyId,
+        company_id: companyId!,
         name,
         email,
         user_type: 1,
@@ -72,6 +86,21 @@ export default function Register() {
         <Text className="text-3xl font-bold mb-8 text-primary text-center">
           Create an Account
         </Text>
+
+        {/* Company Dropdown */}
+        <Text className="text-primary font-semibold px-4 py-3">Company</Text>
+        <View className="px-4 mb-4 z-50">
+          <DropdownField
+            open={companyOpen}
+            value={companyId}
+            items={companyItems}
+            setOpen={setCompanyOpen}
+            setValue={setCompanyId}
+            setItems={setCompanyItems}
+            placeholder="Select Company"
+            zIndex={3000}
+          />
+        </View>
 
         {/* Name */}
         <Text className="text-primary font-semibold px-4 py-3">Full name</Text>

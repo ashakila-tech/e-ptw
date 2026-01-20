@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 from .. import models, schemas
 from ..deps import get_db, get_current_user
@@ -48,43 +49,54 @@ def login(
 
 @router.post("/register")
 def create(request: schemas.UserCreate, db: Session = Depends(get_db)):
-    new_user = models.User(company_id=request.company_id,
-                           name=request.name,
-                           email=request.email,
-                           user_type=request.user_type,
-                           password_hash=hashing.Hash.make(request.password))
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+    try:
+        new_user = models.User(company_id=request.company_id,
+                               name=request.name,
+                               email=request.email,
+                               user_type=request.user_type,
+                               password_hash=hashing.Hash.make(request.password))
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered or invalid Company ID.")
 
 @router.post("/register-applicant")
 def register_applicant(request: schemas.UserCreate, db: Session = Depends(get_db)):
-    new_user = models.User(
-        company_id=request.company_id,
-        name=request.name,
-        email=request.email,
-        user_type=request.user_type,
-        password_hash=hashing.Hash.make(request.password),
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        new_user = models.User(
+            company_id=request.company_id,
+            name=request.name,
+            email=request.email,
+            user_type=request.user_type,
+            password_hash=hashing.Hash.make(request.password),
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
-    # Assign default group (Contractor)
-    user_group = models.UserGroup(
-        user_id=new_user.id,
-        group_id=CONTRACTOR_GROUP_ID,
-    )
-    db.add(user_group)
-    db.commit()
-    db.refresh(user_group)
+        # Assign default group (Contractor)
+        user_group = models.UserGroup(
+            user_id=new_user.id,
+            group_id=CONTRACTOR_GROUP_ID,
+        )
+        db.add(user_group)
+        db.commit()
+        db.refresh(user_group)
 
-    return {
-        "user": new_user,
-        "group": user_group,
-        "message": "User registered successfully as Contractor.",
-    }
+        return {
+            "user": new_user,
+            "group": user_group,
+            "message": "User registered successfully as Contractor.",
+        }
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registration failed. Email already exists, or invalid Group/Company ID."
+        )
 
 
 @router.get("/me")

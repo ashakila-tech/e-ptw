@@ -3,6 +3,8 @@ interface PermitData {
   name: string;
   status: string;
   approvalStatus: string;
+  allApprovalStatuses: string[];
+  latestApprovalStatus: string;
   location?: string;
   document: string;
   permitType?: string;
