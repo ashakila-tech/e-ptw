@@ -54,8 +54,6 @@ export default function Register() {
       return;
     }
 
-    console.log(name, email, companyId, password, confirmPassword);
-
     if (password !== confirmPassword) {
       crossPlatformAlert("Error", "Passwords do not match.");
       return;

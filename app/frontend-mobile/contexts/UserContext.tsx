@@ -5,6 +5,7 @@ import * as api from "../../shared/services/api";
 
 type UserContextType = {
   profile: any | null;
+  setProfile: (profile: any | null) => void;
   userId: number | null;
   setUserId: (id: number | null) => void;
   userName: string | null;
@@ -53,6 +54,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     <UserContext.Provider
       value={{
         profile,
+        setProfile,
         userId,
         setUserId,
         userName,

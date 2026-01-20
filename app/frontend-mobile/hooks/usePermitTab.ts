@@ -8,7 +8,7 @@ import { PermitStatus } from "@/constants/Status";
 const PLACEHOLDER_THRESHOLD = 3;
 
 export function usePermitTab() {
-  const { userId, isApproval, isSecurity } = useUser();
+  const { userId, isApproval, isSecurity, profile } = useUser();
   const [permits, setPermits] = useState<PermitData[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,47 +20,17 @@ export function usePermitTab() {
       setLoading(false);
       return;
     }
+
+    // If user is an approver but profile is not loaded yet, wait.
+    if (isApproval && !profile) {
+      setLoading(true);
+      return;
+    }
+
     setLoading(true);
   
     try {
       const numericUserId = Number(userId);
-
-      // Fetch all necessary data
-      const [allApprovalData, allApprovals, allWorkflowData] = await Promise.all([
-        api.fetchAllApprovalData(),
-        api.fetchAllApprovals(),
-        api.fetchAllWorkflowData(),
-      ]);
-
-      const myApprovals = allApprovals.filter(
-        (a: any) => Number(a.user_id) === numericUserId
-      );
-
-      const myApprovalIds = myApprovals.map((a: any) => Number(a.id));
-      const myWorkflowIds = myApprovals.map((a: any) => Number(a.workflow_id));
-
-      const workflowDataIdsFromApprovalData = Array.from(
-        new Set(
-          allApprovalData
-            .filter((ad: any) => myApprovalIds.includes(Number(ad.approval_id)))
-            .map((ad: any) => Number(ad.workflow_data_id))
-        )
-      );
-
-      const workflowDataIdsFromWorkflows: number[] = [];
-      for (const wfId of myWorkflowIds) {
-        for (const wd of allWorkflowData) {
-          if (Number(wd.workflow_id) === wfId) {
-            workflowDataIdsFromWorkflows.push(Number(wd.id));
-          }
-        }
-      }
-
-      const combinedWorkflowDataIds = [
-        ...workflowDataIdsFromApprovalData,
-        ...workflowDataIdsFromWorkflows,
-      ];
-      const workflowDataIdsToFetch = new Set(combinedWorkflowDataIds);
 
       // Fetch permits based on user type
       let permitsData: any[] = [];
@@ -74,17 +44,8 @@ export function usePermitTab() {
       } else if (!isApproval) {
         permitsData = await api.fetchApplicationsByApplicant(numericUserId);
       } else {
-        const results = await Promise.all(
-          Array.from(workflowDataIdsToFetch).map(async (id) => {
-            try {
-              return await api.fetchApplicationsByWorkflowData(id);
-            } catch (e) {
-              console.warn("fetchApplicationsByWorkflowData failed:", id, e);
-              return [];
-            }
-          })
-        );
-        permitsData = results.flat();
+        // For approvers, fetch all applications. We will filter them client-side based on approval_data.
+        permitsData = await api.fetchAllApplications();
       }
 
       // Enrich permit data
@@ -97,12 +58,27 @@ export function usePermitTab() {
           const workflowData = p.workflow_data;
 
           // Use nested approval_data if available
-          const approvalRows = workflowData?.approval_data || [];
+          // Based on new schema, approval_data is at the root
+          const approvalRows = p.approval_data || [];
 
-          const myApprovalRow = approvalRows.find((ad: any) =>
-            myApprovalIds.includes(Number(ad.approval_id))
-          );
-          const approvalStatus = myApprovalRow ? myApprovalRow.status : "-";
+          let userApprovalStatus = "-";
+          if (isApproval && profile) {
+            const userApprovals = approvalRows.filter((ad: any) => {
+              const isUser = ad.approver_name === profile.name;
+              const isGroup = profile.groups?.some((g: any) => g.name === ad.role_name);
+              return isUser || isGroup;
+            });
+
+            if (userApprovals.length > 0) {
+              if (userApprovals.some((ad: any) => ad.status === "PENDING")) {
+                userApprovalStatus = "PENDING";
+              } else if (userApprovals.some((ad: any) => ad.status === "WAITING")) {
+                userApprovalStatus = "WAITING";
+              } else {
+                userApprovalStatus = userApprovals[0].status;
+              }
+            }
+          }
 
           let latestApprovalStatus = "-";
           if (approvalRows.some((ad: any) => ad.status === "REJECTED")) {
@@ -114,13 +90,15 @@ export function usePermitTab() {
             approvalRows.every((ad: any) => ad.status === "APPROVED")
           ) {
             latestApprovalStatus = "APPROVED";
+          } else if (approvalRows.some((ad: any) => ad.status === "WAITING")) {
+            latestApprovalStatus = "WAITING";
           }
 
           return {
             id: p.id,
             name: p.name?.trim() || "-",
             status: p.status,
-            approvalStatus,
+            approvalStatus: userApprovalStatus,
             latestApprovalStatus,
             location:
               p.location_id && p.location_id <= PLACEHOLDER_THRESHOLD
@@ -147,21 +125,27 @@ export function usePermitTab() {
           };
         });
 
+      // Filter for approvers: only show permits where they have a status (not "-")
+      let finalPermits = enrichedPermits;
+      if (isApproval) {
+        finalPermits = enrichedPermits.filter(p => p.approvalStatus !== "-");
+      }
+
       // Sort permits by created time descending
-      enrichedPermits.sort(
+      finalPermits.sort(
         (a, b) =>
           new Date(b.createdTime ?? 0).getTime() -
           new Date(a.createdTime ?? 0).getTime()
       );
 
-      setPermits(enrichedPermits);
+      setPermits(finalPermits);
     } catch (err: any) {
       console.error("Error fetching permits:", err);
       Alert.alert("Error", err.message || "Failed to load permits");
     } finally {
       setLoading(false);
     }
-  }, [userId, isApproval, isSecurity]);
+  }, [userId, isApproval, isSecurity, profile]);
 
   useEffect(() => {
     fetchPermits();

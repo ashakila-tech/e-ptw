@@ -85,6 +85,7 @@ export default function MyPermitTab() {
 
     if (sortOrder === "desc") list = [...list].reverse();
 
+    console.log(list[0]);
     return list;
   }, [permits, activeTab, search, sortOrder]);
 
@@ -165,6 +166,7 @@ export default function MyPermitTab() {
             <PermitCard
               key={permit.id}
               {...permit}
+              status={isApproval ? permit.approvalStatus : permit.status}
               isApproval={isApproval}
               onEdit={() =>
                 router.push({

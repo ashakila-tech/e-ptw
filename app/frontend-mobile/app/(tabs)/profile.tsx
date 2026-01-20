@@ -15,7 +15,7 @@ import { fetchFeedbacks, fetchAllApplications } from "../../../shared/services/a
 export default function ProfileTab() {
   const router = useRouter();
   const { logout } = useAuth();
-  const { isApproval, isSecurity } = useUser();
+  const { isApproval, isSecurity, userId } = useUser();
   const { profile, loading, error, workers, refresh: refreshProfile, removeWorker } = useProfile();
     
   const [refreshing, setRefreshing] = useState(false);
@@ -25,7 +25,7 @@ export default function ProfileTab() {
   const [waitingCount, setWaitingCount] = useState(0);
 
   useEffect(() => {
-    fetchFeedbacks()
+    fetchFeedbacks(userId ?? undefined)
       .then(setFeedbacks)
       .catch((err) => console.error("Failed to fetch feedbacks", err));
 
@@ -56,7 +56,7 @@ export default function ProfileTab() {
         })
         .catch((err) => console.error("Failed to fetch applications stats", err));
     }
-  }, [isApproval, profile]);
+  }, [isApproval, profile, userId]);
 
   // Memoized list for searching and sorting workers
   const sortedAndFilteredWorkers = useMemo(() => {
@@ -79,7 +79,7 @@ export default function ProfileTab() {
     setRefreshing(true);
     const promises: Promise<any>[] = [
       refreshProfile(),
-      fetchFeedbacks().then(setFeedbacks).catch(console.error)
+      fetchFeedbacks(userId ?? undefined).then(setFeedbacks).catch(console.error)
     ];
 
     if (isApproval && profile) {
@@ -111,7 +111,7 @@ export default function ProfileTab() {
     }
     await Promise.all(promises);
     setRefreshing(false);
-  }, [refreshProfile, isApproval, profile]);
+  }, [refreshProfile, isApproval, profile, userId]);
 
   const handleSignOut = async () => {
     await logout();

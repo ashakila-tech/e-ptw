@@ -3,7 +3,7 @@ import * as api from "../../shared/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function useAuth() {
-  const { setUserId, setUserName, setCompanyId, setIsApproval, setIsSecurity } = useUser();
+  const { setUserId, setUserName, setCompanyId, setIsApproval, setIsSecurity, setProfile } = useUser();
 
   // useAuth.ts
   const login = async (email: string, password: string) => {
@@ -12,6 +12,7 @@ export function useAuth() {
       await AsyncStorage.setItem("access_token", token);
       const user = await api.getCurrentUser();
 
+      setProfile(user);
       setUserId(user.id);
       setUserName(user.name);
       setCompanyId(user.company_id);
@@ -51,6 +52,7 @@ export function useAuth() {
 
   const logout = async () => {
     await AsyncStorage.removeItem("access_token");
+    setProfile(null);
     setUserId(null);
     setCompanyId(null);
     setIsApproval(false);
