@@ -12,7 +12,6 @@ import Users from './pages/Users';
 import Login from './pages/Login';
 import Feedbacks from './pages/Feedbacks';
 import Settings from './pages/Settings';
-import { useInactivityLogout } from './hooks/useInactivityLogout';
 
 /**
  * A simple utility to lighten or darken a hex color.
