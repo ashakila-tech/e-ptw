@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     FCM_SA_EMAIL: Union[str, None] = None
     FCM_SA_PRIVATE_KEY: Union[str, None] = None
 
+    # Email
+    MAIL_USERNAME: str = "your_email@gmail.com"
+    MAIL_PASSWORD: str = "your_google_app_password"
+    MAIL_FROM: str = "your_email@gmail.com"
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str = "smtp.gmail.com"
+
     # (Optional) allow comma-separated CORS in dev
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
