@@ -10,11 +10,9 @@ from .routers import (
     authentication,               # /auth/*
     companies, permit_types, users, locations, documents,
     workflows, approvals, groups, user_groups, workflow_data, approval_data,
-    applications, location_managers, permit_officers, workers,
-    safety_equipments,
-    application_workers,
-    application_safety_equipments,
-    push_tokens, feedbacks
+    applications, location_managers, permit_officers, workers, safety_equipments,
+    application_workers, application_safety_equipments,
+    push_tokens, feedbacks, notifications
 )
 # scheduler = BackgroundScheduler()
 
@@ -65,6 +63,7 @@ app.include_router(feedbacks.router, prefix="/api")
 app.include_router(groups.router, prefix="/api")
 app.include_router(location_managers.router, prefix="/api")
 app.include_router(locations.crud_router, prefix="/api")
+app.include_router(notifications.router, prefix="/api")
 app.include_router(permit_officers.router, prefix="/api")
 app.include_router(permit_types.router, prefix="/api")
 app.include_router(push_tokens.router, prefix="/api")

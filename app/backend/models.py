@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, func, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, func, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -222,6 +222,18 @@ class PushToken(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "token", name="uq_user_push_token"),
     )
+
+class Notification(Base):
+    __tablename__ = "notification"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    title = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+    is_read = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    user = relationship("User")
+
 
 class Feedback(Base):
     __tablename__ = "feedback"

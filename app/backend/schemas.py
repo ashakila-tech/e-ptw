@@ -346,6 +346,27 @@ class PushTokenOut(PushTokenIn):
 
     model_config = ConfigDict(from_attributes=True)
 
+# ---------- Notification ----------
+class NotificationBase(BaseModel):
+    user_id: int
+    title: str
+    message: str
+
+class NotificationIn(NotificationBase):
+    pass
+
+class NotificationOut(NotificationBase):
+    id: int
+    is_read: bool
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+class NotificationUpdate(BaseModel):
+    user_id: Optional[int] = None
+    title: Optional[str] = None
+    message: Optional[str] = None
+    is_read: Optional[bool] = None
+
 # ---------- Feedback ----------
 class FeedbackBase(BaseModel):
     user_id: int
