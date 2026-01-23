@@ -5,6 +5,7 @@ from ._crud_factory import make_crud_router
 from ..deps import get_db
 from .. import models, schemas
 from ..utils.email import send_notification_email
+from ..config import settings
 
 # Create the base router
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
@@ -21,8 +22,9 @@ def filter_notifications(
     
     return query.order_by(models.Notification.created_at.desc()).all()
 
-@router.post("/send", response_model=schemas.NotificationOut)
+@router.post("/send-to-user/{user_id}", response_model=schemas.NotificationOut)
 def send_notification(
+    user_id: int,
     notification_in: schemas.NotificationIn,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
@@ -31,13 +33,15 @@ def send_notification(
     Create a notification in the database and send an email to the user.
     """
     # 1. Create Notification in DB
-    db_notification = models.Notification(**notification_in.model_dump())
+    data = notification_in.model_dump()
+    data["user_id"] = user_id
+    db_notification = models.Notification(**data)
     db.add(db_notification)
     db.commit()
     db.refresh(db_notification)
 
     # 2. Fetch User Email
-    user = db.query(models.User).filter(models.User.id == notification_in.user_id).first()
+    user = db.query(models.User).filter(models.User.id == user_id).first()
     
     # 3. Send Email (Background Task)
     if user and user.email:
@@ -45,6 +49,32 @@ def send_notification(
             send_notification_email,
             subject=notification_in.title,
             recipients=[user.email],
+            body=notification_in.message
+        )
+
+    return db_notification
+
+@router.post("/send-to-admin", response_model=schemas.NotificationOut)
+def send_notification_to_admin(
+    notification_in: schemas.NotificationIn,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """
+    Create a notification in the database and send an email to the admin.
+    """
+    # 1. Create Notification in DB
+    db_notification = models.Notification(**notification_in.model_dump())
+    db.add(db_notification)
+    db.commit()
+    db.refresh(db_notification)
+
+    # 2. Send Email (Background Task)
+    if settings.MAIL_ADMIN:
+        background_tasks.add_task(
+            send_notification_email,
+            subject=notification_in.title,
+            recipients=[settings.MAIL_ADMIN],
             body=notification_in.message
         )
 

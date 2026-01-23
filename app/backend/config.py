@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     MAIL_FROM: str = "your_email@gmail.com"
     MAIL_PORT: int = 587
     MAIL_SERVER: str = "smtp.gmail.com"
+    MAIL_ADMIN: str = "admin@gmail.com"
 
     # (Optional) allow comma-separated CORS in dev
     @field_validator("CORS_ORIGINS", mode="before")
