@@ -11,7 +11,8 @@ conf = ConnectionConfig(
     MAIL_STARTTLS=settings.MAIL_STARTTLS,
     MAIL_SSL_TLS=settings.MAIL_SSL_TLS,
     USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True
+    VALIDATE_CERTS=True,
+    TIMEOUT=settings.MAIL_TIMEOUT
 )
 
 async def send_notification_email(subject: str, recipients: List[str], body: str):

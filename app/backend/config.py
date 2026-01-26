@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     MAIL_ADMIN: str
     MAIL_STARTTLS: bool = False
     MAIL_SSL_TLS: bool = False
+    MAIL_TIMEOUT: int = 120
 
     # (Optional) allow comma-separated CORS in dev
     @field_validator("CORS_ORIGINS", mode="before")
