@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, Query, BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from ._crud_factory import make_crud_router
@@ -56,15 +56,30 @@ def send_notification(
 
 @router.post("/send-to-admin", response_model=schemas.NotificationOut)
 def send_notification_to_admin(
-    notification_in: schemas.NotificationIn,
+    notification_in: schemas.AdminNotificationIn,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     """
     Create a notification in the database and send an email to the admin.
     """
+    # Find the admin user to link the notification to
+    # Try matching MAIL_ADMIN email first
+    admin_user = db.query(models.User).filter(models.User.email == settings.MAIL_ADMIN).first()
+    
+    # If not found, try finding any user with admin privileges (user_type=9)
+    if not admin_user:
+        admin_user = db.query(models.User).filter(models.User.user_type == 9).first()
+        
+    if not admin_user:
+        raise HTTPException(status_code=404, detail="Admin user not found in database. Cannot save notification.")
+
     # 1. Create Notification in DB
-    db_notification = models.Notification(**notification_in.model_dump())
+    db_notification = models.Notification(
+        user_id=admin_user.id,
+        title=notification_in.title,
+        message=notification_in.message
+    )
     db.add(db_notification)
     db.commit()
     db.refresh(db_notification)

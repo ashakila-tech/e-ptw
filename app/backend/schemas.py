@@ -355,6 +355,10 @@ class NotificationBase(BaseModel):
 class NotificationIn(NotificationBase):
     pass
 
+class AdminNotificationIn(BaseModel):
+    title: str
+    message: str
+
 class NotificationOut(NotificationBase):
     id: int
     is_read: bool
