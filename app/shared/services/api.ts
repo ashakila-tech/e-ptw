@@ -763,6 +763,28 @@ export async function fetchServerTime() {
   return res.json();
 }
 
+// -------------------- Notifications --------------------
+export async function sendNotificationToAdmin(payload: { title: string; message: string }) {
+  const token = await getToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const res = await fetch(`${API_BASE_URL}api/notifications/send-to-admin`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: "Failed to send notification" }));
+    throw new Error(errorData.detail || "Failed to send notification");
+  }
+
+  return res.json();
+}
+
 // -------------------- Feedbacks --------------------
 export async function fetchFeedbacks(userId?: number) {
   if (userId) {

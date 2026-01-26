@@ -6,7 +6,7 @@ import * as api from "../../shared/services/api";
 
 export const useFeedbackForm = () => {
   const router = useRouter();
-  const { userId } = useUser();
+  const { userId, userName } = useUser();
   
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -24,6 +24,12 @@ export const useFeedbackForm = () => {
         user_id: Number(userId),
         title,
         message,
+      });
+
+      // Send email notification to admin
+      await api.sendNotificationToAdmin({
+        title: `New Feedback Submitted: "${title}"`,
+        message: `User ${userName} (ID: ${userId}) has submitted new feedback.\n\n---\n\nTitle: ${title}\n\nMessage:\n${message}`,
       });
 
       crossPlatformAlert("Success", "Thank you for your feedback!");
