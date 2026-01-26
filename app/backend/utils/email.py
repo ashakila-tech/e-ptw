@@ -11,7 +11,7 @@ conf = ConnectionConfig(
     MAIL_STARTTLS=settings.MAIL_STARTTLS,
     MAIL_SSL_TLS=settings.MAIL_SSL_TLS,
     USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True,
+    VALIDATE_CERTS=False,  # Temporarily disabled for debugging
     TIMEOUT=settings.MAIL_TIMEOUT
 )
 
