@@ -23,8 +23,10 @@ export function useProfile() {
     try {
       setLoading(true);
       const currentUserData = await getCurrentUser();
-      const companyById = await fetchCompanyById(currentUserData.company_id);
-      currentUserData.company_name = companyById;
+      if (currentUserData.company_id) {
+        const company = await fetchCompanyById(currentUserData.company_id);
+        currentUserData.company_name = company.name;
+      }
       
       if (currentUserData.groups[0].name === SITE_MANAGER) {
         const locationForSiteManager = await fetchLocationForSiteManager(currentUserData.id);

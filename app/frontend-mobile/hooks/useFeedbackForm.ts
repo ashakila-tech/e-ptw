@@ -6,7 +6,7 @@ import * as api from "../../shared/services/api";
 
 export const useFeedbackForm = () => {
   const router = useRouter();
-  const { userId, userName } = useUser();
+  const { userId, userName, profile } = useUser();
   
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -20,17 +20,33 @@ export const useFeedbackForm = () => {
 
     setLoading(true);
     try {
-      await api.createFeedback({
-        user_id: Number(userId),
-        title,
-        message,
-      });
+      // await api.createFeedback({
+      //   user_id: Number(userId),
+      //   title,
+      //   message,
+      // });
+
+      const companyName = profile?.company_name || "Unknown Company";
+      console.log("Profile: ", profile);
+
+      console.log("Email contents: ", userName, userId, companyName, title, message);
 
       // Send email notification to admin
-      await api.sendNotificationToAdmin({
-        title: `New Feedback Submitted: "${title}"`,
-        message: `User ${userName} (ID: ${userId}) has submitted new feedback.\n\n---\n\nTitle: ${title}\n\nMessage:\n${message}`,
-      });
+      // await api.sendNotificationToAdmin({
+      //   title: `New Feedback Submitted: "${title}"`,
+      //   message: `
+      //     <p>DO NOT REPLY TO THIS EMAIL.</p>
+      //     <p>
+      //       User ${userName} (ID: ${userId}) from ${companyName} has submitted new feedback.
+      //     </p>
+      //     <p>
+      //       Title: ${title}
+      //       <br/><br/>
+      //       Message: ${message}
+      //     </p>
+      //     <p>USE THE ADMIN CONSOLE TO VIEW ALL FEEDBACK.</p>
+      //   `,
+      // });
 
       crossPlatformAlert("Success", "Thank you for your feedback!");
       router.back();

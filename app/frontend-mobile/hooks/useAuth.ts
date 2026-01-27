@@ -12,6 +12,13 @@ export function useAuth() {
       await AsyncStorage.setItem("access_token", token);
       const user = await api.getCurrentUser();
 
+      // Manually enrich the user object with company name if it's missing.
+      // This makes the app resilient even if the backend /me endpoint is outdated.
+      if (user.company_id && !user.company_name) {
+        const company = await api.fetchCompanyById(user.company_id);
+        user.company_name = company.name;
+      }
+
       setProfile(user);
       setUserId(user.id);
       setUserName(user.name);
