@@ -9,7 +9,7 @@ const CLOSING_FLOW_LEVEL = 98;
 
 export function usePermitDetails(id?: string) {
   const [permit, setPermit] = useState<any | null>(null);
-  const { userId, companyId: userCompanyId } = useUser();
+  const { userId, companyId: userCompanyId, userName } = useUser();
   const [approvals, setApprovals] = useState<any[]>([]);
   const [approvalData, setApprovalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -207,8 +207,57 @@ export function usePermitDetails(id?: string) {
     await api.securityConfirmEntry(permit.id);
   };
 
+  const updatePermitApproval = async (approvalDataId: number, status: string, remarks?: string) => {
+    if (!permit) throw new Error("Permit details are not loaded.");
+
+    const originalApprovalData = approvalData.find(ad => ad.id === approvalDataId);
+    if (!originalApprovalData) {
+      throw new Error("Could not find the corresponding approval data to update.");
+    }
+
+    // Construct the full payload for the PUT request.
+    const payload: any = {
+      ...originalApprovalData,
+      status,
+      time: new Date().toISOString(),
+    };
+    if (remarks !== undefined) {
+      payload.remarks = remarks;
+    }
+
+    // 1. Update the approval status in the backend
+    await api.updateApprovalData(payload);
+
+    // 2. Send notification to the applicant (if applicantId exists)
+    // We wrap this in a try/catch so that if the notification fails, the approval flow doesn't break.
+    if (permit.applicantId) {
+      const title = `Permit Application Update: ${permit.name}`;
+      const message = `
+        <p>DO NOT REPLY TO THIS EMAIL.</p>
+        <p>
+          Your permit application <strong>${permit.name}</strong> has been marked as <strong>${status}</strong>.
+        </p>
+        <p>
+          <strong>Approver:</strong> ${userName || "Unknown"}<br/>
+          <strong>Remarks:</strong> ${remarks || "N/A"}
+        </p>
+        <p>Please check the app for more details.</p>
+      `;
+
+      try {
+        await api.sendNotificationToUser(permit.applicantId, { title, message });
+      } catch (notifyErr) {
+        console.warn("Failed to send notification email:", notifyErr);
+      }
+    }
+
+    // 3. Refresh the permit details to reflect changes
+    await fetchPermit();
+  };
+
   return { 
     permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, 
-    safetyEquipments, createClosingWorkflow, confirmEntryAndCreateClosingWorkflow, serverTime 
+    safetyEquipments, createClosingWorkflow, confirmEntryAndCreateClosingWorkflow, serverTime,
+    updatePermitApproval
   };
 }

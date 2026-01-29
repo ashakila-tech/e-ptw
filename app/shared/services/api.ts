@@ -785,6 +785,30 @@ export async function sendNotificationToAdmin(payload: { title: string; message:
   return res.json();
 }
 
+export async function sendNotificationToUser(userId: number, payload: { title: string; message: string }) {
+  const token = await getToken();
+  if (!token) throw new Error("Not authenticated");
+
+  // The schema NotificationIn requires user_id in the body as well
+  const body = { ...payload, user_id: userId };
+
+  const res = await fetch(`${API_BASE_URL}api/notifications/send-to-user/${userId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: "Failed to send notification" }));
+    throw new Error(errorData.detail || "Failed to send notification");
+  }
+
+  return res.json();
+}
+
 // -------------------- Feedbacks --------------------
 export async function fetchFeedbacks(userId?: number) {
   if (userId) {

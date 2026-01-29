@@ -183,7 +183,7 @@ export default function ProfileTab() {
               <View className="mb-2">
                 <Text className="text-primary mb-1">Company:
                   <Text className="font-bold">
-                    {" " + (profile.company_name?.name ?? "-")}
+                    {" " + profile.company_name}
                   </Text>
                 </Text>
               </View>

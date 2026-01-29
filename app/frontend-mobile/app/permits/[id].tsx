@@ -35,7 +35,7 @@ export default function PermitDetails() {
   const router = useRouter();
   const { 
     permit, approvals, approvalData, loading, error, refetch, 
-    confirmEntryAndCreateClosingWorkflow, serverTime 
+    confirmEntryAndCreateClosingWorkflow, serverTime, updatePermitApproval 
   } = usePermitDetails(id as string);
   const { userId, isApproval, isSecurity } = useUser();
 
@@ -149,7 +149,15 @@ export default function PermitDetails() {
     const myApprovalData = approvalData.find(ad => ad.approval_id === myApproval.id && ad.workflow_data_id === permit.workflowDataId);
     if (!myApprovalData) return crossPlatformAlert("Error", "ApprovalData record not found.");
 
-    await updateStatus(myApprovalData, action, remarksText);
+    try {
+      await updatePermitApproval(myApprovalData.id, action, remarksText);
+      crossPlatformAlert("Success", `Permit ${action.toLowerCase()} successfully!`);
+      setRemarksModalVisible(false);
+      setRemarks("");
+    } catch (err: any) {
+      console.error("Approval update failed:", err);
+      crossPlatformAlert("Error", err.message || "Failed to update status");
+    }
   }
 
   async function handleSecurityConfirm() {
@@ -185,7 +193,7 @@ export default function PermitDetails() {
 
     try {
       // First, update the approval data record to mark it as done
-      await updateStatus(jobDoneApprovalData, PermitStatus.APPROVED);
+      await updatePermitApproval(jobDoneApprovalData.id, PermitStatus.APPROVED);
       // Then, call the new endpoint to change the permit status to EXIT_PENDING
       await api.confirmJobDone(permit.id);
       crossPlatformAlert("Success", "Job done confirmed. Permit is now awaiting exit confirmation from security.");
@@ -200,31 +208,6 @@ export default function PermitDetails() {
     await api.securityConfirmExit(permit.id);
     crossPlatformAlert("Success", "Permit completed successfully!");
     refetch();
-  }
-
-  async function updateStatus(approvalDataToUpdate: any, action: "APPROVED" | "REJECTED", remarksText?: string) {
-    if (!approvalDataToUpdate) return crossPlatformAlert("Error", "Approval data to update is missing.");
-
-    try {
-      const payload: any = {
-        ...approvalDataToUpdate,
-        status: action,
-        time: new Date().toISOString(),
-      };
-
-      if (action === "REJECTED" && remarksText) {
-        payload.remarks = remarksText;
-      }
-      await api.updateApprovalData(payload);
-
-      crossPlatformAlert("Success", `Permit ${action.toLowerCase()} successfully!`);
-      setRemarksModalVisible(false);
-      setRemarks("");
-      refetch();
-    } catch (err: any) {
-      console.error("Approval update failed:", err);
-      crossPlatformAlert("Error", err.message || "Failed to update status");
-    }
   }
 
   function confirmApproveReject(action: "APPROVED" | "REJECTED") {
