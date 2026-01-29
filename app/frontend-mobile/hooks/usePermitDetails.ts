@@ -215,49 +215,67 @@ export function usePermitDetails(id?: string) {
       throw new Error("Could not find the corresponding approval data to update.");
     }
 
-    // Construct the full payload for the PUT request.
     const payload: any = {
       ...originalApprovalData,
       status,
       time: new Date().toISOString(),
+      // Add the approver's name for the backend to use in notifications
+      approver_name: userName,
     };
     if (remarks !== undefined) {
       payload.remarks = remarks;
     }
 
     // 1. Update the approval status in the backend
+    // The backend will now handle sending notifications based on the new status.
     await api.updateApprovalData(payload);
 
-    // 2. Send notification to the applicant (if applicantId exists)
-    // We wrap this in a try/catch so that if the notification fails, the approval flow doesn't break.
-    if (permit.applicantId) {
-      const title = `Permit Application Update: ${permit.name}`;
-      const message = `
-        <p>DO NOT REPLY TO THIS EMAIL.</p>
-        <p>
-          Your permit application <strong>${permit.name}</strong> has been marked as <strong>${status}</strong>.
-        </p>
-        <p>
-          <strong>Approver:</strong> ${userName || "Unknown"}<br/>
-          <strong>Remarks:</strong> ${remarks || "N/A"}
-        </p>
-        <p>Please check the app for more details.</p>
-      `;
+    // 2. Refresh the permit details to reflect changes
+    await fetchPermit();
+  };
 
-      try {
-        await api.sendNotificationToUser(permit.applicantId, { title, message });
-      } catch (notifyErr) {
-        console.warn("Failed to send notification email:", notifyErr);
-      }
+  const confirmPermitExit = async () => {
+    if (!permit) throw new Error("Permit details are not loaded.");
+
+    // 1. Call API to confirm exit
+    await api.securityConfirmExit(permit.id);
+
+    // 2. Send Notifications
+    const title = `Permit Completed: ${permit.name}`;
+    const message = `
+      <p>DO NOT REPLY TO THIS EMAIL.</p>
+      <p>The permit <strong>${permit.name}</strong> has been marked as <strong>COMPLETED</strong>.</p>
+      <p>All associated work is now finished and the permit is closed.</p>
+      <p>Please check the app for more details.</p>
+    `;
+
+    const notifyPromises = [];
+    
+    // Notify Applicant
+    if (permit.applicantId) {
+      notifyPromises.push(
+        api.sendNotificationToUser(permit.applicantId, { title, message })
+          .catch(e => console.warn("Failed to notify applicant:", e))
+      );
     }
 
-    // 3. Refresh the permit details to reflect changes
+    // Notify Supervisor (Job Assigner)
+    if (permit.job_assigner_id) {
+      notifyPromises.push(
+        api.sendNotificationToUser(permit.job_assigner_id, { title, message })
+          .catch(e => console.warn("Failed to notify supervisor:", e))
+      );
+    }
+
+    await Promise.all(notifyPromises);
+
+    // 3. Refresh data
     await fetchPermit();
   };
 
   return { 
     permit, approvals, approvalData, loading, error, refetch: fetchPermit, workers, 
     safetyEquipments, createClosingWorkflow, confirmEntryAndCreateClosingWorkflow, serverTime,
-    updatePermitApproval
+    updatePermitApproval, confirmPermitExit
   };
 }

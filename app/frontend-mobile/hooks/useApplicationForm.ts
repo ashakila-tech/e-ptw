@@ -20,6 +20,7 @@ import {
   fetchPermitOfficersByPermitType,
   fetchLocationManagersByLocation,
   downloadDocumentById,
+  sendNotificationToUser,
 } from "../../shared/services/api";
 import Constants from "expo-constants";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
@@ -394,6 +395,20 @@ export function useApplicationForm(existingApp: any, router: any) {
           role_name: "Supervisor",
           level: 1,
         });
+
+        // Notify Supervisor
+        try {
+          const title = `New Permit Application: ${permitName}`;
+          const message = `
+            <p>DO NOT REPLY TO THIS EMAIL.</p>
+            <p>A new permit application <strong>${permitName}</strong> has been submitted by <strong>${applicantName}</strong>.</p>
+            <p>It is currently waiting for your approval.</p>
+            <p>Please log in to the application to review and take action.</p>
+          `;
+          await sendNotificationToUser(jobAssigner, { title, message });
+        } catch (notifyErr) {
+          console.warn("Failed to send notification to supervisor:", notifyErr);
+        }
 
         // LEVEL 2 — SAFETY OFFICER (WAITING)
         try {

@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
+import asyncio
 from typing import Optional, List
 from datetime import datetime
 
 from ._crud_factory import make_crud_router
 from ..deps import get_db
 from .. import models, schemas
+from ..utils.email import send_notification_email
+
 
 # Create the base router
 router = APIRouter(prefix="/approval-data", tags=["Approval Data"])
@@ -88,6 +91,35 @@ def create_completion_flow(
     return [job_done_data]
 
 
+def _send_notification(db: Session, user_id: int, title: str, message: str):
+    """
+    Helper to create a notification record and send an email synchronously.
+    """
+    # 1. Create Notification in DB
+    db_notification = models.Notification(
+        user_id=user_id,
+        title=title,
+        message=message
+    )
+    db.add(db_notification)
+    db.commit()
+    db.refresh(db_notification)
+
+    # 2. Fetch User Email
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+
+    # 3. Send Email
+    if user and user.email:
+        try:
+            asyncio.run(send_notification_email(
+                subject=title,
+                recipients=[user.email],
+                body=message
+            ))
+        except Exception as e:
+            print(f"Failed to send email to {user.email}: {e}")
+
+
 # --- Custom update mutator for approval logic ---
 def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Session):
     """
@@ -99,6 +131,7 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
     """
     new_status = data.get("status")
     new_remarks = data.get("remarks")
+    approver_name = data.get("approver_name", "System")
 
     # Update the ApprovalData object itself
     if new_status in {"APPROVED", "REJECTED"} and obj.status != new_status:
@@ -108,6 +141,11 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
             obj.remarks = new_remarks
         db.flush()
 
+    # Eagerly load the application to get its details for notifications
+    application = db.query(models.Application).filter(
+        models.Application.workflow_data_id == obj.workflow_data_id
+    ).first()
+
     # Fetch all approval data for this workflow
     all_approval_data = db.query(models.ApprovalData).filter(
         models.ApprovalData.workflow_data_id == obj.workflow_data_id
@@ -115,15 +153,26 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
 
     # If any approver rejected, set application status to REJECTED
     if any(a.status == "REJECTED" for a in all_approval_data):
-        application = db.query(models.Application).filter(
-            models.Application.workflow_data_id == obj.workflow_data_id
-        ).first()
         if application and application.status != "REJECTED":
             application.status = "REJECTED"
             application.updated_time = datetime.utcnow()
             db.commit()
             print(f"Application {application.id} rejected due to an approver rejection!")
-        return data  # No need to process further
+
+            # Notify Applicant of Rejection
+            if application.applicant_id:
+                title = f"Permit Application Rejected: {application.name}"
+                message = f"""
+                    <p>DO NOT REPLY TO THIS EMAIL.</p>
+                    <p>Your permit application <strong>{application.name}</strong> has been <strong>REJECTED</strong>.</p>
+                    <p>
+                        <strong>Approver:</strong> {approver_name}<br/>
+                        <strong>Remarks:</strong> {new_remarks or "N/A"}
+                    </p>
+                    <p>Please check the app for more details.</p>
+                """
+                _send_notification(db, user_id=application.applicant_id, title=title, message=message)
+        return data
 
     # Only run next-level promotion if current approval is APPROVED
     if new_status == "APPROVED":
@@ -135,23 +184,39 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
 
         if next_level and next_level.status == "WAITING":
             next_level.status = "PENDING"
+            db.flush()
+
+            # Notify Next Approver
+            next_approver_user_id = next_level.approval.user_id
+            if next_approver_user_id:
+                title = f"Permit Pending Approval: {application.name}"
+                message = f"""
+                    <p>DO NOT REPLY TO THIS EMAIL.</p>
+                    <p>A permit application, <strong>{application.name}</strong>, requires your approval.</p>
+                    <p>Please log in to the application to review and take action.</p>
+                """
+                _send_notification(db, user_id=next_approver_user_id, title=title, message=message)
 
         # If all approvals are approved, update the application status
         if all(a.status == "APPROVED" for a in all_approval_data):
-            application = db.query(models.Application).filter(
-                models.Application.workflow_data_id == obj.workflow_data_id
-            ).first()
             if application and application.status != "APPROVED":
                 application.status = "APPROVED"
                 application.updated_time = datetime.utcnow()
                 db.commit()
                 print(f"Application {application.id} fully approved!")
+
+                # Notify Applicant of Final Approval
+                if application.applicant_id:
+                    title = f"Permit Application Approved: {application.name}"
+                    message = f"""
+                        <p>DO NOT REPLY TO THIS EMAIL.</p>
+                        <p>Congratulations! Your permit application <strong>{application.name}</strong> has been fully <strong>APPROVED</strong>.</p>
+                        <p>Please check the app for more details.</p>
+                    """
+                    _send_notification(db, user_id=application.applicant_id, title=title, message=message)
         
         # Custom logic for completion flow
         if obj.level == 98: # Check for special completion flow level
-            application = db.query(models.Application).filter(
-                models.Application.workflow_data_id == obj.workflow_data_id
-            ).first()
             if application:
                 application.status = "EXIT_PENDING"
                 application.updated_time = datetime.utcnow()

@@ -35,7 +35,7 @@ export default function PermitDetails() {
   const router = useRouter();
   const { 
     permit, approvals, approvalData, loading, error, refetch, 
-    confirmEntryAndCreateClosingWorkflow, serverTime, updatePermitApproval 
+    confirmEntryAndCreateClosingWorkflow, serverTime, updatePermitApproval, confirmPermitExit
   } = usePermitDetails(id as string);
   const { userId, isApproval, isSecurity } = useUser();
 
@@ -204,10 +204,12 @@ export default function PermitDetails() {
   }
 
   async function handleExitConfirm() {
-    // This action will complete the permit via the dedicated security endpoint.
-    await api.securityConfirmExit(permit.id);
-    crossPlatformAlert("Success", "Permit completed successfully!");
-    refetch();
+    try {
+      await confirmPermitExit();
+      crossPlatformAlert("Success", "Permit completed successfully!");
+    } catch (err: any) {
+      crossPlatformAlert("Error", err.message || "Failed to complete permit.");
+    }
   }
 
   function confirmApproveReject(action: "APPROVED" | "REJECTED") {
