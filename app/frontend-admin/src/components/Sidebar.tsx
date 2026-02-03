@@ -6,11 +6,12 @@ import {
   faChartLine, 
   faFileSignature, 
   faUsers, 
-  faComments,
+  faComments, 
   faCog, 
   faSignOutAlt, 
   faChevronLeft, 
-  faChevronRight 
+  faChevronRight,
+  faBell
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -30,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
     { name: 'Permits', path: '/permits', icon: faFileSignature },
     { name: 'Users', path: '/users', icon: faUsers },
     { name: 'Feedbacks', path: '/feedbacks', icon: faComments },
+    { name: 'Notifications', path: '/notifications', icon: faBell },
   ];
 
   const handleLogout = async () => {

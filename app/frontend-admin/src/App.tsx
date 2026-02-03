@@ -12,6 +12,7 @@ import Users from './pages/Users';
 import Login from './pages/Login';
 import Feedbacks from './pages/Feedbacks';
 import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
 
 /**
  * A simple utility to lighten or darken a hex color.
@@ -117,6 +118,7 @@ function App() {
           <Route path="permits" element={<Permits />} />
           <Route path="users" element={<Users />} />
           <Route path="feedbacks" element={<Feedbacks />} />
+          <Route path="notifications" element={<Notifications />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 

@@ -819,6 +819,16 @@ export async function sendNotificationToUser(userId: number, payload: { title: s
   return res.json();
 }
 
+export async function updateNotification(id: number, payload: any) {
+  const res = await fetch(`${API_BASE_URL}api/notifications/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to update notification: ${await res.text()}`);
+  return res.json();
+}
+
 // -------------------- Feedbacks --------------------
 export async function fetchFeedbacks(userId?: number) {
   if (userId) {
