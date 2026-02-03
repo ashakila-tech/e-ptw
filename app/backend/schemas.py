@@ -389,3 +389,68 @@ class FeedbackUpdate(BaseModel):
     user_id: Optional[int] = None
     title: Optional[str] = None
     message: Optional[str] = None
+
+# ---------- Department ----------
+class DepartmentBase(BaseModel):
+    company_id: int
+    name: str
+
+class DepartmentIn(DepartmentBase):
+    pass
+
+class DepartmentOut(DepartmentBase):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+
+class DepartmentUpdate(BaseModel):
+    company_id: Optional[int] = None
+    name: Optional[str] = None
+
+# ---------- DepartmentHead ----------
+class DepartmentHeadBase(BaseModel):
+    department_id: int
+    user_id: int
+
+class DepartmentHeadIn(DepartmentHeadBase):
+    pass
+
+class DepartmentHeadOut(DepartmentHeadBase):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+
+# ---------- Report (Near Miss) ----------
+class ReportBase(BaseModel):
+    name: str
+    user_id: int
+    incident_timestamp: datetime
+    department_id: Optional[int] = None
+    location_id: int
+    condition: Optional[str] = None
+    concern: Optional[str] = None
+    description: str
+    immediate_action: Optional[str] = None
+    document_id: Optional[int] = None
+
+class ReportIn(ReportBase):
+    pass
+
+class ReportOut(ReportBase):
+    id: int
+    submission_timestamp: datetime
+    department: Optional[DepartmentOut] = None
+    user: Optional[UserOut] = None
+    location: Optional[LocationOut] = None
+    document: Optional[DocumentOut] = None
+    model_config = ConfigDict(from_attributes=True)
+
+class ReportUpdate(BaseModel):
+    name: Optional[str] = None
+    user_id: Optional[int] = None
+    incident_timestamp: Optional[datetime] = None
+    department_id: Optional[int] = None
+    location_id: Optional[int] = None
+    condition: Optional[str] = None
+    concern: Optional[str] = None
+    description: Optional[str] = None
+    immediate_action: Optional[str] = None
+    document_id: Optional[int] = None

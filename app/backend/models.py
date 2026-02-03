@@ -43,6 +43,7 @@ class User(Base):
     company = relationship("Company")
     location_managers = relationship("LocationManager", back_populates="user")
     permit_officers = relationship("PermitOfficer", back_populates="user")
+    department_heads = relationship("DepartmentHead", back_populates="user")
     user_groups = relationship("UserGroup", back_populates="user")
 
 class UserGroup(Base):
@@ -244,3 +245,41 @@ class Feedback(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     user = relationship("User")
+
+class Department(Base):
+    __tablename__ = "department"
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=False)
+    name = Column(String, nullable=False)
+    company = relationship("Company")
+    department_heads = relationship("DepartmentHead", back_populates="department")
+
+class Report(Base):
+    __tablename__ = "report"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    incident_timestamp = Column(DateTime, nullable=False)
+    submission_timestamp = Column(DateTime, server_default=func.now())
+    department_id = Column(Integer, ForeignKey("department.id"), nullable=True)
+    location_id = Column(Integer, ForeignKey("location.id"), nullable=False)
+    condition = Column(String, nullable=True)
+    concern = Column(String, nullable=True)
+    description = Column(Text, nullable=False)
+    immediate_action = Column(Text, nullable=True)
+    document_id = Column(Integer, ForeignKey("document.id"), nullable=True)
+
+    user = relationship("User")
+    department = relationship("Department")
+    location = relationship("Location")
+    document = relationship("Document")
+
+class DepartmentHead(Base):
+    __tablename__ = "department_head"
+
+    id = Column(Integer, primary_key=True, index=True)
+    department_id = Column(Integer, ForeignKey("department.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+
+    user = relationship("User", back_populates="department_heads")
+    department = relationship("Department", back_populates="department_heads")

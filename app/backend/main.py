@@ -12,7 +12,7 @@ from .routers import (
     workflows, approvals, groups, user_groups, workflow_data, approval_data,
     applications, location_managers, permit_officers, workers, safety_equipments,
     application_workers, application_safety_equipments,
-    push_tokens, feedbacks, notifications
+    push_tokens, feedbacks, notifications, departments, reports, department_heads
 )
 # scheduler = BackgroundScheduler()
 
@@ -58,6 +58,8 @@ app.include_router(application_workers.crud_router, prefix="/api")
 app.include_router(approval_data.router, prefix="/api")
 app.include_router(approvals.router, prefix="/api")
 app.include_router(companies.crud_router, prefix="/api")
+app.include_router(departments.router, prefix="/api")
+app.include_router(department_heads.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(feedbacks.router, prefix="/api")
 app.include_router(groups.router, prefix="/api")
@@ -66,6 +68,7 @@ app.include_router(locations.crud_router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
 app.include_router(permit_officers.router, prefix="/api")
 app.include_router(permit_types.router, prefix="/api")
+app.include_router(reports.router, prefix="/api")
 app.include_router(push_tokens.router, prefix="/api")
 app.include_router(safety_equipments.crud_router, prefix="/api")
 app.include_router(users.router, prefix="/api")

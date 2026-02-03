@@ -102,10 +102,19 @@ export default function Home() {
           </Link>
 
           <Link href="/feedbacks/form" asChild>
-            <Pressable className="bg-white border border-bg1 w-full py-4 rounded flex-row justify-center items-center">
+            <Pressable className="bg-white border border-bg1 w-full py-4 rounded flex-row justify-center items-center mb-4">
               <Entypo name="mail" size={18} color="#000" />
               <Text className="text-bg1 text-center font-semibold text-lg ml-2">
                 Give Feedback
+              </Text>
+            </Pressable>
+          </Link>
+
+          <Link href="/reports/form" asChild>
+            <Pressable className="bg-white border border-bg1 w-full py-4 rounded flex-row justify-center items-center">
+              <Entypo name="flag" size={18} color="#000" />
+              <Text className="text-bg1 text-center font-semibold text-lg ml-2">
+                Near Miss Report
               </Text>
             </Pressable>
           </Link>
