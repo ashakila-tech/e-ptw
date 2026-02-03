@@ -764,6 +764,16 @@ export async function fetchServerTime() {
 }
 
 // -------------------- Notifications --------------------
+export async function fetchAllNotifications() {
+  return fetchPaginatedData("api/notifications/");
+}
+
+export async function fetchNotifications(userId: number) {
+  const res = await fetch(`${API_BASE_URL}api/notifications/filter?user_id=${userId}`);
+  if (!res.ok) throw new Error("Failed to fetch notifications");
+  return res.json();
+}
+
 export async function sendNotificationToAdmin(payload: { title: string; message: string }) {
   const token = await getToken();
   if (!token) throw new Error("Not authenticated");
