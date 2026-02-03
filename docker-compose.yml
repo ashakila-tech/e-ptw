@@ -10,7 +10,8 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./app:/app/app
+      # - ./app:/app/app
+      - .:/app
       - /mnt/data/ptw-uploads:/app/ptw-uploads
 
   db:
