@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   SafeAreaView,
   View,
@@ -10,29 +10,38 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import CustomHeader from "@/components/CustomHeader";
-import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
+import DropdownField from "@/components/DropdownField";
+import DatePickerField from "@/components/DatePickerField";
+import DocumentUpload from "@/components/DocumentUpload";
+import { useReportForm } from "@/hooks/useReportForm";
 
 export default function NearMissReportForm() {
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [location, setLocation] = useState("");
-  const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const submitReport = async () => {
-    if (!title.trim() || !location.trim() || !description.trim()) {
-      crossPlatformAlert("Incomplete Form", "Please fill out all fields.");
-      return;
-    }
-    setLoading(true);
-    // In the future, an API call to submit the report will go here.
-    // For now, we'll simulate a network request.
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setLoading(false);
-    crossPlatformAlert("Success", "Your near miss report has been submitted.", [
-      { text: "OK", onPress: () => router.back() }
-    ]);
-  };
+  const {
+    name, setName,
+    locationId, setLocationId,
+    departmentId, setDepartmentId,
+    incidentTimestamp, setIncidentTimestamp,
+    description, setDescription,
+    condition, setCondition,
+    concern, setConcern,
+    immediateAction, setImmediateAction,
+    documentId,
+    documentName,
+    uploading,
+    loading,
+    locationOpen, setLocationOpen,
+    departmentOpen, setDepartmentOpen,
+    conditionOpen, setConditionOpen,
+    concernOpen, setConcernOpen,
+    locationItems, setLocationItems,
+    departmentItems, setDepartmentItems,
+    conditionItems, setConditionItems,
+    concernItems, setConcernItems,
+    submitReport,
+    pickAndUploadDocument,
+    handleDownloadDocument,
+  } = useReportForm(router);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -43,27 +52,99 @@ export default function NearMissReportForm() {
         <TextInput
           className="border border-gray-300 rounded-2xl px-4 py-3 mb-4"
           placeholder="e.g., Slippery floor near entrance"
-          value={title}
-          onChangeText={setTitle}
+          value={name}
+          onChangeText={setName}
         />
 
         <Text className="text-base text-gray-700 mb-2">Location of Incident</Text>
-        <TextInput
-          className="border border-gray-300 rounded-2xl px-4 py-3 mb-4"
-          placeholder="e.g., Warehouse Section B"
-          value={location}
-          onChangeText={setLocation}
+        <DropdownField
+          open={locationOpen}
+          value={locationId}
+          items={locationItems}
+          setOpen={setLocationOpen}
+          setValue={setLocationId}
+          setItems={setLocationItems}
+          placeholder="Select a location..."
+          zIndex={1000}
         />
 
-        <Text className="text-base text-gray-700 mb-2">Description of Near Miss</Text>
+        <Text className="text-base text-gray-700 mt-4 mb-2">Department</Text>
+        <DropdownField
+          open={departmentOpen}
+          value={departmentId}
+          items={departmentItems}
+          setOpen={setDepartmentOpen}
+          setValue={setDepartmentId}
+          setItems={setDepartmentItems}
+          placeholder="Select a department (optional)..."
+          zIndex={900}
+        />
+
+        <Text className="text-base text-gray-700 mt-4 mb-2">Date & Time of Incident</Text>
+        <DatePickerField
+          value={incidentTimestamp}
+          onChange={(date) => date && setIncidentTimestamp(date)}
+          mode="datetime"
+        />
+
+        <Text className="text-base text-gray-700 mt-4 mb-2">Condition</Text>
+        <DropdownField
+          open={conditionOpen}
+          value={condition}
+          items={conditionItems}
+          setOpen={setConditionOpen}
+          setValue={setCondition}
+          setItems={setConditionItems}
+          placeholder="Select a condition..."
+          zIndex={800}
+        />
+
+        <Text className="text-base text-gray-700 mt-4 mb-2">Type of Concern</Text>
+        <DropdownField
+          open={concernOpen}
+          value={concern}
+          items={concernItems}
+          setOpen={setConcernOpen}
+          setValue={setConcern}
+          setItems={setConcernItems}
+          placeholder="Select a concern..."
+          zIndex={700}
+        />
+
+        <Text className="text-base text-gray-700 mt-4 mb-2">
+          Describe the potential incident / hazard / concern and possible outcome (in as much detail as possible)
+        </Text>
         <TextInput
           className="border border-gray-300 rounded-2xl px-4 py-3 h-40 mb-4"
-          placeholder="Describe what happened, what the risks were, and any immediate actions taken."
+          placeholder="Describe what happened, what the risks were..."
           value={description}
           onChangeText={setDescription}
           multiline
           textAlignVertical="top"
         />
+
+        <Text className="text-base text-gray-700 mb-2">
+          Your immediate actions to resolve the near miss or any recommendations
+        </Text>
+        <TextInput
+          className="border border-gray-300 rounded-2xl px-4 py-3 h-40 mb-4"
+          placeholder="Describe any immediate corrective actions."
+          value={immediateAction}
+          onChangeText={setImmediateAction}
+          multiline
+          textAlignVertical="top"
+        />
+
+        <Text className="text-base text-gray-700 mt-4 mb-2">Attachment</Text>
+        <View className="mb-8">
+          <DocumentUpload
+            uploading={uploading}
+            documentId={documentId}
+            documentName={documentName}
+            onUploadPress={pickAndUploadDocument}
+            onDownloadPress={handleDownloadDocument}
+          />
+        </View>
 
         <Pressable
           onPress={submitReport}
@@ -76,6 +157,8 @@ export default function NearMissReportForm() {
             <Text className="text-white font-semibold text-base">Submit Report</Text>
           )}
         </Pressable>
+
+        <View className="p-10" />
       </ScrollView>
     </SafeAreaView>
   );

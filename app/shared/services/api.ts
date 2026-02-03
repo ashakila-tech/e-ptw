@@ -856,6 +856,45 @@ export async function createFeedback(payload: { user_id: number; title: string; 
   return res.json();
 }
 
+// -------------------- Departments --------------------
+export async function fetchDepartments() {
+  const res = await fetch(`${API_BASE_URL}api/departments/`);
+  if (!res.ok) throw new Error("Failed to fetch departments");
+  return res.json();
+}
+
+// -------------------- Reports --------------------
+export async function createReport(payload: {
+  name: string;
+  user_id: number;
+  incident_timestamp: string;
+  location_id: number;
+  description: string;
+  department_id?: number | null;
+  condition?: string | null;
+  concern?: string | null;
+  immediate_action?: string | null;
+}) {
+  const token = await getToken();
+  if (!token) throw new Error("Not authenticated");
+
+  const res = await fetch(`${API_BASE_URL}api/reports/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: "Failed to submit report" }));
+    throw new Error(errorData.detail || "Failed to submit report");
+  }
+
+  return res.json();
+}
+
 // -------------------- Utility: Paginated Fetch --------------------
 export async function fetchPaginatedData<T = any>(endpoint: string): Promise<T[]> {
   const results: T[] = [];
