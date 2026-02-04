@@ -863,6 +863,12 @@ export async function fetchDepartments() {
   return res.json();
 }
 
+export async function fetchDepartmentHeads(departmentId: number) {
+  const res = await fetch(`${API_BASE_URL}api/department-heads/filter?department_id=${departmentId}`);
+  if (!res.ok) throw new Error("Failed to fetch department heads");
+  return res.json();
+}
+
 // -------------------- Reports --------------------
 export async function createReport(payload: {
   name: string;
@@ -892,6 +898,19 @@ export async function createReport(payload: {
     throw new Error(errorData.detail || "Failed to submit report");
   }
 
+  return res.json();
+}
+
+export async function fetchReports(userId?: number) {
+  if (userId) {
+    return fetchPaginatedData(`api/reports/filter?user_id=${userId}`);
+  }
+  return fetchPaginatedData("api/reports/");
+}
+
+export async function fetchReportById(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/reports/${id}`);
+  if (!res.ok) throw new Error(`Failed to fetch report: ${await res.text()}`);
   return res.json();
 }
 

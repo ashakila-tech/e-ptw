@@ -10,13 +10,14 @@ import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@/contexts/UserContext";
 import FeedbackTable from "@/components/FeedbackTable";
+import ReportTable from "@/components/ReportTable";
 import { fetchFeedbacks, fetchAllApplications } from "../../../shared/services/api";
 
 export default function ProfileTab() {
   const router = useRouter();
   const { logout } = useAuth();
   const { isApproval, isSecurity, userId } = useUser();
-  const { profile, loading, error, workers, refresh: refreshProfile, removeWorker } = useProfile();
+  const { profile, loading, error, workers, reports, refresh: refreshProfile, removeWorker } = useProfile();
     
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
@@ -293,6 +294,15 @@ export default function ProfileTab() {
               )}
             </View>
 
+            {/* Reports Table */}
+            <View className="bg-white rounded-xl p-6 shadow-lg mb-6">
+              <Text className="text-primary text-lg font-bold mb-4">My Near Miss Reports</Text>
+              {reports && reports.length > 0 ? (
+                <ReportTable reports={reports} />
+              ) : (
+                <Text className="text-primary text-center mt-4">No reports submitted</Text>
+              )}
+            </View>
 
           </>
         )}

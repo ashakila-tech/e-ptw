@@ -6,7 +6,8 @@ import {
   fetchLocationForSiteManager,
   fetchPermitTypeForSafetyOfficer,
   fetchWorkers,
-  deleteWorker
+  deleteWorker,
+  fetchReports
 } from "../../shared/services/api";
 
 const SAFETY_OFFICER = "Safety Officer";
@@ -18,6 +19,7 @@ export function useProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [workers, setWorkers] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
 
   async function fetchProfile() {
     try {
@@ -42,6 +44,8 @@ export function useProfile() {
       const workersData = await fetchWorkers(currentUserData.company_id);
       setWorkers(workersData);
 
+      const reportsData = await fetchReports(currentUserData.id);
+      setReports(reportsData);
 
       setProfile(currentUserData);
     } catch (err: any) {
@@ -65,6 +69,7 @@ export function useProfile() {
     error,
     refresh: fetchProfile,
     workers,
+    reports,
     removeWorker,
   };
 }

@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { useUser } from "@/contexts/UserContext";
-import { createReport, fetchDepartments, fetchLocations, uploadDocument } from "../../shared/services/api";
+import {
+  createReport,
+  fetchDepartments,
+  fetchLocations,
+  uploadDocument,
+  fetchUsersByGroupName,
+  sendNotificationToUser,
+  fetchDepartmentHeads,
+} from "../../shared/services/api";
 import { downloadDocument } from "@/utils/download";
 import { CONDITION_ITEMS } from "../../shared/constants/Conditions";
 import { CONCERN_ITEMS } from "../../shared/constants/Concerns";
+import { USER_GROUPS } from "../../shared/constants/UserGroups";
 import * as DocumentPicker from "expo-document-picker";
 
 // Define interfaces for fetched data
@@ -94,6 +103,53 @@ export function useReportForm(router: any) {
 
     try {
       await createReport(payload);
+
+      // Notify Safety Officers
+      try {
+        const safetyOfficers = await fetchUsersByGroupName(USER_GROUPS.SafetyOfficer);
+        const locationName = locationItems.find((l) => l.value === locationId)?.label || "Unknown Location";
+        const title = `New Near Miss Report: ${name}`;
+        const message = `
+          <p>DO NOT REPLY TO THIS EMAIL.</p>
+          <p>A new near miss report <strong>${name}</strong> has been submitted.</p>
+          <p><strong>Location:</strong> ${locationName}</p>
+          <p><strong>Description:</strong> ${description}</p>
+          <p>Please log in to the application to review and take action.</p>
+        `;
+
+        await Promise.all(
+          safetyOfficers.map((officer: any) =>
+            sendNotificationToUser(officer.id, { title, message })
+          )
+        );
+      } catch (notifyErr) {
+        console.warn("Failed to notify Safety Officers:", notifyErr);
+      }
+
+      // Notify Department Heads
+      if (departmentId) {
+        try {
+          const departmentHeads = await fetchDepartmentHeads(departmentId);
+          const locationName = locationItems.find((l) => l.value === locationId)?.label || "Unknown Location";
+          const title = `New Near Miss Report: ${name}`;
+          const message = `
+            <p>DO NOT REPLY TO THIS EMAIL.</p>
+            <p>A new near miss report <strong>${name}</strong> has been submitted affecting your department.</p>
+            <p><strong>Location:</strong> ${locationName}</p>
+            <p><strong>Description:</strong> ${description}</p>
+            <p>Please log in to the application to review.</p>
+          `;
+
+          await Promise.all(
+            departmentHeads.map((head: any) =>
+              sendNotificationToUser(head.user_id, { title, message })
+            )
+          );
+        } catch (notifyErr) {
+          console.warn("Failed to notify Department Heads:", notifyErr);
+        }
+      }
+
       setLoading(false);
       crossPlatformAlert("Success", "Your near miss report has been submitted.", [
         { text: "OK", onPress: () => router.back() }
