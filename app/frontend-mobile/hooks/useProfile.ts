@@ -46,6 +46,7 @@ export function useProfile() {
 
       const reportsData = await fetchReports(currentUserData.id);
       setReports(reportsData);
+      console.log("Fetched reports:", reportsData);
 
       setProfile(currentUserData);
     } catch (err: any) {

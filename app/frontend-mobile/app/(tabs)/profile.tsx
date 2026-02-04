@@ -75,6 +75,10 @@ export default function ProfileTab() {
     return list;
   }, [workers, search]);
 
+  useEffect(() => {
+    console.log("Reports in profile", reports);
+  },[reports]);
+
   // Pull-to-refresh handler
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

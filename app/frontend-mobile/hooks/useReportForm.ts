@@ -174,14 +174,7 @@ export function useReportForm(router: any) {
 
       setUploading(true);
 
-      const formData = new FormData();
-      formData.append("file", {
-        uri: asset.uri,
-        name: asset.name,
-        type: asset.mimeType || "application/octet-stream",
-      } as any);
-
-      const response = await uploadDocument(formData);
+      const response = await uploadDocument(asset);
       setDocumentId(response.id);
       setDocumentName(response.name);
     } catch (error) {

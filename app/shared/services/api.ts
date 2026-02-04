@@ -918,9 +918,8 @@ export async function fetchReportById(id: number) {
 export async function fetchPaginatedData<T = any>(endpoint: string): Promise<T[]> {
   const results: T[] = [];
   let base = API_BASE_URL || await getApiBaseUrlWithOverride();
-  const separator = endpoint.includes("?") ? "&" : "?";
-  let nextUrl: string | null = `${base + endpoint}${separator}page=1&page_size=100`;
-
+  // Start with the raw endpoint. The backend will provide the next URL if it's paginated.
+  let nextUrl: string | null = base + endpoint;
   // Get token for auth
   const token = await getToken();
   const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
