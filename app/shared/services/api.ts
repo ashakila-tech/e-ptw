@@ -906,6 +906,8 @@ export async function fetchReports(userId?: number) {
     return fetchPaginatedData(`api/reports/filter?user_id=${userId}`);
   }
   return fetchPaginatedData("api/reports/");
+  // Use filter endpoint to ensure relations (location, user, etc.) are loaded
+  // return fetchPaginatedData("api/reports/filter");
 }
 
 export async function fetchReportById(id: number) {
