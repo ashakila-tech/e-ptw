@@ -863,9 +863,43 @@ export async function fetchDepartments() {
   return res.json();
 }
 
+export async function createDepartment(payload: { name: string; company_id: number }) {
+  const res = await fetch(`${API_BASE_URL}api/departments/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to create department: ${await res.text()}`);
+  return res.json();
+}
+
+export async function updateDepartment(id: number, payload: { name?: string; company_id?: number }) {
+  const res = await fetch(`${API_BASE_URL}api/departments/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to update department: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteDepartment(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/departments/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to delete department: ${await res.text()}`);
+  return true;
+}
+
 export async function fetchDepartmentHeads(departmentId: number) {
   const res = await fetch(`${API_BASE_URL}api/department-heads/filter?department_id=${departmentId}`);
   if (!res.ok) throw new Error("Failed to fetch department heads");
+  return res.json();
+}
+
+export async function fetchAllDepartmentHeads() {
+  const res = await fetch(`${API_BASE_URL}api/department-heads/`);
+  if (!res.ok) throw new Error("Failed to fetch all department heads");
   return res.json();
 }
 

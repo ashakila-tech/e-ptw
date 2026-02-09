@@ -11,7 +11,8 @@ import {
   faSignOutAlt, 
   faChevronLeft, 
   faChevronRight,
-  faBell
+  faBell,
+  faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -30,8 +31,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
     { name: 'Dashboard', path: '/dashboard', icon: faChartLine },
     { name: 'Permits', path: '/permits', icon: faFileSignature },
     { name: 'Users', path: '/users', icon: faUsers },
+    { name: 'Reports', path: '/reports', icon: faExclamationTriangle },
     { name: 'Feedbacks', path: '/feedbacks', icon: faComments },
     { name: 'Notifications', path: '/notifications', icon: faBell },
+    
   ];
 
   const handleLogout = async () => {

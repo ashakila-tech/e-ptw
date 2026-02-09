@@ -1,17 +1,19 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useUsers } from '../hooks/useUsers';
-import { fetchWorkers, deleteWorker, deleteUser, fetchCompanies, deleteCompany, fetchAllGroups, deleteGroup } from '../../../shared/services/api';
+import { fetchWorkers, deleteWorker, deleteUser, fetchCompanies, deleteCompany, fetchAllGroups, deleteGroup, fetchDepartments, deleteDepartment, fetchAllDepartmentHeads } from '../../../shared/services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import WorkerModal from '../components/modals/WorkerModal';
 import UserModal from '../components/modals/UserModal';
 import CompanyModal from '../components/modals/CompanyModal';
 import GroupModal from '../components/modals/GroupModal';
+import DepartmentModal from '../components/modals/DepartmentModal';
 import UserTable from '../components/tables/UserTable';
 import UserAssignmentModal from '../components/modals/UserAssignmentModal';
 import WorkerTable from '../components/tables/WorkerTable';
 import CompanyTable from '../components/tables/CompanyTable';
 import GroupTable from '../components/tables/GroupTable';
+import DepartmentTable from '../components/tables/DepartmentTable';
 
 const Users: React.FC = () => {
   const { users, loading, error, refetch } = useUsers();
@@ -25,6 +27,10 @@ const Users: React.FC = () => {
   // Companies state
   const [companies, setCompanies] = useState<{ id: number; name: string }[]>([]);
   const [companiesLoading, setCompaniesLoading] = useState(false);
+
+  // Departments state
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [departmentsLoading, setDepartmentsLoading] = useState(false);
 
   // Groups state
   const [groups, setGroups] = useState<any[]>([]);
@@ -43,6 +49,10 @@ const Users: React.FC = () => {
   const [companyModalOpen, setCompanyModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<{ id: number; name: string } | null>(null);
 
+  // Department Modal state
+  const [departmentModalOpen, setDepartmentModalOpen] = useState(false);
+  const [editingDepartment, setEditingDepartment] = useState<any | null>(null);
+
   // Group Modal state
   const [groupModalOpen, setGroupModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any | null>(null);
@@ -50,6 +60,9 @@ const Users: React.FC = () => {
   // Assignment Modal state
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
   const [assigningUser, setAssigningUser] = useState<any | null>(null);
+
+  // Department Head Counts
+  const [departmentHeadCounts, setDepartmentHeadCounts] = useState(new Map<number, number>());
 
   const loadCompanies = useCallback(async () => {
     setCompaniesLoading(true);
@@ -60,6 +73,18 @@ const Users: React.FC = () => {
       console.error("Failed to load companies", e);
     } finally {
       setCompaniesLoading(false);
+    }
+  }, []);
+
+  const loadDepartments = useCallback(async () => {
+    setDepartmentsLoading(true);
+    try {
+      const data = await fetchDepartments();
+      setDepartments(data);
+    } catch (e) {
+      console.error("Failed to load departments", e);
+    } finally {
+      setDepartmentsLoading(false);
     }
   }, []);
 
@@ -124,6 +149,20 @@ const Users: React.FC = () => {
     }
   };
 
+  // Department handlers
+  const openAddDepartment = () => { setEditingDepartment(null); setDepartmentModalOpen(true); };
+  const openEditDepartment = (d: any) => { setEditingDepartment(d); setDepartmentModalOpen(true); };
+  const closeDepartmentModal = () => { setEditingDepartment(null); setDepartmentModalOpen(false); };
+  const handleDepartmentSaved = () => { loadDepartments(); };
+
+  const handleDeleteDepartment = async (id: number) => {
+    if (!confirm('Delete this department? This may fail if it is in use.')) return;
+    try {
+      await deleteDepartment(id);
+      loadDepartments();
+    } catch (e: any) { alert(e?.message || String(e)); }
+  };
+
   // Group handlers
   const openAddGroup = () => { setEditingGroup(null); setGroupModalOpen(true); };
   const openEditGroup = (g: any) => { setEditingGroup(g); setGroupModalOpen(true); };
@@ -179,10 +218,27 @@ const Users: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadAllWorkers();
-    loadCompanies();
-    loadGroups();
-  }, [workersRefresh, loadAllWorkers, loadCompanies, loadGroups]);
+    const loadAllData = async () => {
+        await Promise.all([
+            loadAllWorkers(),
+            loadCompanies(),
+            loadGroups(),
+            loadDepartments(),
+        ]);
+
+        try {
+            const allHeads = await fetchAllDepartmentHeads();
+            const counts = new Map<number, number>();
+            allHeads.forEach((head: any) => {
+                counts.set(head.department_id, (counts.get(head.department_id) || 0) + 1);
+            });
+            setDepartmentHeadCounts(counts);
+        } catch (e) {
+            console.error("Failed to load department head counts", e);
+        }
+    };
+    loadAllData();
+  }, [workersRefresh, loadAllWorkers, loadCompanies, loadGroups, loadDepartments]);
 
   return (
     <div className="content-area">
@@ -197,6 +253,17 @@ const Users: React.FC = () => {
         onRefresh={() => { loadCompanies(); refetch(); setWorkersRefresh(k => k + 1); }}
         onEdit={openEditCompany}
         onDelete={handleDeleteCompany}
+      />
+
+      <DepartmentTable
+        departments={departments}
+        loading={departmentsLoading}
+        companies={companies}
+        departmentHeadCounts={departmentHeadCounts}
+        onAdd={openAddDepartment}
+        onRefresh={loadDepartments}
+        onEdit={openEditDepartment}
+        onDelete={handleDeleteDepartment}
       />
 
       <GroupTable
@@ -304,6 +371,14 @@ const Users: React.FC = () => {
         onClose={closeCompanyModal}
         initial={editingCompany}
         onSaved={handleCompanySaved}
+      />
+
+      <DepartmentModal
+        open={departmentModalOpen}
+        onClose={closeDepartmentModal}
+        initial={editingDepartment}
+        companies={companies}
+        onSaved={handleDepartmentSaved}
       />
 
       <GroupModal
