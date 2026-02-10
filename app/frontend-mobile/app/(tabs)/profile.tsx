@@ -11,53 +11,23 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@/contexts/UserContext";
 import FeedbackTable from "@/components/FeedbackTable";
 import ReportTable from "@/components/ReportTable";
-import { fetchFeedbacks, fetchAllApplications } from "../../../shared/services/api";
+import { fetchFeedbacks } from "../../../shared/services/api";
 
 export default function ProfileTab() {
   const router = useRouter();
   const { logout } = useAuth();
   const { isApproval, isSecurity, userId } = useUser();
-  const { profile, loading, error, workers, reports, refresh: refreshProfile, removeWorker } = useProfile();
+  const { profile, loading, error, workers, reports, refresh: refreshProfile, removeWorker, pendingCount, waitingCount } = useProfile();
     
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [waitingCount, setWaitingCount] = useState(0);
 
   useEffect(() => {
     fetchFeedbacks(userId ?? undefined)
       .then(setFeedbacks)
       .catch((err) => console.error("Failed to fetch feedbacks", err));
-
-    if (isApproval && profile) {
-      fetchAllApplications()
-        .then((apps) => {
-          if (Array.isArray(apps)) {
-            let pending = 0;
-            let waiting = 0;
-
-            apps.forEach((app: any) => {
-              const approvalData = app.approval_data || [];
-              const userApprovals = approvalData.filter((ad: any) => {
-                const isUser = ad.approver_name === profile.name;
-                const isGroup = profile.groups?.some((g: any) => g.name === ad.role_name);
-                return isUser || isGroup;
-              });
-
-              userApprovals.forEach((ad: any) => {
-                if (ad.status === "PENDING") pending++;
-                if (ad.status === "WAITING") waiting++;
-              });
-            });
-
-            setPendingCount(pending);
-            setWaitingCount(waiting);
-          }
-        })
-        .catch((err) => console.error("Failed to fetch applications stats", err));
-    }
-  }, [isApproval, profile, userId]);
+  }, [userId]);
 
   // Memoized list for searching and sorting workers
   const sortedAndFilteredWorkers = useMemo(() => {
@@ -86,37 +56,9 @@ export default function ProfileTab() {
       refreshProfile(),
       fetchFeedbacks(userId ?? undefined).then(setFeedbacks).catch(console.error)
     ];
-
-    if (isApproval && profile) {
-      promises.push(
-        fetchAllApplications().then((apps) => {
-          if (Array.isArray(apps)) {
-            let pending = 0;
-            let waiting = 0;
-
-            apps.forEach((app: any) => {
-              const approvalData = app.approval_data || [];
-              const userApprovals = approvalData.filter((ad: any) => {
-                const isUser = ad.approver_name === profile.name;
-                const isGroup = profile.groups?.some((g: any) => g.name === ad.role_name);
-                return isUser || isGroup;
-              });
-
-              userApprovals.forEach((ad: any) => {
-                if (ad.status === "PENDING") pending++;
-                if (ad.status === "WAITING") waiting++;
-              });
-            });
-
-            setPendingCount(pending);
-            setWaitingCount(waiting);
-          }
-        }).catch(console.error)
-      );
-    }
     await Promise.all(promises);
     setRefreshing(false);
-  }, [refreshProfile, isApproval, profile, userId]);
+  }, [refreshProfile, userId]);
 
   const handleSignOut = async () => {
     await logout();

@@ -643,6 +643,16 @@ export async function fetchApplicationsByApplicant(applicantId: number) {
   return res.ok ? res.json() : [];
 }
 
+export async function fetchApplicationsForApprover(userId: number) {
+  const token = await getToken();
+  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+  const res = await fetch(`${API_BASE_URL}api/applications/for-approver?user_id=${userId}`, {
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to fetch applications for approver (${res.status})`);
+  return res.json();
+}
+
 export async function fetchApplicationsByWorkflowData(workflowDataId: number) {
   const res = await fetch(`${API_BASE_URL}api/applications/filter?workflow_data_id=${workflowDataId}`);
   return res.ok ? res.json() : [];

@@ -41,11 +41,12 @@ export function usePermitTab() {
             PermitStatus.APPROVED, PermitStatus.ACTIVE, PermitStatus.COMPLETED, PermitStatus.EXIT_PENDING
           ].includes(p.status)
         );
-      } else if (!isApproval) {
-        permitsData = await api.fetchApplicationsByApplicant(numericUserId);
+      } else if (isApproval) {
+        // For approvers, use the new dedicated endpoint.
+        permitsData = await api.fetchApplicationsForApprover(numericUserId);
       } else {
-        // For approvers, fetch all applications. We will filter them client-side based on approval_data.
-        permitsData = await api.fetchAllApplications();
+        // Default to fetching by applicant
+        permitsData = await api.fetchApplicationsByApplicant(numericUserId);
       }
 
       // Enrich permit data
@@ -60,22 +61,27 @@ export function usePermitTab() {
           // Use nested approval_data if available
           // Based on new schema, approval_data is at the root
           const approvalRows = p.approval_data || [];
+          const approvalDefs = p.approvals || [];
 
           let userApprovalStatus = "-";
-          if (isApproval && profile) {
-            const userApprovals = approvalRows.filter((ad: any) => {
-              const isUser = ad.approver_name === profile.name;
-              const isGroup = profile.groups?.some((g: any) => g.name === ad.role_name);
-              return isUser || isGroup;
-            });
+          if (isApproval && userId) {
+            const userApprovalDefinitions = approvalDefs.filter(
+              (a: any) => a.user_id === Number(userId)
+            );
 
-            if (userApprovals.length > 0) {
-              if (userApprovals.some((ad: any) => ad.status === "PENDING")) {
-                userApprovalStatus = "PENDING";
-              } else if (userApprovals.some((ad: any) => ad.status === "WAITING")) {
-                userApprovalStatus = "WAITING";
-              } else {
-                userApprovalStatus = userApprovals[0].status;
+            if (userApprovalDefinitions.length > 0) {
+              const userApprovalDataItems = approvalRows.filter((ad: any) =>
+                userApprovalDefinitions.some((def: any) => def.id === ad.approval_id)
+              );
+
+              if (userApprovalDataItems.length > 0) {
+                if (userApprovalDataItems.some((ad: any) => ad.status === "PENDING")) {
+                  userApprovalStatus = "PENDING";
+                } else if (userApprovalDataItems.some((ad: any) => ad.status === "WAITING")) {
+                  userApprovalStatus = "WAITING";
+                } else {
+                  userApprovalStatus = userApprovalDataItems[0].status;
+                }
               }
             }
           }

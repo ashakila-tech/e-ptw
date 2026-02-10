@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useUser } from "@/contexts/UserContext";
 import { 
   getCurrentUser,
   fetchCompanyById,
@@ -7,19 +8,23 @@ import {
   fetchPermitTypeForSafetyOfficer,
   fetchWorkers,
   deleteWorker,
-  fetchReports
+  fetchReports,
+  fetchApplicationsForApprover
 } from "../../shared/services/api";
 
 const SAFETY_OFFICER = "Safety Officer";
 const SITE_MANAGER = "Site Manager";
 
 export function useProfile() {
+  const { isApproval, userId } = useUser();
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [workers, setWorkers] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [waitingCount, setWaitingCount] = useState(0);
 
   async function fetchProfile() {
     try {
@@ -48,6 +53,38 @@ export function useProfile() {
       setReports(reportsData);
       console.log("Fetched reports:", reportsData);
 
+      if (isApproval && currentUserData.id) {
+        const approverApps = await fetchApplicationsForApprover(currentUserData.id);
+        if (Array.isArray(approverApps)) {
+          let pending = 0;
+          let waiting = 0;
+
+          approverApps.forEach((app: any) => {
+            const approvalDataItems = app.approval_data || [];
+            const approvalDefinitions = app.approvals || [];
+
+            // Find which approval definitions belong to the current user for this app
+            const userApprovalDefIds = approvalDefinitions
+              .filter((def: any) => def.user_id === currentUserData.id)
+              .map((def: any) => def.id);
+
+            // Filter approval_data items that correspond to the user's approval definitions
+            const userApprovalDataItems = approvalDataItems.filter((ad: any) =>
+              userApprovalDefIds.includes(ad.approval_id)
+            );
+
+            // Count statuses from these items
+            userApprovalDataItems.forEach((ad: any) => {
+              if (ad.status === "PENDING") pending++;
+              if (ad.status === "WAITING") waiting++;
+            });
+          });
+
+          setPendingCount(pending);
+          setWaitingCount(waiting);
+        }
+      }
+
       setProfile(currentUserData);
     } catch (err: any) {
       setError(err.message || "Failed to load profile");
@@ -62,7 +99,7 @@ export function useProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [isApproval, userId]);
 
   return {
     profile,
@@ -72,5 +109,7 @@ export function useProfile() {
     workers,
     reports,
     removeWorker,
+    pendingCount,
+    waitingCount,
   };
 }
