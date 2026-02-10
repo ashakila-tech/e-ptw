@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencilAlt, faTrash, faSync } from '@fortawesome/free-solid-svg-icons';
+import { faPencilAlt, faTrash, faSync, faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import TablePagination from './TablePagination';
 
 interface Department {
@@ -23,6 +23,7 @@ interface Props {
   onRefresh: () => void;
   onEdit: (d: Department) => void;
   onDelete: (id: number) => void;
+  onAssign: (d: Department) => void;
 }
 
 const DepartmentTable: React.FC<Props> = ({
@@ -34,6 +35,7 @@ const DepartmentTable: React.FC<Props> = ({
   onRefresh,
   onEdit,
   onDelete,
+  onAssign,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -106,6 +108,9 @@ const DepartmentTable: React.FC<Props> = ({
                         </button>
                         <button className="icon-btn delete" onClick={() => onDelete(d.id)} title="Delete">
                           <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                        <button className="icon-btn assign" onClick={() => onAssign(d)} title="Assign Heads">
+                          <FontAwesomeIcon icon={faUserPlus} />
                         </button>
                       </div>
                     </td>

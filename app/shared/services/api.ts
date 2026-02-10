@@ -919,6 +919,24 @@ export async function fetchAllDepartmentHeads() {
   return res.json();
 }
 
+export async function createDepartmentHead(payload: { user_id: number; department_id: number }) {
+  const res = await fetch(`${API_BASE_URL}api/department-heads/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to assign department head: ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteDepartmentHead(id: number) {
+  const res = await fetch(`${API_BASE_URL}api/department-heads/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to remove department head: ${await res.text()}`);
+  return true;
+}
+
 export async function fetchDepartmentForHead(userId: number) {
   const res = await fetch(
     `${API_BASE_URL}api/department-heads/filter?user_id=${userId}`

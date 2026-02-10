@@ -14,6 +14,7 @@ import WorkerTable from '../components/tables/WorkerTable';
 import CompanyTable from '../components/tables/CompanyTable';
 import GroupTable from '../components/tables/GroupTable';
 import DepartmentTable from '../components/tables/DepartmentTable';
+import ManagerAssignmentModal from '../components/modals/ManagerAssignmentModal';
 
 const Users: React.FC = () => {
   const { users, loading, error, refetch } = useUsers();
@@ -60,6 +61,11 @@ const Users: React.FC = () => {
   // Assignment Modal state
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
   const [assigningUser, setAssigningUser] = useState<any | null>(null);
+
+  // Manager Assignment Modal state (for departments)
+  const [managerAssignmentModalOpen, setManagerAssignmentModalOpen] = useState(false);
+  const [assignmentType, setAssignmentType] = useState<'location' | 'permit_type' | 'department'>('department');
+  const [assignmentItem, setAssignmentItem] = useState<{ id: number; name: string } | null>(null);
 
   // Department Head Counts
   const [departmentHeadCounts, setDepartmentHeadCounts] = useState(new Map<number, number>());
@@ -174,6 +180,12 @@ const Users: React.FC = () => {
     catch (e: any) { alert(e?.message || String(e)); }
   };
 
+  const handleAssignDepartment = (item: any) => {
+    setAssignmentType('department');
+    setAssignmentItem(item);
+    setManagerAssignmentModalOpen(true);
+  };
+
   // Assignment handlers
   const openAssignmentModal = (u: any) => { setAssigningUser(u); setAssignmentModalOpen(true); };
   const closeAssignmentModal = () => { setAssigningUser(null); setAssignmentModalOpen(false); };
@@ -183,6 +195,7 @@ const Users: React.FC = () => {
   const contractors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'contractor')), [users]);
   const supervisors = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'supervisor')), [users]);
   const areaOwners = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'area owner')), [users]);
+  const departmentHeads = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'head of department')), [users]);
   const siteManagers = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'site manager')), [users]);
   const safetyOfficers = useMemo(() => users.filter(u => u.groups.some(g => g.toLowerCase() === 'safety officer')), [users]);
 
@@ -264,6 +277,7 @@ const Users: React.FC = () => {
         onRefresh={loadDepartments}
         onEdit={openEditDepartment}
         onDelete={handleDeleteDepartment}
+        onAssign={handleAssignDepartment}
       />
 
       <GroupTable
@@ -314,6 +328,17 @@ const Users: React.FC = () => {
           onRefresh={refetch}
           onEdit={openEditUser}
           onDelete={handleDeleteUser}
+        />
+        
+        <UserTable 
+          title="Head of Departments" 
+          users={departmentHeads} 
+          loading={loading} 
+          error={error} 
+          onRefresh={refetch}
+          onEdit={openEditUser}
+          onDelete={handleDeleteUser}
+          onAssign={openAssignmentModal}
         />
         
         <UserTable 
@@ -394,6 +419,14 @@ const Users: React.FC = () => {
         onClose={closeAssignmentModal}
         user={assigningUser}
         onSaved={handleAssignmentsSaved}
+      />
+
+      <ManagerAssignmentModal
+        open={managerAssignmentModalOpen}
+        onClose={() => setManagerAssignmentModalOpen(false)}
+        type={assignmentType}
+        item={assignmentItem}
+        allUsers={users}
       />
     </div>
   );

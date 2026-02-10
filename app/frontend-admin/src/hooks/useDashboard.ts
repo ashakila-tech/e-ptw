@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
-    fetchUsers, fetchAllApplications, fetchUsersByGroupId, fetchGroupsOptions, fetchUserGroups
+    fetchUsers, fetchAllApplications, fetchGroupsOptions, fetchUserGroups
 } from "../../../shared/services/api";
 
 export function useDashboardData() {
@@ -23,10 +23,10 @@ export function useDashboardData() {
     (async () => {
       try {
         const [users, apps, groups, userGroups] = await Promise.all([
-          fetchUsers(),
-          fetchAllApplications(),
-          fetchGroupsOptions({ page_size: 200 }),
-          fetchUserGroups(),
+          fetchUsers().catch(() => []),
+          fetchAllApplications().catch(() => []),
+          fetchGroupsOptions({ page_size: 200 }).catch(() => []),
+          fetchUserGroups().catch(() => []),
         ]);
 
         // Build a map of status -> count (normalize to UPPERCASE)
@@ -60,15 +60,9 @@ export function useDashboardData() {
           return true;
         });
 
-        // For each visible group, fetch users by group id and return member arrays
-        const groupPromises = (visibleGroups || []).map(async (g: any) => {
-          try {
-            const members = await fetchUsersByGroupId(g.id);
-            return [g.name, (members || [])] as [string, any[]];
-          } catch (e) {
-            return [g.name, []] as [string, any[]];
-          }
-        });
+        // Create a map of user_id -> user object for easy lookup
+        const usersMap = new Map<number, any>();
+        (users || []).forEach((u: any) => { if (u?.id) usersMap.set(u.id, u); });
 
         // Compute excluded user ids from excludedGroupIds (so users in placeholder groups are excluded entirely)
         const excludedUserIds = new Set<number>();
@@ -76,8 +70,15 @@ export function useDashboardData() {
           if (ug?.group_id && excludedGroupIds.has(ug.group_id) && ug?.user_id) excludedUserIds.add(ug.user_id);
         });
 
-        // For group promises results, build role counts and map members but exclude users in excluded groups
-        const groupEntries = await Promise.all(groupPromises);
+        // For each visible group, resolve members from userGroups and usersMap
+        const groupEntries = (visibleGroups || []).map((g: any) => {
+          const members = (userGroups || [])
+            .filter((ug: any) => ug.group_id === g.id)
+            .map((ug: any) => usersMap.get(ug.user_id))
+            .filter((u: any) => u !== undefined);
+          return [g.name, members] as [string, any[]];
+        });
+
         const roleCounts: Record<string, number> = {};
         const groupMembersMap: Record<string, any[]> = {};
         groupEntries.forEach(([display, members]) => {

@@ -8,12 +8,15 @@ import {
   fetchPermitOfficersByPermitType,
   createPermitOfficer,
   deletePermitOfficer,
+  fetchDepartmentHeads,
+  createDepartmentHead,
+  deleteDepartmentHead,
 } from '../../../../shared/services/api';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  type: 'location' | 'permit_type';
+  type: 'location' | 'permit_type' | 'department';
   item: { id: number; name: string } | null;
   allUsers: any[];
 }
@@ -39,8 +42,10 @@ const ManagerAssignmentModal: React.FC<Props> = ({ open, onClose, type, item, al
       let data: any;
       if (type === 'location') {
         data = await fetchLocationManagersByLocation(item.id);
-      } else {
+      } else if (type === 'permit_type') {
         data = await fetchPermitOfficersByPermitType(item.id);
+      } else {
+        data = await fetchDepartmentHeads(item.id);
       }
       // Handle potential pagination structure
       const results = Array.isArray(data) ? data : (data.results || []);
@@ -57,8 +62,10 @@ const ManagerAssignmentModal: React.FC<Props> = ({ open, onClose, type, item, al
     try {
       if (type === 'location') {
         await createLocationManager({ user_id: parseInt(selectedUser), location_id: item.id });
-      } else {
+      } else if (type === 'permit_type') {
         await createPermitOfficer({ user_id: parseInt(selectedUser), permit_type_id: item.id });
+      } else {
+        await createDepartmentHead({ user_id: parseInt(selectedUser), department_id: item.id });
       }
       setSelectedUser('');
       loadAssignments();
@@ -72,8 +79,10 @@ const ManagerAssignmentModal: React.FC<Props> = ({ open, onClose, type, item, al
     try {
       if (type === 'location') {
         await deleteLocationManager(id);
-      } else {
+      } else if (type === 'permit_type') {
         await deletePermitOfficer(id);
+      } else {
+        await deleteDepartmentHead(id);
       }
       loadAssignments();
     } catch (e: any) {
