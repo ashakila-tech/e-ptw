@@ -16,6 +16,8 @@ type UserContextType = {
   setIsApproval: (value: boolean) => void;
   isSecurity: boolean;
   setIsSecurity: (value: boolean) => void;
+  isDepartmentHead: boolean;
+  setIsDepartmentHead: (value: boolean) => void;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -27,6 +29,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [companyId, setCompanyId] = useState<number | null>(null);
   const [isApproval, setIsApproval] = useState<boolean>(false);
   const [isSecurity, setIsSecurity] = useState<boolean>(false);
+  const [isDepartmentHead, setIsDepartmentHead] = useState<boolean>(false);
 
   useEffect(() => {
     const rehydrateUser = async () => {
@@ -40,6 +43,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           setCompanyId(user.company_id);
           setIsApproval(user.is_approver);
           setIsSecurity(user.is_security);
+          setIsDepartmentHead(user.groups?.some((g: any) => g.name === "Head of Department"));
         }
       } catch (error) {
         console.error("Failed to rehydrate user:", error);
@@ -65,6 +69,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setIsApproval,
         isSecurity,
         setIsSecurity,
+        isDepartmentHead,
+        setIsDepartmentHead,
       }}
     >
       {children}

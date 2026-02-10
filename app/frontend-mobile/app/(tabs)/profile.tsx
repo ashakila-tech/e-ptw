@@ -16,7 +16,7 @@ import { fetchFeedbacks } from "../../../shared/services/api";
 export default function ProfileTab() {
   const router = useRouter();
   const { logout } = useAuth();
-  const { isApproval, isSecurity, userId } = useUser();
+  const { isApproval, isSecurity, userId, isDepartmentHead } = useUser();
   const { profile, loading, error, workers, reports, refresh: refreshProfile, removeWorker, pendingCount, waitingCount } = useProfile();
     
   const [refreshing, setRefreshing] = useState(false);
@@ -134,6 +134,17 @@ export default function ProfileTab() {
                   </Text>
                 </Text>
               </View>
+
+              {/* Department */}
+              {isDepartmentHead && profile.departments?.length > 0 && (
+                <View className="mb-2">
+                  <Text className="text-primary mb-1">Department:
+                    <Text className="font-bold">
+                      {" " + profile.departments.map((d: any) => d.department_name).join(", ")}
+                    </Text>
+                  </Text>
+                </View>
+              )}
             </View>
             
             {/* Locations (GREEN version like permit types) */}

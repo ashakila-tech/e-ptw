@@ -6,6 +6,7 @@ import {
   fetchCompanyById,
   fetchLocationForSiteManager,
   fetchPermitTypeForSafetyOfficer,
+  fetchDepartmentForHead,
   fetchWorkers,
   deleteWorker,
   fetchReports,
@@ -14,9 +15,10 @@ import {
 
 const SAFETY_OFFICER = "Safety Officer";
 const SITE_MANAGER = "Site Manager";
+const DEPARTMENT_HEADS = "Head of Department";
 
 export function useProfile() {
-  const { isApproval, userId } = useUser();
+  const { isApproval, userId, isDepartmentHead } = useUser();
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,11 @@ export function useProfile() {
         const permitTypeForSafetyOfficer = await fetchPermitTypeForSafetyOfficer(currentUserData.id);
         currentUserData.permit_types = permitTypeForSafetyOfficer;
         console.log("Fetched permit types:", permitTypeForSafetyOfficer);
+      }
+
+      if (isDepartmentHead) {
+        const departmentForHead = await fetchDepartmentForHead(currentUserData.id);
+        currentUserData.departments = departmentForHead;
       }
 
       const workersData = await fetchWorkers(currentUserData.company_id);
@@ -99,7 +106,7 @@ export function useProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, [isApproval, userId]);
+  }, [isApproval, userId, isDepartmentHead]);
 
   return {
     profile,

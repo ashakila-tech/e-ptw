@@ -3,7 +3,7 @@ import * as api from "../../shared/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function useAuth() {
-  const { setUserId, setUserName, setCompanyId, setIsApproval, setIsSecurity, setProfile } = useUser();
+  const { setUserId, setUserName, setCompanyId, setIsApproval, setIsSecurity, setProfile, setIsDepartmentHead } = useUser();
 
   // useAuth.ts
   const login = async (email: string, password: string) => {
@@ -25,6 +25,7 @@ export function useAuth() {
       setCompanyId(user.company_id);
       setIsApproval(user.is_approver);
       setIsSecurity(user.is_security);
+      setIsDepartmentHead(user.groups?.some((g: any) => g.name === "Head of Department"));
 
       return user;
     } catch (err: any) {
@@ -63,6 +64,7 @@ export function useAuth() {
     setUserId(null);
     setCompanyId(null);
     setIsApproval(false);
+    setIsDepartmentHead(false);
   };
 
   return { login, register, logout };

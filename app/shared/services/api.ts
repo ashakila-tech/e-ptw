@@ -883,6 +883,12 @@ export async function createDepartment(payload: { name: string; company_id: numb
   return res.json();
 }
 
+export async function fetchDepartmentById(departmentId: number) {
+  const res = await fetch(`${API_BASE_URL}api/departments/${departmentId}`);
+  if (!res.ok) throw new Error(`Failed to fetch department (${res.status})`);
+  return res.json();
+}
+
 export async function updateDepartment(id: number, payload: { name?: string; company_id?: number }) {
   const res = await fetch(`${API_BASE_URL}api/departments/${id}`, {
     method: "PUT",
@@ -911,6 +917,31 @@ export async function fetchAllDepartmentHeads() {
   const res = await fetch(`${API_BASE_URL}api/department-heads/`);
   if (!res.ok) throw new Error("Failed to fetch all department heads");
   return res.json();
+}
+
+export async function fetchDepartmentForHead(userId: number) {
+  const res = await fetch(
+    `${API_BASE_URL}api/department-heads/filter?user_id=${userId}`
+  );
+
+  if (!res.ok) throw new Error("Failed to fetch department for Head");
+
+  const responseData = await res.json();
+  const data = Array.isArray(responseData) ? responseData : responseData.results || [];
+
+  // Fetch department names for each head role
+  const enriched = await Promise.all(
+    data.map(async (item: any) => {
+      try {
+        const department = await fetchDepartmentById(item.department_id);
+        return { ...item, department_name: department.name };
+      } catch {
+        return { ...item, department_name: `Department ID: ${item.department_id}` };
+      }
+    })
+  );
+
+  return enriched;
 }
 
 // -------------------- Reports --------------------
