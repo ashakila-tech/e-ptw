@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
 from typing import Optional, List
 from datetime import datetime
 from datetime import timedelta
@@ -122,11 +123,61 @@ def filter_applications(
         joinedload(models.Application.location),
         joinedload(models.Application.permit_type),
         joinedload(models.Application.workflow_data).joinedload(models.WorkflowData.approval_data),
+        joinedload(models.Application.workflow_data).joinedload(models.WorkflowData.workflow).joinedload(models.Workflow.approvals),
         joinedload(models.Application.workers),
         joinedload(models.Application.safety_equipment),
     )
 
     return query.all()
+
+@router.get("/for-approver", response_model=List[schemas.ApplicationOut])
+def get_applications_for_approver(
+    user_id: int = Query(..., description="Filter applications for a specific approver by their user ID."),
+    db: Session = Depends(get_db),
+):
+    """
+    Fetches applications where a specific user is a designated approver,
+    either directly by user ID or through a group role.
+
+    This is more efficient than fetching all applications and filtering on the client,
+    as it performs a targeted query on the database.
+    """
+    # Eagerly load the user's groups to get their names in an efficient query.
+    user_with_groups = db.query(models.User).options(
+        joinedload(models.User.user_groups).joinedload(models.UserGroup.group)
+    ).filter(models.User.id == user_id).one_or_none()
+
+    if not user_with_groups:
+        raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
+    
+    user_group_names = [ug.group.name for ug in user_with_groups.user_groups]
+
+    # Build the query to find applications where the user is an approver.
+    query = db.query(models.Application).join(
+        models.Application.workflow_data
+    ).join(
+        models.WorkflowData.workflow
+    ).join(
+        models.Workflow.approvals
+    ).filter(
+        or_(
+            models.Approval.user_id == user_id,
+            models.Approval.role_name.in_(user_group_names)
+        )
+    ).options(
+        # Eager-load all necessary relationships for the response schema to avoid N+1 queries.
+        joinedload(models.Application.document),
+        joinedload(models.Application.location),
+        joinedload(models.Application.permit_type),
+        joinedload(models.Application.applicant),
+        joinedload(models.Application.workers),
+        joinedload(models.Application.safety_equipment),
+        joinedload(models.Application.workflow_data).joinedload(models.WorkflowData.approval_data),
+        joinedload(models.Application.workflow_data).joinedload(models.WorkflowData.workflow).joinedload(models.Workflow.approvals),
+    ).distinct() # Use distinct to avoid duplicates if a user matches multiple approval criteria for the same application.
+
+    return query.all()
+
 
 @router.post("/{app_id}/security-confirm-entry")
 def security_confirm_entry_action(

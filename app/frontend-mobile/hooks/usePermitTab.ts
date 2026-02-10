@@ -149,6 +149,8 @@ export function usePermitTab() {
 
   useEffect(() => {
     fetchPermits();
+    // console.log("Permits", permits);
+    console.log("Permits count", permits.length);
   }, [fetchPermits]);
 
   return { permits, loading, refetch: fetchPermits };

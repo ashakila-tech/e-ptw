@@ -286,6 +286,7 @@ class ApplicationOut(ApplicationBase):
     document: Optional[DocumentOut] = None
     location: Optional[LocationOut] = None
     approval_data: List[ApprovalDataOut] = []
+    approvals: List[ApprovalOut] = []
     permit_type: Optional[PermitTypeOut] = None
     applicant: Optional[UserOut] = None
 

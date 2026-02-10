@@ -24,6 +24,7 @@ class Workflow(Base):
     name = Column(String, nullable=False)
     company = relationship("Company")
     permit_type = relationship("PermitType")
+    approvals = relationship("Approval", back_populates="workflow")
 
 class Group(Base):
     __tablename__ = "group"
@@ -66,6 +67,7 @@ class Approval(Base):
     name = Column(String, nullable=False)
     role_name = Column(String, nullable=True)
     level = Column(Integer, nullable=True)
+    workflow = relationship("Workflow", back_populates="approvals")
 
 class WorkflowData(Base):
     __tablename__ = "workflow_data"
@@ -76,6 +78,7 @@ class WorkflowData(Base):
     start_time = Column(DateTime, nullable=True)
     end_time = Column(DateTime, nullable=True)
     approval_data = relationship("ApprovalData", backref="workflow_data")
+    workflow = relationship("Workflow")
 
 class Document(Base):
     __tablename__ = "document"
@@ -127,6 +130,10 @@ class Application(Base):
     @property
     def approval_data(self):
         return self.workflow_data.approval_data if self.workflow_data else []
+
+    @property
+    def approvals(self):
+        return self.workflow_data.workflow.approvals if self.workflow_data and self.workflow_data.workflow else []
 
 
 class ApprovalData(Base):
