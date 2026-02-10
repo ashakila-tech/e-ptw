@@ -1,27 +1,37 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { formatDate } from "@/utils/date";
+import { useRouter } from "expo-router";
 
-type NotificationCardProps = {
+interface Notification {
+  id: number;
   title: string;
   message: string;
-  time: string | Date;
-  isRead?: boolean;
+  created_at: string;
+  is_read: boolean;
+}
+
+type NotificationCardProps = {
+  notification: Notification;
 };
 
-export default function NotificationCard({
-  title,
-  message,
-  time,
-  isRead = false,
-}: NotificationCardProps) {
+export default function NotificationCard({ notification }: NotificationCardProps) {
+  const router = useRouter();
+
+  const handlePress = () => {
+    router.push({
+      pathname: `../notifications/${notification.id}`,
+      params: { notification: JSON.stringify(notification) },
+    });
+  };
+
   return (
-    <View className={`bg-white rounded-lg w-full p-4 shadow-sm mb-3 ${isRead ? "opacity-70" : ""}`}>
-      <View className="flex-row justify-between items-start mb-1">
-        <Text className="text-primary text-lg font-bold flex-1 mr-2">{title}</Text>
-        <Text className="text-gray-500 text-xs mt-1">{formatDate(time)}</Text>
+    <Pressable onPress={handlePress} className={`bg-white rounded-lg w-full p-4 shadow-sm mb-3 ${notification.is_read ? "opacity-70" : ""}`}>
+      <Text className="text-primary text-lg font-bold flex-1 mr-2">{notification.title}</Text>
+      <Text className="text-gray-500 text-xs mt-1">{formatDate(notification.created_at)}</Text>
+      <View className="items-end mt-2">
+        <Text className="text-blue-600 font-semibold">View Details</Text>
       </View>
-      <Text className="text-primary text-base leading-5">{message}</Text>
-    </View>
+    </Pressable>
   );
 }

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, SafeAreaView, RefreshControl } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import NotificationCard from '@/components/NotificationCard';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Colors } from '@/constants/Colors';
@@ -8,6 +9,13 @@ import { useNotification } from '@/hooks/useNotification';
 export default function NotificationTab() {
   const { notifications, loading, refetch } = useNotification();
   const [refreshing, setRefreshing] = useState(false);
+
+  // Refetch notifications whenever the screen comes into focus to see read/unread status changes
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -29,12 +37,7 @@ export default function NotificationTab() {
         data={notifications}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <NotificationCard
-            title={item.title}
-            message={item.message}
-            time={item.created_at}
-            isRead={item.is_read}
-          />
+          <NotificationCard notification={item} />
         )}
         contentContainerStyle={{ padding: 16 }}
         refreshControl={
