@@ -136,21 +136,16 @@ def get_applications_for_approver(
     db: Session = Depends(get_db),
 ):
     """
-    Fetches applications where a specific user is a designated approver,
-    either directly by user ID or through a group role.
+    Fetches applications where a specific user is a designated approver
+    by their user ID.
 
     This is more efficient than fetching all applications and filtering on the client,
     as it performs a targeted query on the database.
     """
-    # Eagerly load the user's groups to get their names in an efficient query.
-    user_with_groups = db.query(models.User).options(
-        joinedload(models.User.user_groups).joinedload(models.UserGroup.group)
-    ).filter(models.User.id == user_id).one_or_none()
-
-    if not user_with_groups:
+    # Check if user exists
+    user = db.get(models.User, user_id)
+    if not user:
         raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
-    
-    user_group_names = [ug.group.name for ug in user_with_groups.user_groups]
 
     # Build the query to find applications where the user is an approver.
     query = db.query(models.Application).join(
@@ -160,10 +155,7 @@ def get_applications_for_approver(
     ).join(
         models.Workflow.approvals
     ).filter(
-        or_(
-            models.Approval.user_id == user_id,
-            models.Approval.role_name.in_(user_group_names)
-        )
+        models.Approval.user_id == user_id
     ).options(
         # Eager-load all necessary relationships for the response schema to avoid N+1 queries.
         joinedload(models.Application.document),
@@ -174,7 +166,7 @@ def get_applications_for_approver(
         joinedload(models.Application.safety_equipment),
         joinedload(models.Application.workflow_data).joinedload(models.WorkflowData.approval_data),
         joinedload(models.Application.workflow_data).joinedload(models.WorkflowData.workflow).joinedload(models.Workflow.approvals),
-    ).distinct() # Use distinct to avoid duplicates if a user matches multiple approval criteria for the same application.
+    ).distinct() # Use distinct to avoid duplicates if a user is an approver on multiple steps for the same application.
 
     return query.all()
 
