@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   SafeAreaView,
   View,
@@ -7,6 +7,9 @@ import {
   Pressable,
   RefreshControl,
   TextInput,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { usePermitTab } from "@/hooks/usePermitTab";
@@ -18,12 +21,22 @@ import { PermitStatus } from "@/constants/Status";
 export default function MyPermitTab() {
   const router = useRouter();
   const { isApproval, isSecurity } = useUser();
-  const { permits, loading, refetch } = usePermitTab();
-
   const [activeTab, setActiveTab] = useState<string>("all");
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Debounce search input to avoid spamming API
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const { permits, loading, refetch, loadMore, hasMore, isFetchingMore } = usePermitTab(debouncedSearch);
 
   // Pull-to-refresh handler
   const onRefresh = useCallback(async () => {
@@ -66,7 +79,7 @@ export default function MyPermitTab() {
     ? approverTabs
     : applicantTabs;
 
-  // Filter + search + sort
+  // Filter + sort (Search is now handled by backend via usePermitTab)
   const filteredPermits = useMemo(() => {
     let list = permits;
 
@@ -78,16 +91,11 @@ export default function MyPermitTab() {
       }
     }
 
-    if (search.trim()) {
-      const term = search.toLowerCase();
-      list = list.filter((p) => (p.name || "").toLowerCase().includes(term));
-    }
-
     if (sortOrder === "desc") list = [...list].reverse();
 
-    console.log(list[0]);
+    // console.log(list[0]);
     return list;
-  }, [permits, activeTab, search, sortOrder]);
+  }, [permits, activeTab, sortOrder]); // Removed 'search' dependency
 
   if (loading) {
     return <LoadingScreen message="Fetching permits..." />;
@@ -148,37 +156,56 @@ export default function MyPermitTab() {
       </View>
 
       {/* Scrollable Permit List */}
-      <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 16 }}
+      <FlatList
+        data={filteredPermits}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View className="mb-4">
+            <PermitCard
+              {...item}
+              status={isApproval ? item.approvalStatus : item.status}
+              isApproval={isApproval}
+              onEdit={() =>
+                router.push({
+                  pathname: "/permits/form",
+                  params: { application: JSON.stringify(item) },
+                })
+              }
+              onDeleted={refetch}
+            />
+          </View>
+        )}
+        contentContainerStyle={{ padding: 16 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        className="flex-1"
-      >
-        {filteredPermits.length === 0 ? (
+        ListEmptyComponent={
           <View className="flex-1 justify-center items-center">
             <Text className="text-primary text-base">
               {isApproval ? "No approvals found" : "No permits found"}
             </Text>
           </View>
-        ) : (
-          filteredPermits.map((permit) => (
-            <PermitCard
-              key={permit.id}
-              {...permit}
-              status={isApproval ? permit.approvalStatus : permit.status}
-              isApproval={isApproval}
-              onEdit={() =>
-                router.push({
-                  pathname: "/permits/form",
-                  params: { application: JSON.stringify(permit) },
-                })
-              }
-              onDeleted={refetch}
-            />
-          ))
-        )}
-      </ScrollView>
+        }
+        ListFooterComponent={
+          <View className="py-4 items-center">
+            {hasMore && (
+              <TouchableOpacity
+                onPress={loadMore}
+                disabled={isFetchingMore}
+                className="bg-primary px-6 py-3 rounded-lg flex-row items-center"
+              >
+                {isFetchingMore && <ActivityIndicator size="small" color="#fff" className="mr-2" />}
+                <Text className="text-white font-semibold">
+                  {isFetchingMore ? "Loading..." : "Load More"}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {!hasMore && filteredPermits.length > 0 && (
+              <Text className="text-gray-500 mt-2">No more permits</Text>
+            )}
+          </View>
+        }
+      />
     </SafeAreaView>
   );
 }

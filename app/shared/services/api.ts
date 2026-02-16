@@ -638,15 +638,17 @@ export async function fetchApplicationById(id: number) {
   return res.json();
 }
 
-export async function fetchApplicationsByApplicant(applicantId: number, skip: number = 0, limit: number = 20) {
-  const res = await fetch(`${API_BASE_URL}api/applications/filter?applicant_id=${applicantId}&skip=${skip}&limit=${limit}`);
+export async function fetchApplicationsByApplicant(applicantId: number, skip: number = 0, limit: number = 20, search: string = "") {
+  const query = search ? `&q=${encodeURIComponent(search)}` : "";
+  const res = await fetch(`${API_BASE_URL}api/applications/filter?applicant_id=${applicantId}&skip=${skip}&limit=${limit}${query}`);
   return res.ok ? res.json() : [];
 }
 
-export async function fetchApplicationsForApprover(userId: number, skip: number = 0, limit: number = 20) {
+export async function fetchApplicationsForApprover(userId: number, skip: number = 0, limit: number = 20, search: string = "") {
   const token = await getToken();
   const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-  const res = await fetch(`${API_BASE_URL}api/applications/for-approver?user_id=${userId}&skip=${skip}&limit=${limit}`, {
+  const query = search ? `&q=${encodeURIComponent(search)}` : "";
+  const res = await fetch(`${API_BASE_URL}api/applications/for-approver?user_id=${userId}&skip=${skip}&limit=${limit}${query}`, {
     headers,
   });
   if (!res.ok) throw new Error(`Failed to fetch applications for approver (${res.status})`);

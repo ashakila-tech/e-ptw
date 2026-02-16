@@ -100,6 +100,7 @@ def filter_applications(
     applicant_id: Optional[int] = Query(None, description="Filter by applicant_id"),
     company_id: Optional[int] = Query(None, description="Filter by company_id"),
     workflow_data_id: Optional[int] = Query(None, description="Filter by workflow_data_id"),
+    q: Optional[str] = Query(None, description="Search by name"),
     skip: int = 0,
     limit: int = 20,
     db: Session = Depends(get_db),
@@ -118,6 +119,9 @@ def filter_applications(
         query = query.filter(models.Application.company_id == company_id)
     if workflow_data_id:
         query = query.filter(models.Application.workflow_data_id == workflow_data_id)
+    
+    if q:
+        query = query.filter(models.Application.name.ilike(f"%{q}%"))
 
     # Sort by created_time descending
     query = query.order_by(desc(models.Application.created_time))
@@ -138,6 +142,7 @@ def filter_applications(
 @router.get("/for-approver", response_model=List[schemas.ApplicationOut])
 def get_applications_for_approver(
     user_id: int = Query(..., description="Filter applications for a specific approver by their user ID."),
+    q: Optional[str] = Query(None, description="Search by name"),
     skip: int = 0,
     limit: int = 20,
     db: Session = Depends(get_db),
@@ -163,7 +168,12 @@ def get_applications_for_approver(
         models.Workflow.approvals
     ).filter(
         models.Approval.user_id == user_id
-    ).options(
+    )
+
+    if q:
+        query = query.filter(models.Application.name.ilike(f"%{q}%"))
+
+    query = query.options(
         # Eager-load all necessary relationships for the response schema to avoid N+1 queries.
         joinedload(models.Application.document),
         joinedload(models.Application.location),

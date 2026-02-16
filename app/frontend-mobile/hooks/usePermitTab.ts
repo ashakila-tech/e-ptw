@@ -6,12 +6,13 @@ import * as api from "../../shared/services/api";
 import { PermitStatus } from "@/constants/Status";
 
 const PLACEHOLDER_THRESHOLD = 3;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
-export function usePermitTab() {
+export function usePermitTab(searchQuery: string = "") {
   const { userId, isApproval, isSecurity, profile } = useUser();
   const [permits, setPermits] = useState<PermitData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
@@ -34,6 +35,8 @@ export function usePermitTab() {
       setLoading(true);
       setPage(0);
       setHasMore(true);
+    } else {
+      setIsFetchingMore(true);
     }
   
     try {
@@ -51,12 +54,17 @@ export function usePermitTab() {
             PermitStatus.APPROVED, PermitStatus.ACTIVE, PermitStatus.COMPLETED, PermitStatus.EXIT_PENDING
           ].includes(p.status)
         );
+
+        // Client-side search for security (since we fetch all)
+        if (searchQuery) {
+          permitsData = permitsData.filter((p: any) => p.name?.toLowerCase().includes(searchQuery.toLowerCase()));
+        }
       } else if (isApproval) {
         // For approvers, use the new dedicated endpoint.
-        permitsData = await api.fetchApplicationsForApprover(numericUserId, currentSkip, PAGE_SIZE);
+        permitsData = await api.fetchApplicationsForApprover(numericUserId, currentSkip, PAGE_SIZE, searchQuery);
       } else {
         // Default to fetching by applicant
-        permitsData = await api.fetchApplicationsByApplicant(numericUserId, currentSkip, PAGE_SIZE);
+        permitsData = await api.fetchApplicationsByApplicant(numericUserId, currentSkip, PAGE_SIZE, searchQuery);
       }
 
       // Enrich permit data
@@ -166,20 +174,21 @@ export function usePermitTab() {
       Alert.alert("Error", err.message || "Failed to load permits");
     } finally {
       setLoading(false);
+      setIsFetchingMore(false);
     }
-  }, [userId, isApproval, isSecurity, profile, page]);
+  }, [userId, isApproval, isSecurity, profile, page, searchQuery]);
 
   useEffect(() => {
     fetchPermits(true);
     // console.log("Permits", permits);
     // console.log("Permits count", permits.length);
-  }, [userId, isApproval, isSecurity, profile]); // Only re-fetch on auth/profile change
+  }, [userId, isApproval, isSecurity, profile, searchQuery]); // Re-fetch on search change
 
   const loadMore = () => {
-    if (!loading && hasMore && !isSecurity) {
+    if (!loading && !isFetchingMore && hasMore && !isSecurity) {
       fetchPermits(false);
     }
   };
 
-  return { permits, loading, refetch: () => fetchPermits(true), loadMore, hasMore };
+  return { permits, loading, isFetchingMore, refetch: () => fetchPermits(true), loadMore, hasMore };
 }
