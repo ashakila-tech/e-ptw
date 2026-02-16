@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
 from typing import Optional, List
 from datetime import datetime
 from datetime import timedelta
@@ -100,6 +100,8 @@ def filter_applications(
     applicant_id: Optional[int] = Query(None, description="Filter by applicant_id"),
     company_id: Optional[int] = Query(None, description="Filter by company_id"),
     workflow_data_id: Optional[int] = Query(None, description="Filter by workflow_data_id"),
+    skip: int = 0,
+    limit: int = 20,
     db: Session = Depends(get_db),
 ):
     """
@@ -117,6 +119,9 @@ def filter_applications(
     if workflow_data_id:
         query = query.filter(models.Application.workflow_data_id == workflow_data_id)
 
+    # Sort by created_time descending
+    query = query.order_by(desc(models.Application.created_time))
+
     # Eager-load related models to avoid N+1 queries (optional but faster)
     query = query.options(
         joinedload(models.Application.document),
@@ -128,11 +133,13 @@ def filter_applications(
         joinedload(models.Application.safety_equipment),
     )
 
-    return query.all()
+    return query.offset(skip).limit(limit).all()
 
 @router.get("/for-approver", response_model=List[schemas.ApplicationOut])
 def get_applications_for_approver(
     user_id: int = Query(..., description="Filter applications for a specific approver by their user ID."),
+    skip: int = 0,
+    limit: int = 20,
     db: Session = Depends(get_db),
 ):
     """
@@ -166,9 +173,9 @@ def get_applications_for_approver(
         joinedload(models.Application.safety_equipment),
         joinedload(models.Application.workflow_data).joinedload(models.WorkflowData.approval_data),
         joinedload(models.Application.workflow_data).joinedload(models.WorkflowData.workflow).joinedload(models.Workflow.approvals),
-    ).distinct() # Use distinct to avoid duplicates if a user is an approver on multiple steps for the same application.
+    ).distinct().order_by(desc(models.Application.created_time))
 
-    return query.all()
+    return query.offset(skip).limit(limit).all()
 
 
 @router.post("/{app_id}/security-confirm-entry")

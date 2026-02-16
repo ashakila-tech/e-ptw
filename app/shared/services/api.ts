@@ -638,15 +638,15 @@ export async function fetchApplicationById(id: number) {
   return res.json();
 }
 
-export async function fetchApplicationsByApplicant(applicantId: number) {
-  const res = await fetch(`${API_BASE_URL}api/applications/filter?applicant_id=${applicantId}`);
+export async function fetchApplicationsByApplicant(applicantId: number, skip: number = 0, limit: number = 20) {
+  const res = await fetch(`${API_BASE_URL}api/applications/filter?applicant_id=${applicantId}&skip=${skip}&limit=${limit}`);
   return res.ok ? res.json() : [];
 }
 
-export async function fetchApplicationsForApprover(userId: number) {
+export async function fetchApplicationsForApprover(userId: number, skip: number = 0, limit: number = 20) {
   const token = await getToken();
   const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-  const res = await fetch(`${API_BASE_URL}api/applications/for-approver?user_id=${userId}`, {
+  const res = await fetch(`${API_BASE_URL}api/applications/for-approver?user_id=${userId}&skip=${skip}&limit=${limit}`, {
     headers,
   });
   if (!res.ok) throw new Error(`Failed to fetch applications for approver (${res.status})`);

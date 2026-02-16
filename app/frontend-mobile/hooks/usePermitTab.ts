@@ -6,13 +6,16 @@ import * as api from "../../shared/services/api";
 import { PermitStatus } from "@/constants/Status";
 
 const PLACEHOLDER_THRESHOLD = 3;
+const PAGE_SIZE = 20;
 
 export function usePermitTab() {
   const { userId, isApproval, isSecurity, profile } = useUser();
   const [permits, setPermits] = useState<PermitData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
-  const fetchPermits = useCallback(async () => {
+  const fetchPermits = useCallback(async (reset = true) => {
     // Don't fetch if there's no user ID.
     if (!userId) {
       // If there's no user, we are not loading, and there are no permits.
@@ -27,14 +30,21 @@ export function usePermitTab() {
       return;
     }
 
-    setLoading(true);
+    if (reset) {
+      setLoading(true);
+      setPage(0);
+      setHasMore(true);
+    }
   
     try {
       const numericUserId = Number(userId);
+      const currentSkip = reset ? 0 : page * PAGE_SIZE;
 
       // Fetch permits based on user type
       let permitsData: any[] = [];
       if (isSecurity) {
+        // Security still fetches all for now as filtering is complex, 
+        // but could be optimized similarly if backend supports status filtering
         const allPermits = await api.fetchAllApplications();
         permitsData = allPermits.filter((p: any) =>
           [
@@ -43,10 +53,10 @@ export function usePermitTab() {
         );
       } else if (isApproval) {
         // For approvers, use the new dedicated endpoint.
-        permitsData = await api.fetchApplicationsForApprover(numericUserId);
+        permitsData = await api.fetchApplicationsForApprover(numericUserId, currentSkip, PAGE_SIZE);
       } else {
         // Default to fetching by applicant
-        permitsData = await api.fetchApplicationsByApplicant(numericUserId);
+        permitsData = await api.fetchApplicationsByApplicant(numericUserId, currentSkip, PAGE_SIZE);
       }
 
       // Enrich permit data
@@ -137,27 +147,39 @@ export function usePermitTab() {
         finalPermits = enrichedPermits.filter(p => p.approvalStatus !== "-");
       }
 
-      // Sort permits by created time descending
-      finalPermits.sort(
-        (a, b) =>
-          new Date(b.createdTime ?? 0).getTime() -
-          new Date(a.createdTime ?? 0).getTime()
-      );
+      // Backend now handles sorting by created_time desc
 
-      setPermits(finalPermits);
+      if (reset) {
+        setPermits(finalPermits);
+      } else {
+        setPermits((prev) => [...prev, ...finalPermits]);
+      }
+
+      // If we got fewer than PAGE_SIZE, we've reached the end
+      if (permitsData.length < PAGE_SIZE) {
+        setHasMore(false);
+      } else {
+        setPage((prev) => (reset ? 1 : prev + 1));
+      }
     } catch (err: any) {
       console.error("Error fetching permits:", err);
       Alert.alert("Error", err.message || "Failed to load permits");
     } finally {
       setLoading(false);
     }
-  }, [userId, isApproval, isSecurity, profile]);
+  }, [userId, isApproval, isSecurity, profile, page]);
 
   useEffect(() => {
-    fetchPermits();
+    fetchPermits(true);
     // console.log("Permits", permits);
-    console.log("Permits count", permits.length);
-  }, [fetchPermits]);
+    // console.log("Permits count", permits.length);
+  }, [userId, isApproval, isSecurity, profile]); // Only re-fetch on auth/profile change
 
-  return { permits, loading, refetch: fetchPermits };
+  const loadMore = () => {
+    if (!loading && hasMore && !isSecurity) {
+      fetchPermits(false);
+    }
+  };
+
+  return { permits, loading, refetch: () => fetchPermits(true), loadMore, hasMore };
 }
