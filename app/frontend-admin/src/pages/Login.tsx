@@ -34,7 +34,7 @@ const Login: React.FC = () => {
       <div className="login-box">
         <h2>Admin Portal Login</h2>
 
-        <div style={{ marginTop: '20px' }}>
+        <div style={{ marginTop: '20px', textAlign: 'left' }}>
           <label className="form-label">Email</label>
           <input
             type="email"
@@ -44,7 +44,7 @@ const Login: React.FC = () => {
             placeholder="admin@email.com"
           />
         </div>
-        <div style={{ marginTop: '10px' }}>
+        <div style={{ marginTop: '10px', textAlign: 'left' }}>
           <label className="form-label">Password</label>
           <input
             type="password"

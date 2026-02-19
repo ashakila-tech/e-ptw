@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   SafeAreaView,
   View,
@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { usePermitTab } from "@/hooks/usePermitTab";
 import { useUser } from "@/contexts/UserContext";
@@ -24,19 +25,14 @@ export default function MyPermitTab() {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
-  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // Debounce search input to avoid spamming API
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 500); // 500ms delay
+  const handleSearch = () => {
+    setSearchQuery(search);
+  };
 
-    return () => clearTimeout(handler);
-  }, [search]);
-
-  const { permits, loading, refetch, loadMore, hasMore, isFetchingMore } = usePermitTab(debouncedSearch);
+  const { permits, loading, refetch, loadMore, hasMore, isFetchingMore } = usePermitTab(searchQuery);
 
   // Pull-to-refresh handler
   const onRefresh = useCallback(async () => {
@@ -137,12 +133,19 @@ export default function MyPermitTab() {
 
       {/* Search + Sort Controls */}
       <View className="flex-row items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
-        <TextInput
-          placeholder="Search permits..."
-          value={search}
-          onChangeText={setSearch}
-          className="flex-1 bg-secondary p-2 rounded-lg mr-2 text-primary"
-        />
+        <View className="flex-1 flex-row mr-2">
+          <TextInput
+            placeholder="Search permits..."
+            value={search}
+            onChangeText={setSearch}
+            className="flex-1 bg-secondary p-2 rounded-l-lg text-primary"
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+          />
+          <TouchableOpacity onPress={handleSearch} className="bg-primary px-3 justify-center rounded-r-lg">
+            <Ionicons name="search" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
         <Pressable
           onPress={() =>
             setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))

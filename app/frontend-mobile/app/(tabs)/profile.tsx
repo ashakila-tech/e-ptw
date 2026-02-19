@@ -22,6 +22,9 @@ export default function ProfileTab() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [showFeedbacks, setShowFeedbacks] = useState(false);
+  const [showReports, setShowReports] = useState(false);
+  const [showWorkers, setShowWorkers] = useState(false);
 
   useEffect(() => {
     fetchFeedbacks(userId ?? undefined)
@@ -199,27 +202,35 @@ export default function ProfileTab() {
             {/* Only shows worker table for contractor (not approver nor security) */}
             {profile && !isApproval && !isSecurity && (
               <View className="bg-white rounded-xl p-6 shadow-lg mb-6">
-                <View className="flex-row justify-between items-center mb-4">
+                <Pressable onPress={() => setShowWorkers(!showWorkers)} className="flex-row justify-between items-center">
                   <Text className="text-primary text-lg font-bold">Workers</Text>
-                  <Pressable onPress={() => router.push("/workers/form")} className="bg-primary px-3 py-1 rounded-lg">
-                    <Text className="text-white font-bold">+ Add Worker</Text>
-                  </Pressable>
-                </View>
+                  <Ionicons name={showWorkers ? "chevron-up" : "chevron-down"} size={20} color="#374151" />
+                </Pressable>
 
-                {/* Search Bar */}
-                <View className="mb-4">
-                  <TextInput
-                    placeholder="Search by name, IC, or position..."
-                    value={search}
-                    onChangeText={setSearch}
-                    className="bg-secondary p-3 rounded-lg text-primary"
-                  />
-                </View>
+                {showWorkers && (
+                  <View className="mt-4">
+                    <View className="flex-row justify-end mb-4">
+                      <Pressable onPress={() => router.push("/workers/form")} className="bg-primary px-3 py-1 rounded-lg">
+                        <Text className="text-white font-bold">+ Add Worker</Text>
+                      </Pressable>
+                    </View>
 
-                {sortedAndFilteredWorkers.length > 0 ? (                
-                  <WorkerTable workers={sortedAndFilteredWorkers} handleDeleteWorker={handleDeleteWorker} isEditable={true} />
-                ) : (                
-                  <Text className="text-primary text-center mt-4">No worker added</Text>                
+                    {/* Search Bar */}
+                    <View className="mb-4">
+                      <TextInput
+                        placeholder="Search by name, IC, or position..."
+                        value={search}
+                        onChangeText={setSearch}
+                        className="bg-secondary p-3 rounded-lg text-primary"
+                      />
+                    </View>
+
+                    {sortedAndFilteredWorkers.length > 0 ? (
+                      <WorkerTable workers={sortedAndFilteredWorkers} handleDeleteWorker={handleDeleteWorker} isEditable={true} />
+                    ) : (
+                      <Text className="text-primary text-center mt-4">No worker added</Text>
+                    )}
+                  </View>
                 )}
               </View>
             )}
@@ -243,21 +254,35 @@ export default function ProfileTab() {
 
             {/* Feedbacks Table */}
             <View className="bg-white rounded-xl p-6 shadow-lg mb-6">
-              <Text className="text-primary text-lg font-bold mb-4">My Feedbacks</Text>
-              {feedbacks.length > 0 ? (
-                <FeedbackTable feedbacks={feedbacks} />
-              ) : (
-                <Text className="text-primary text-center mt-4">No feedback submitted</Text>
+              <Pressable onPress={() => setShowFeedbacks(!showFeedbacks)} className="flex-row justify-between items-center">
+                <Text className="text-primary text-lg font-bold">My Feedbacks</Text>
+                <Ionicons name={showFeedbacks ? "chevron-up" : "chevron-down"} size={20} color="#374151" />
+              </Pressable>
+              {showFeedbacks && (
+                <View className="mt-4">
+                  {feedbacks.length > 0 ? (
+                    <FeedbackTable feedbacks={feedbacks} />
+                  ) : (
+                    <Text className="text-primary text-center">No feedback submitted</Text>
+                  )}
+                </View>
               )}
             </View>
 
             {/* Reports Table */}
             <View className="bg-white rounded-xl p-6 shadow-lg mb-6">
-              <Text className="text-primary text-lg font-bold mb-4">My Near Miss Reports</Text>
-              {reports && reports.length > 0 ? (
-                <ReportTable reports={reports} />
-              ) : (
-                <Text className="text-primary text-center mt-4">No reports submitted</Text>
+              <Pressable onPress={() => setShowReports(!showReports)} className="flex-row justify-between items-center">
+                <Text className="text-primary text-lg font-bold">My Near Miss Reports</Text>
+                <Ionicons name={showReports ? "chevron-up" : "chevron-down"} size={20} color="#374151" />
+              </Pressable>
+              {showReports && (
+                <View className="mt-4">
+                  {reports && reports.length > 0 ? (
+                    <ReportTable reports={reports} />
+                  ) : (
+                    <Text className="text-primary text-center">No reports submitted</Text>
+                  )}
+                </View>
               )}
             </View>
 

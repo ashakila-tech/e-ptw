@@ -374,7 +374,7 @@ body {
   gap: 8px;
   align-items: center;
   /* margin-bottom: 12px; */
-  margin: auto;
+  margin-left: auto;
   flex-wrap: wrap;
 }
 
