@@ -237,18 +237,19 @@ export default function ApplicationForm() {
 
         {/* Action Buttons */}
         <View className="flex-row mt-8 space-x-4">
-          <Pressable
+          {/* Leave Save as Draft commented for now */}
+          {/* <Pressable
             onPress={() => submitApplication("DRAFT")}
             disabled={!!formError}
             className={`flex-[0.4] rounded-xl py-4 mr-3 items-center ${formError ? "bg-gray-400" : "bg-primary"}`}
           >
             <Text className="text-white font-semibold text-base">Save as Draft</Text>
-          </Pressable>
+          </Pressable> */}
 
           <Pressable
             onPress={() => submitApplication("SUBMITTED")}
             disabled={!!formError}
-            className={`flex-[0.6] rounded-xl py-4 items-center ${formError ? "bg-gray-400" : "bg-bg1"}`}
+            className={`flex-1 rounded-xl py-4 items-center ${formError ? "bg-gray-400" : "bg-bg1"}`}
           >
             <Text className="text-white font-semibold text-base">Submit Application</Text>
           </Pressable>

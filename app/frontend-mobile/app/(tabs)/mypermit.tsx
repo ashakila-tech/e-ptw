@@ -49,7 +49,7 @@ export default function MyPermitTab() {
     { key: PermitStatus.APPROVED, label: "Approved" },
     { key: PermitStatus.REJECTED, label: "Rejected" },
     { key: PermitStatus.SUBMITTED, label: "Submitted" },
-    { key: PermitStatus.DRAFT, label: "Draft" },
+    // { key: PermitStatus.DRAFT, label: "Draft" },
   ];
 
   const approverTabs = [

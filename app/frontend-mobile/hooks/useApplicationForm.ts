@@ -18,7 +18,6 @@ import {
   createApproval,
   createApprovalData,
   fetchPermitOfficersByPermitType,
-  fetchLocationManagersByLocation,
   downloadDocumentById,
   sendNotificationToUser,
 } from "../../shared/services/api";
@@ -72,10 +71,10 @@ export function useApplicationForm(existingApp: any, router: any) {
   const [safetyEquipmentItems, setSafetyEquipmentItems] = useState<{ label: string; value: number }[]>([]);
 
   const [startTime, setStartTime] = useState<Date | null>(
-    existingApp?.workStartTime ? new Date(existingApp.workStartTime) : null
+    existingApp?.work_start_time ? new Date(existingApp.work_start_time) : null
   );
   const [endTime, setEndTime] = useState<Date | null>(
-    existingApp?.workEndTime ? new Date(existingApp.workEndTime) : null
+    existingApp?.work_end_time ? new Date(existingApp.work_end_time) : null
   );
 
   const [initialized, setInitialized] = useState(false);
@@ -163,8 +162,8 @@ export function useApplicationForm(existingApp: any, router: any) {
         ? Number(existingApp.jobAssignerId)
         : null
     );
-    setWorkerIds(Array.isArray(existingApp.worker_ids) ? existingApp.worker_ids : []);
-    setSafetyEquipmentIds(Array.isArray(existingApp.safety_equipment_ids) ? existingApp.safety_equipment_ids : []);
+    setWorkerIds(Array.isArray(existingApp.workers) ? existingApp.workers.map((w: any) => w.id) : []);
+    setSafetyEquipmentIds(Array.isArray(existingApp.safety_equipment) ? existingApp.safety_equipment.map((e: any) => e.id) : []);
 
     // Reset document placeholders
     if (!existingApp.documentId || existingApp.documentId <= PLACEHOLDER_THRESHOLD) {
@@ -350,6 +349,8 @@ export function useApplicationForm(existingApp: any, router: any) {
             ? existingApp.documentId
             : PLACEHOLDER_ID,
         status,
+        work_start_time: startTime ? startTime.toISOString() : null,
+        work_end_time: endTime ? endTime.toISOString() : null,
         worker_ids: finalWorkerIds.filter(id => id !== null),
         safety_equipment_ids: finalSafetyEquipmentIds.filter(id => id !== null),
         created_by: applicantName || "Unknown User",
@@ -545,16 +546,16 @@ export function useApplicationForm(existingApp: any, router: any) {
     workersOpen,
     setWorkersOpen,
     workerIds,
-    setWorkerIds: safeSetWorkerIds, // Use the safe setter
+    setWorkerIds: safeSetWorkerIds, 
     workerItems,
     safetyEquipmentOpen,
     setSafetyEquipmentOpen,
     safetyEquipmentIds,
-    setSafetyEquipmentIds: safeSetSafetyEquipmentIds, // Use the safe setter
+    setSafetyEquipmentIds: safeSetSafetyEquipmentIds,
     safetyEquipmentItems,
     setJobAssignerItems,
     startTime,
-    setStartTime: handleSetStartTime, // Use the custom setter
+    setStartTime: handleSetStartTime,
     endTime,
     setEndTime,
     loading,

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import Sidebar from './components/Sidebar'; // Import the new Sidebar component
+import Sidebar from './components/Sidebar';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { Colors, StatusColors } from '../../shared/constants/Colors';
 import { getCurrentUser, logout } from '../../shared/services/api';
+import shadeColor from '../../shared/utils/color';
 
-// Import the new page components
 import Dashboard from './pages/Dashboard';
 import Permits from './pages/Permits';
 import Users from './pages/Users';
@@ -15,34 +15,10 @@ import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
 import Reports from './pages/Reports';
 
-/**
- * A simple utility to lighten or darken a hex color.
- * @param color The hex color string.
- * @param percent The percentage to lighten (positive) or darken (negative).
- */
-const shadeColor = (color: string, percent: number) => {
-  let R = parseInt(color.substring(1, 3), 16);
-  let G = parseInt(color.substring(3, 5), 16);
-  let B = parseInt(color.substring(5, 7), 16);
-  R = Math.round(R * (100 + percent) / 100);
-  G = Math.round(G * (100 + percent) / 100);
-  B = Math.round(B * (100 + percent) / 100);
-  const newR = Math.min(255, R).toString(16).padStart(2, '0');
-  const newG = Math.min(255, G).toString(16).padStart(2, '0');
-  const newB = Math.min(255, B).toString(16).padStart(2, '0');
-  return `#${newR}${newG}${newB}`;
-};
-
-/**
- * A layout component that includes the sidebar and a content area for nested routes.
- */
 const MainLayout = () => {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-
-  // Force logout after 10 minutes of inactivity
-  // useInactivityLogout(10);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -63,7 +39,7 @@ const MainLayout = () => {
   }, [navigate]);
 
   if (isLoading) {
-    // You can replace this with a more sophisticated spinner component
+    // Simple loading screen
     return <div className="loading-overlay">Loading...</div>;
   }
 
@@ -74,7 +50,6 @@ const MainLayout = () => {
         setIsCollapsed={setSidebarCollapsed}
       />
       <main className="content-area">
-        {/* Child routes will be rendered here */}
         <Outlet />
       </main>
     </div>
@@ -82,7 +57,6 @@ const MainLayout = () => {
 };
 
 function App() {
-  // This effect runs once on mount to set the CSS color variables globally.
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--color-bg1', Colors.bg1);
@@ -91,12 +65,10 @@ function App() {
     root.style.setProperty('--color-secondary', Colors.secondary);
     root.style.setProperty('--color-highlight', Colors.highlight);
 
-    // Also set hover variations
     root.style.setProperty('--color-primary-hover', shadeColor(Colors.primary, 20)); // Lighter
     root.style.setProperty('--color-accent1-hover', shadeColor(Colors.accent1, 20)); // Lighter
     root.style.setProperty('--color-highlight-hover', shadeColor(Colors.highlight, -10)); // Darker
 
-    // Status colors
     root.style.setProperty('--color-status-approved', StatusColors.approved);
     root.style.setProperty('--color-status-pending', StatusColors.pending);
     root.style.setProperty('--color-status-rejected', StatusColors.rejected);
