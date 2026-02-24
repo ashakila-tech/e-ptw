@@ -45,7 +45,6 @@ export function useProfile() {
       if (currentUserData.groups[0].name === SAFETY_OFFICER) {
         const permitTypeForSafetyOfficer = await fetchPermitTypeForSafetyOfficer(currentUserData.id);
         currentUserData.permit_types = permitTypeForSafetyOfficer;
-        console.log("Fetched permit types:", permitTypeForSafetyOfficer);
       }
 
       if (isDepartmentHead) {
@@ -58,7 +57,6 @@ export function useProfile() {
 
       const reportsData = await fetchReports(currentUserData.id);
       setReports(reportsData);
-      console.log("Fetched reports:", reportsData);
 
       if (isApproval && currentUserData.id) {
         const approverApps = await fetchApplicationsForApprover(currentUserData.id);

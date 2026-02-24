@@ -32,7 +32,7 @@ def send_notification(
     """
     Create a notification in the database and send an email to the user.
     """
-    # 1. Create Notification in DB
+    # Create Notification in DB
     data = notification_in.model_dump()
     data["user_id"] = user_id
     db_notification = models.Notification(**data)
@@ -40,10 +40,10 @@ def send_notification(
     db.commit()
     db.refresh(db_notification)
 
-    # 2. Fetch User Email
+    # Fetch User Email
     user = db.query(models.User).filter(models.User.id == user_id).first()
     
-    # 3. Send Email (Background Task)
+    # Send Email (Background Task)
     if user and user.email:
         background_tasks.add_task(
             send_notification_email,
@@ -74,7 +74,7 @@ def send_notification_to_admin(
     if not admin_user:
         raise HTTPException(status_code=404, detail="Admin user not found in database. Cannot save notification.")
 
-    # 1. Create Notification in DB
+    # Create Notification in DB
     db_notification = models.Notification(
         user_id=admin_user.id,
         title=notification_in.title,
@@ -84,7 +84,7 @@ def send_notification_to_admin(
     db.commit()
     db.refresh(db_notification)
 
-    # 2. Send Email (Background Task)
+    # Send Email (Background Task)
     if settings.MAIL_ADMIN:
         background_tasks.add_task(
             send_notification_email,

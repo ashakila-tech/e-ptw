@@ -13,15 +13,14 @@ export default function DocumentUpload({ uploading, documentId, documentName, on
   return (
     <View className="mb-1">
       <View className="flex-row items-center justify-between">
-        {/* <Text className="text-gray-800 flex-1">
-          {documentName ? documentName : "No document uploaded"} */}
         {/* </Text> */}
         <View className="flex-1">
           <Text className="text-gray-800">
             {documentName ? documentName : "No document uploaded"}
           </Text>
-          {/* <Text className="text-xs text-gray-500 mt-1">Supported formats: PDF, DOCX, XLSX, CSV, PPTX, JPG, PNG</Text> */}
-          <Text className="text-xs text-gray-500 mt-1">Supported formats: PDF, DOCX, XLSX, CSV, PPTX, JPG, PNG, GIF, BMP, TXT, RTF</Text>
+          <Text className="text-xs text-gray-500 mt-1">
+            Supported formats: PDF, DOCX, XLSX, CSV, PPTX, JPG, PNG, GIF, BMP, TXT, RTF
+          </Text>
         </View>
 
         {/* Upload / Change button */}

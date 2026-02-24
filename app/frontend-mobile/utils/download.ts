@@ -1,14 +1,11 @@
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Alert, Platform } from 'react-native';
-// import * as api from '@/services/api';
 import * as api from "../../shared/services/api";
 
 export const downloadDocument = async (documentId: number, fileName: string) => {
   let loadingAlertDisplayed = false;
   try {
-    console.log("Downloading document ID:", documentId);
-
     // For Android, we'll try to save directly to the Downloads folder.
     if (Platform.OS === 'android') {
       const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
@@ -52,8 +49,6 @@ export const downloadDocument = async (documentId: number, fileName: string) => 
 
     const fileUri = FileSystem.cacheDirectory + fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
     await FileSystem.writeAsStringAsync(fileUri, base64Data, { encoding: FileSystem.EncodingType.Base64 });
-
-    console.log("Download successful. Saved to cache:", fileUri);
 
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(fileUri, { dialogTitle: 'Save or share your document' });

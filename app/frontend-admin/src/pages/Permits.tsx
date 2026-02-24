@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { deleteApplication, createSafetyEquipment, deleteSafetyEquipment, updateSafetyEquipment, createLocation, deleteLocation, createPermitType, deletePermitType } from '../../../shared/services/api';
+import { deleteApplication, createSafetyEquipment, deleteSafetyEquipment, updateSafetyEquipment, createLocation, updateLocation, deleteLocation, createPermitType, updatePermitType, deletePermitType } from '../../../shared/services/api';
 import PermitTable from '../components/tables/PermitTable';
 import { usePermits } from '../hooks/usePermits';
 import ManageList from '../components/ManageList';
@@ -57,6 +57,17 @@ const Permits: React.FC = () => {
     }
   };
 
+  const handleEditLocation = async (item: any) => {
+    const name = window.prompt("Edit location name:", item.name);
+    if (!name || name === item.name) return;
+    try {
+      await updateLocation(item.id, name);
+      refetch();
+    } catch (e: any) {
+      alert(e.message || 'Failed to update location');
+    }
+  };
+
   const handleRemoveLocation = async (id: number) => {
     if (!window.confirm('Are you sure you want to remove this location?')) return;
     try {
@@ -76,6 +87,17 @@ const Permits: React.FC = () => {
       refetch();
     } catch (e: any) {
       alert(e.message || 'Failed to create permit type');
+    }
+  };
+
+  const handleEditPermitType = async (item: any) => {
+    const name = window.prompt("Edit permit type name:", item.name);
+    if (!name || name === item.name) return;
+    try {
+      await updatePermitType(item.id, name);
+      refetch();
+    } catch (e: any) {
+      alert(e.message || 'Failed to update permit type');
     }
   };
 
@@ -117,10 +139,6 @@ const Permits: React.FC = () => {
     alert(`Edit permit: ${permit.name} (Functionality to be implemented)`);
   };
 
-  const handleEditItem = (type: 'location' | 'permit', item: any) => {
-    alert(`Edit ${type}: ${item.name} (Functionality to be implemented)`);
-  };
-
   // Remove first 3 placeholder entries (development artifacts) before rendering
   const visibleLocations = (locations || []).slice(3);
   const visiblePermitTypes = (permitTypes || []).slice(3);
@@ -143,7 +161,7 @@ const Permits: React.FC = () => {
         items={visibleLocations}
         loading={loading}
         onAdd={handleAddLocation}
-        onEdit={(item) => handleEditItem('location', item)}
+        onEdit={handleEditLocation}
         onDelete={handleRemoveLocation}
         onAssign={handleAssignLocation}
       />
@@ -153,7 +171,7 @@ const Permits: React.FC = () => {
         items={visiblePermitTypes}
         loading={loading}
         onAdd={handleAddPermitType}
-        onEdit={(item) => handleEditItem('permit', item)}
+        onEdit={handleEditPermitType}
         onDelete={handleRemovePermitType}
         onAssign={handleAssignPermitType}
       />

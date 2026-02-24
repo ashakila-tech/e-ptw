@@ -26,8 +26,6 @@ export function useWorkerDetails(id?: string) {
         ? `${api.API_BASE_URL}api/workers/${workerData.id}/picture?timestamp=${new Date().getTime()}`
         : null;
 
-      console.log(pictureUrl);
-
       setWorker({
         ...workerData,
         company_name: company?.name || "-",

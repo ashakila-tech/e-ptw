@@ -248,6 +248,16 @@ export async function createLocation(name: string, company_id: number = 1) {
   return res.json();
 }
 
+export async function updateLocation(id: number, name: string, company_id: number = 1) {
+  const res = await fetch(`${API_BASE_URL}api/locations/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, company_id }),
+  });
+  if (!res.ok) throw new Error(`Failed to update location: ${await res.text()}`);
+  return res.json();
+}
+
 export async function deleteLocation(id: number) {
   const res = await fetch(`${API_BASE_URL}api/locations/${id}`, {
     method: "DELETE",
@@ -325,6 +335,16 @@ export async function createPermitType(name: string, company_id: number = 1) {
     body: JSON.stringify({ name, company_id }),
   });
   if (!res.ok) throw new Error(`Failed to create permit type: ${await res.text()}`);
+  return res.json();
+}
+
+export async function updatePermitType(id: number, name: string, company_id: number = 1) {
+  const res = await fetch(`${API_BASE_URL}api/permit-types/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, company_id }),
+  });
+  if (!res.ok) throw new Error(`Failed to update permit type: ${await res.text()}`);
   return res.json();
 }
 

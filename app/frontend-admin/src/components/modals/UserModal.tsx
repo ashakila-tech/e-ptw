@@ -80,19 +80,6 @@ const UserModal: React.FC<Props> = ({ open, onClose, initial = null, onSaved }) 
     }
   }, [initial, open]);
 
-  /*
-  useEffect(() => {
-    if (companyId) {
-      fetchGroupsOptions({ company_id: Number(companyId), page_size: 100 })
-        .then((res: any) => setGroupOptions(res))
-        .catch((e: any) => console.error('Failed to load groups', e));
-      console.log("Group options:", groupOptions);
-    } else {
-      setGroupOptions([]);
-    }
-  }, [companyId]);
-  */
-
   if (!open) return null;
 
   const submit = async () => {

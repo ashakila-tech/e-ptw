@@ -27,9 +27,6 @@ export const useFeedbackForm = () => {
       });
 
       const companyName = profile?.company_name || "Unknown Company";
-      console.log("Profile: ", profile);
-
-      console.log("Email contents: ", userName, userId, companyName, title, message);
 
       // Send email notification to admin
       await api.sendNotificationToAdmin({

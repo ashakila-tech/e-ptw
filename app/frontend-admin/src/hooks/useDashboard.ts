@@ -81,7 +81,7 @@ export function useDashboardData() {
 
         const roleCounts: Record<string, number> = {};
         const groupMembersMap: Record<string, any[]> = {};
-        groupEntries.forEach(([display, members]) => {
+        groupEntries.forEach(([display, members]: [string, any[]]) => {
           const list = (members || []).filter((m: any) => m && !excludedUserIds.has(m.id));
           roleCounts[display] = list.length;
           groupMembersMap[display] = list;
@@ -98,15 +98,15 @@ export function useDashboardData() {
         const noGroupCount = noGroupUsers.length;
 
         // Debug logs: list all user names for All (excluding placeholder group memberships), each group, and No-group
-        try {
-          const allIncludedUserNames = (users || []).filter((u: any) => u?.id && !excludedUserIds.has(u.id)).map((u: any) => u?.name).filter(Boolean);
-          console.log('[Dashboard] All (included) users:', allIncludedUserNames);
-          console.log('[Dashboard] Group members (filtered):', Object.fromEntries(Object.entries(groupMembersMap).map(([k, v]) => [k, (v || []).map((m: any) => m?.name).filter(Boolean)])));
-          console.log('[Dashboard] No group users:', (noGroupUsers || []).map((u: any) => u?.name).filter(Boolean));
-        } catch (e) {
-          // swallow logging errors
-          console.warn('[Dashboard] Failed to log user lists', e);
-        }
+        // try {
+        //   const allIncludedUserNames = (users || []).filter((u: any) => u?.id && !excludedUserIds.has(u.id)).map((u: any) => u?.name).filter(Boolean);
+        //   console.log('[Dashboard] All (included) users:', allIncludedUserNames);
+        //   console.log('[Dashboard] Group members (filtered):', Object.fromEntries(Object.entries(groupMembersMap).map(([k, v]) => [k, (v || []).map((m: any) => m?.name).filter(Boolean)])));
+        //   console.log('[Dashboard] No group users:', (noGroupUsers || []).map((u: any) => u?.name).filter(Boolean));
+        // } catch (e) {
+        //   // swallow logging errors
+        //   console.warn('[Dashboard] Failed to log user lists', e);
+        // }
 
         // Add special entries: No groups and simplified All (sum of role counts)
         roleCounts['No groups / None'] = noGroupCount;

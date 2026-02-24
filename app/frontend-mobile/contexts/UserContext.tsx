@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import * as api from "@/services/api";
 import * as api from "../../shared/services/api";
 
 type UserContextType = {

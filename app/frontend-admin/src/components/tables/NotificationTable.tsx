@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSync, faEnvelope, faEnvelopeOpen, faEye, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faSync, faEnvelope, faEnvelopeOpen, faEye } from '@fortawesome/free-solid-svg-icons';
 import TablePagination from './TablePagination';
 
 export interface Notification {
@@ -27,7 +27,6 @@ const NotificationTable: React.FC<Props> = ({
   error,
   onRefresh,
   onView,
-  onMarkAsRead,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<'id' | 'title' | 'created_at' | 'is_read'>('created_at');

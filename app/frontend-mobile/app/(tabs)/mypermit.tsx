@@ -89,7 +89,6 @@ export default function MyPermitTab() {
 
     if (sortOrder === "desc") list = [...list].reverse();
 
-    // console.log(list[0]);
     return list;
   }, [permits, activeTab, sortOrder]); // Removed 'search' dependency
 

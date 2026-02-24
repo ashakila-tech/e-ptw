@@ -15,7 +15,7 @@ const Login: React.FC = () => {
     try {
       await login(email, password); 
       const user = await getCurrentUser();
-      // Assuming '9' is the user_type for admins based on backend schema
+      // '9' is the user_type for admins
       if (user.user_type !== 9) {
         await logout(); // Log them out immediately
         throw new Error("Access to this portal is restricted to administrators.");

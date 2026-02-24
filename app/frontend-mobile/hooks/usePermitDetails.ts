@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { PermitStatus } from "@/constants/Status";
-// import * as api from "@/services/api";
 import * as api from "../../shared/services/api";
 
 import { useUser } from "@/contexts/UserContext";
@@ -9,7 +8,7 @@ const CLOSING_FLOW_LEVEL = 98;
 
 export function usePermitDetails(id?: string) {
   const [permit, setPermit] = useState<any | null>(null);
-  const { userId, companyId: userCompanyId, userName } = useUser();
+  const { companyId: userCompanyId, userName } = useUser();
   const [approvals, setApprovals] = useState<any[]>([]);
   const [approvalData, setApprovalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,9 +25,6 @@ export function usePermitDetails(id?: string) {
     try {
       // Fetch main permit application
       const permitData = await api.fetchApplicationById(Number(id));
-      const timeRes = await api.fetchServerTime();
-
-      console.log("Fetched permit data:", permitData);
 
       // Helper to log errors for troubleshooting
       const fetchWithLog = async (promise: Promise<any>, name: string) => {

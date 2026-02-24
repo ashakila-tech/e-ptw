@@ -24,7 +24,7 @@ const MainLayout = () => {
     const checkAuth = async () => {
       try {
         const user = await getCurrentUser();
-        // Assuming '9' is the user_type for admins based on backend schema
+        // '9' is the user_type for admins
         if (user.user_type !== 9) {
           throw new Error("Access denied. Not an administrator.");
         }

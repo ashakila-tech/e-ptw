@@ -2,7 +2,6 @@ import React from "react";
 import DropDownPicker from "react-native-dropdown-picker";
 
 export default function DropdownField({
-  label,
   open,
   value,
   items,

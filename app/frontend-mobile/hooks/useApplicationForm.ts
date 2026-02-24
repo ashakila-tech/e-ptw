@@ -217,7 +217,7 @@ export function useApplicationForm(existingApp: any, router: any) {
         a.remove();
         window.URL.revokeObjectURL(url);
       } else {
-        // On native, you might use Share or FileSystem API
+        // On native, can use Share or FileSystem API
         const fileUri = FileSystem.cacheDirectory + fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
 
         // The blob needs to be read by a FileReader to get a base64 string
@@ -358,7 +358,7 @@ export function useApplicationForm(existingApp: any, router: any) {
       };
 
       // Save application
-      const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
+      // const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
 
       // Ensure workflow exists before creating approvals
       let workflowId = workflow?.id ?? existingApp?.workflow_id ?? existingApp?.workflowId ?? null;

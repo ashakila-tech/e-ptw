@@ -21,13 +21,11 @@ import { getStatusClass } from "@/utils/class";
 import { formatDate } from "@/utils/date";
 import { PermitStatus } from "@/constants/Status";
 import { getMimeType } from "@/utils/file";
-// import * as api from "@/services/api";
 import * as api from "../../../shared/services/api";
 import { Colors } from "@/constants/Colors";
 import CustomHeader from "@/components/CustomHeader";
 import WorkerTable from "@/components/WorkerTable";
 import { TextInput } from "react-native";
-// import Constants from "expo-constants";
 import * as Linking from "expo-linking";
 
 export default function PermitDetails() {
@@ -142,7 +140,7 @@ export default function PermitDetails() {
     );
   }
 
-  // ---------------------- Button handlers ----------------------
+  // Button handlers
 
   async function handleApprovalAction(action: "APPROVED" | "REJECTED", remarksText?: string) {
     if (!myApproval) return crossPlatformAlert("Error", "No pending approval found for you.");

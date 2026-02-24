@@ -11,7 +11,6 @@ type PermitCardProps = Partial<PermitData> & {
   onEdit?: () => void;
   onDeleted?: () => void;
   isApproval?: boolean;
-  latestApprovalStatus?: string;
 };
 
 const ICON_COLOR_PRIMARY = "#535252";
@@ -28,7 +27,6 @@ export default function PermitCard({
   workStartTime,
   workEndTime,
   isApproval,
-  latestApprovalStatus,
   onEdit,
   onDeleted, // refresh callback
 }: PermitCardProps) {

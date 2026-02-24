@@ -131,8 +131,3 @@ def get_me(
         "is_approver": is_approver,
         "is_security": is_security,
     }
-
-# @router.get("/me", response_model=schemas.UserOut)
-# def me(current_user: models.User = Depends(get_current_user)):
-#     # get_current_user returns the ORM user; FastAPI will serialize via UserOut
-#     return current_user

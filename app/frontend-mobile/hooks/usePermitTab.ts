@@ -146,6 +146,7 @@ export function usePermitTab(searchQuery: string = "") {
             locationId: p.location_id,
             permitTypeId: p.permit_type_id,
             workflowDataId: p.workflow_data_id,
+            allApprovalStatuses: approvalRows,
           };
         });
 
@@ -180,8 +181,6 @@ export function usePermitTab(searchQuery: string = "") {
 
   useEffect(() => {
     fetchPermits(true);
-    // console.log("Permits", permits);
-    // console.log("Permits count", permits.length);
   }, [userId, isApproval, isSecurity, profile, searchQuery]); // Re-fetch on search change
 
   const loadMore = () => {

@@ -38,7 +38,7 @@ def upload_document(
     if file.content_type not in allowed:
         raise HTTPException(400, detail=f"Unsupported file type: {file.content_type}")
 
-    # --- Build year/month path ---
+    # Build year/month path
     now = datetime.utcnow()
     year = now.strftime("%Y")
     month = now.strftime("%m")
@@ -48,7 +48,7 @@ def upload_document(
 
     os.makedirs(target_dir, exist_ok=True)
 
-    # --- Create safe + unique filename ---
+    # Create safe + unique filename
     base, ext = os.path.splitext(file.filename)
     safe_base = "".join(c for c in base if c.isalnum() or c in (" ", "_", "-")).rstrip()
 
@@ -58,11 +58,11 @@ def upload_document(
 
     full_path = os.path.join(target_dir, unique_filename)
 
-    # --- Write the file ---
+    # Write the file
     with open(full_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # --- Save DB record ---
+    # Save DB record
     doc = models.Document(
         company_id=company_id,
         name=name,

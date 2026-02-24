@@ -27,7 +27,6 @@ def create_approval_data(payload: schemas.ApprovalDataIn, db: Session = Depends(
     db.refresh(obj)
     return obj
 
-# --- Custom filter endpoint ---
 @router.get("/filter", response_model=List[schemas.ApprovalDataOut])
 def filter_approval_data(
     workflow_data_id: Optional[int] = Query(None, description="Filter by workflow_data_id"),
@@ -95,7 +94,7 @@ def _send_notification(db: Session, user_id: int, title: str, message: str):
     """
     Helper to create a notification record and send an email synchronously.
     """
-    # 1. Create Notification in DB
+    # Create Notification in DB
     db_notification = models.Notification(
         user_id=user_id,
         title=title,
@@ -105,10 +104,10 @@ def _send_notification(db: Session, user_id: int, title: str, message: str):
     db.commit()
     db.refresh(db_notification)
 
-    # 2. Fetch User Email
+    # Fetch User Email
     user = db.query(models.User).filter(models.User.id == user_id).first()
 
-    # 3. Send Email
+    # Send Email
     if user and user.email:
         try:
             asyncio.run(send_notification_email(
@@ -119,8 +118,6 @@ def _send_notification(db: Session, user_id: int, title: str, message: str):
         except Exception as e:
             print(f"Failed to send email to {user.email}: {e}")
 
-
-# --- Custom update mutator for approval logic ---
 def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Session):
     """
     Runs before saving during PUT update.
@@ -225,7 +222,7 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
     return data
 
 
-# --- Attach the CRUD routes ---
+# Attach the CRUD routes
 crud_router = make_crud_router(
     Model=models.ApprovalData,
     InSchema=schemas.ApprovalDataIn,

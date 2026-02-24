@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencilAlt, faTrash, faSync, faEye } from '@fortawesome/free-solid-svg-icons';
+import { /* faPencilAlt ,*/ faTrash, faSync, faEye } from '@fortawesome/free-solid-svg-icons';
 import { downloadDocumentById } from '../../../../shared/services/api';
 import { ApprovalsModal, WorkersModal, SafetyEquipmentModal } from '../modals/PermitModals';
 import TablePagination from './TablePagination';
@@ -45,7 +45,7 @@ const PermitTable: React.FC<Props> = ({
   locations,
   applicants,
   onRefresh,
-  onEdit,
+  // onEdit,
   onDelete,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -389,9 +389,10 @@ const PermitTable: React.FC<Props> = ({
                     </td>
                     <td className="users-td">
                       <div className="actions-cell">
-                        <button className="icon-btn edit" onClick={() => onEdit(p)} title="Edit">
+                        {/* Comment out edit for now */}
+                        {/* <button className="icon-btn edit" onClick={() => onEdit(p)} title="Edit">
                           <FontAwesomeIcon icon={faPencilAlt} />
-                        </button>
+                        </button> */}
                         <button className="icon-btn delete" onClick={() => onDelete(p.id)} title="Delete">
                           <FontAwesomeIcon icon={faTrash} />
                         </button>

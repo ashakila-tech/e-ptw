@@ -11,7 +11,6 @@ from ..deps import get_db, get_current_user, require_role
 # Create the base router
 router = APIRouter(prefix="/applications", tags=["Applications"])
 
-# No auth for creating applications
 @router.post("/", response_model=schemas.ApplicationOut)
 def create_application(
     payload: schemas.ApplicationIn,
@@ -273,15 +272,15 @@ def check_permit_extension_eligibility(application_id: int, db: Session = Depend
     if not permit:
         raise HTTPException(status_code=404, detail="Permit not found")
 
-    # 1. Check if permit status is ACTIVE
+    # Check if permit status is ACTIVE
     if permit.status != "ACTIVE":
         return {"eligible": False, "reason": f"Permit status is '{permit.status}'."}
 
-    # 2. Check if work end time exists
+    # Check if work end time exists
     if not permit.workflow_data or not permit.workflow_data.end_time:
         return {"eligible": False, "reason": "Permit does not have a work end time."}
 
-    # 3. Perform date comparison using server time
+    # Perform date comparison using server time
     work_end_time = permit.workflow_data.end_time
     today = datetime.utcnow().date()
     
