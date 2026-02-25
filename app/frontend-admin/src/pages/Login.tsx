@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, getCurrentUser, logout } from '../../../shared/services/api';
+import { AppStrings } from '../../../shared/constants/AppStrings';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ const Login: React.FC = () => {
   return (
     <div className="login-container">
       <div className="login-box">
+        <h1>{AppStrings.companyName}</h1>
         <h2>Admin Portal Login</h2>
 
         <div style={{ marginTop: '20px', textAlign: 'left' }}>

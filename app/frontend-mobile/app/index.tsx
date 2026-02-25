@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { AppStrings } from "../../shared/constants/AppStrings";
 
 export default function Index() {
   const router = useRouter();
@@ -54,7 +55,7 @@ return (
     {/* Middle third: title */}
     <View className="flex-1 justify-center items-center">
       <Text className="text-center text-5xl font-bold text-primary">
-        Senior Aerospace{"\n"}Upeca Aerotech
+        {AppStrings.companyName}
       </Text>
     </View>
 

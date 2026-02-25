@@ -14,6 +14,7 @@ import PermitCard from "@/components/PermitCard";
 import LoadingScreen from "@/components/LoadingScreen";
 import { PermitStatus } from "@/constants/Status";
 import { Entypo } from "@expo/vector-icons";
+import { AppStrings } from "../../../shared/constants/AppStrings";
 
 export default function Home() {
   const { userId, userName, isApproval } = useUser();
@@ -51,7 +52,7 @@ export default function Home() {
       {/* Top Section */}
       <View className="bg-bg1 justify-center items-center px-6 py-10">
         <Text className="text-center text-4xl font-bold text-white mt-10 mb-2">
-          Senior Aerospace{"\n"}Upeca Aerotech
+          {AppStrings.companyName}
         </Text>
 
         <Text className="text-center text-lg text-white">

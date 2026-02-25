@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { logout } from '../../../shared/services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { AppStrings } from '../../../shared/constants/AppStrings';
 import { 
   faChartLine, 
   faFileSignature, 
@@ -46,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
     <nav className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {/* Button to toggle the sidebar's collapsed state */}
       <div className="sidebar-top">
-        <h3 className="sidebar-title">{!isCollapsed && 'Navigation'}</h3>
+        <h3 className="sidebar-title">{!isCollapsed && AppStrings.companyShortName}</h3>
         <button onClick={() => setIsCollapsed(!isCollapsed)} className="toggle-btn">
           <FontAwesomeIcon icon={isCollapsed ? faChevronRight : faChevronLeft} />
         </button>
