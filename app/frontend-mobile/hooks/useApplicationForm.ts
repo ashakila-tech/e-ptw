@@ -358,7 +358,7 @@ export function useApplicationForm(existingApp: any, router: any) {
       };
 
       // Save application
-      // const applicationId = await saveApplication(existingApp?.id || null, payload, !!existingApp);
+      await saveApplication(existingApp?.id || null, payload, !!existingApp);
 
       // Ensure workflow exists before creating approvals
       let workflowId = workflow?.id ?? existingApp?.workflow_id ?? existingApp?.workflowId ?? null;
