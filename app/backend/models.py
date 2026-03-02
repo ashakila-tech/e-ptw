@@ -68,6 +68,10 @@ class Approval(Base):
     role_name = Column(String, nullable=True)
     level = Column(Integer, nullable=True)
     workflow = relationship("Workflow", back_populates="approvals")
+    approval_data = relationship(
+        "ApprovalData",
+        back_populates="approval"
+    )
 
 class WorkflowData(Base):
     __tablename__ = "workflow_data"
@@ -149,6 +153,8 @@ class ApprovalData(Base):
     role_name = Column(String, nullable=True)
     level = Column(Integer, nullable=True)
     remarks = Column(String, nullable=True)
+
+    approval = relationship("Approval")
 
 class LocationManager(Base):
     __tablename__ = "location_manager"
