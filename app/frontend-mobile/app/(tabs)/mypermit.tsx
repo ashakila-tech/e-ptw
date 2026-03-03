@@ -165,7 +165,7 @@ export default function MyPermitTab() {
           <View className="mb-4">
             <PermitCard
               {...item}
-              status={isApproval ? item.approvalStatus : item.status}
+              status={item.status}
               isApproval={isApproval}
               onEdit={() =>
                 router.push({

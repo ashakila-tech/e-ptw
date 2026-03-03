@@ -19,7 +19,15 @@ import CustomHeader from "@/components/CustomHeader";
 export default function ApplicationForm() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const existingApp = params.application ? JSON.parse(params.application as string) : null;
+  let existingApp = null;
+
+  if (typeof params.application === "string") {
+    try {
+      existingApp = JSON.parse(params.application);
+    } catch (e) {
+      console.warn("Invalid application param");
+    }
+  }
 
   const {
     permitName, setPermitName,
@@ -207,18 +215,15 @@ export default function ApplicationForm() {
 
         {/* Start / End Time */}
         {workDate && (
-          <View className="flex-row mt-4 space-x-4">
-            <View className="flex-1">
+          <View className="flex-row mt-4">
+            <View className="flex-1 mr-2">
               <Text className="text-base text-gray-700 mb-2">Start Time</Text>
-              <View className="mr-1">
-                <DatePickerField value={startTime} onChange={setStartTime} mode="time" />
-              </View>
+              <DatePickerField value={startTime} onChange={setStartTime} mode="time" />
             </View>
-            <View className="flex-1">
+
+            <View className="flex-1 ml-2">
               <Text className="text-base text-gray-700 mb-2">End Time</Text>
-              <View className="ml-1">
               <DatePickerField value={endTime} onChange={setEndTime} mode="time" />
-              </View>
             </View>
           </View>
         )}
@@ -233,10 +238,10 @@ export default function ApplicationForm() {
           onDownloadPress={handleDownloadDocument}
         />
 
-        {formError ? <Text className="text-red-600 mt-4">{formError}</Text> : null}
+        {/* {formError ? <Text className="text-red-600 mt-4">{formError}</Text> : null} */}
 
         {/* Action Buttons */}
-        <View className="flex-row mt-8 space-x-4">
+        <View className="flex-row mt-8">
           {/* Leave Save as Draft commented for now */}
           {/* <Pressable
             onPress={() => submitApplication("DRAFT")}
@@ -255,8 +260,7 @@ export default function ApplicationForm() {
           </Pressable>
         </View>
 
-        <View className="p-10" /> {/* Spacer */}
-
+        <View className="p-10" />
       </ScrollView>
     </SafeAreaView>
   );

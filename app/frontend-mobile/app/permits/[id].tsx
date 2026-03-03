@@ -195,7 +195,7 @@ export default function PermitDetails() {
       // Then, call the new endpoint to change the permit status to EXIT_PENDING
       await api.confirmJobDone(permit.id);
       crossPlatformAlert("Success", "Job done confirmed. Permit is now awaiting exit confirmation from security.");
-      refetch();
+      // refetch();
     } catch (err: any) {
       crossPlatformAlert("Error", err.message || "Failed to confirm job done.");
     }

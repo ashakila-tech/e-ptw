@@ -680,6 +680,42 @@ export async function fetchApplicationsByWorkflowData(workflowDataId: number) {
   return res.ok ? res.json() : [];
 }
 
+interface FilterParams {
+  skip?: number;
+  limit?: number;
+  q?: string;
+  applicant_id?: number;
+  company_id?: number;
+  workflow_data_id?: number;
+}
+
+export async function fetchFilteredApplications(params: FilterParams = {}) {
+  const base = API_BASE_URL || (await getApiBaseUrlWithOverride());
+  const token = await getToken();
+  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+  // Build query string
+  const query = new URLSearchParams();
+  if (params.skip) query.append("skip", params.skip.toString());
+  if (params.limit) query.append("limit", params.limit.toString());
+  if (params.q) query.append("q", params.q);
+  if (params.applicant_id) query.append("applicant_id", params.applicant_id.toString());
+  if (params.company_id) query.append("company_id", params.company_id.toString());
+  if (params.workflow_data_id) query.append("workflow_data_id", params.workflow_data_id.toString());
+
+  const url = `${base}api/applications/filter?${query.toString()}`;
+
+  try {
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`Failed to fetch permits: ${res.status}`);
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (err: any) {
+    console.error("Error in fetchFilteredApplications:", err);
+    return [];
+  }
+}
+
 export async function fetchAllApplications() {
   return fetchPaginatedData("api/applications/");
 }
