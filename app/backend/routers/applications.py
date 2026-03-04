@@ -15,14 +15,16 @@ router = APIRouter(prefix="/applications", tags=["Applications"])
 def create_application(
     payload: schemas.ApplicationIn,
     db: Session = Depends(get_db),
+    me: models.User = Depends(get_current_user),
 ):
     """
-    Create a new application without authentication.
+    Create a new application.
     """
     # Exclude relationship IDs from the main object creation
     payload_dict = payload.model_dump(exclude={"worker_ids", "safety_equipment_ids"})
-    payload_dict["created_time"] = datetime.utcnow()
     payload_dict["updated_time"] = None  # new record
+    payload_dict["created_by"] = me.id
+    payload_dict["updated_by"] = None  # new record
 
     obj = models.Application(**payload_dict)
 
@@ -84,7 +86,6 @@ def update_application(
             obj.safety_equipment = equipment
 
     obj.updated_by = me.id
-    obj.updated_time = datetime.utcnow()  # server timestamp
     db.commit()
     db.refresh(obj)
 
@@ -191,6 +192,7 @@ def get_applications_for_approver(
 def security_confirm_entry_action(
     app_id: int,
     db: Session = Depends(get_db),
+    me: models.User = Depends(get_current_user),
 ):
     """
     Security confirmation endpoint without authentication.
@@ -202,7 +204,7 @@ def security_confirm_entry_action(
 
     if app.status == "APPROVED":
         app.status = "ACTIVE"
-        app.updated_time = datetime.utcnow()
+        app.updated_by = me.id
         message = "Permit activated successfully (entry confirmed)."
     else:
         raise HTTPException(status_code=400, detail=f"Cannot confirm entry for permit with status: {app.status}")
@@ -215,6 +217,7 @@ def security_confirm_entry_action(
 def job_done_action(
     app_id: int,
     db: Session = Depends(get_db),
+    me: models.User = Depends(get_current_user),
 ):
     """
     Supervisor confirms job is done.
@@ -227,7 +230,7 @@ def job_done_action(
 
     if app.status == "ACTIVE":
         app.status = "EXIT_PENDING"
-        app.updated_time = datetime.utcnow()
+        app.updated_by = me.id
         message = "Job done confirmed. Permit is now pending exit confirmation."
     else:
         raise HTTPException(status_code=400, detail=f"Cannot confirm job done for permit with status: {app.status}")
@@ -240,6 +243,7 @@ def job_done_action(
 def security_confirm_exit_action(
     app_id: int,
     db: Session = Depends(get_db),
+    me: models.User = Depends(get_current_user),
 ):
     """
     Security confirmation for exit without authentication.
@@ -251,7 +255,7 @@ def security_confirm_exit_action(
 
     if app.status == "EXIT_PENDING":
         app.status = "COMPLETED"
-        app.updated_time = datetime.utcnow()
+        app.updated_by = me.id
         message = "Permit completed successfully (exit confirmed)."
     else:
         raise HTTPException(status_code=400, detail=f"Cannot confirm exit for permit with status: {app.status}. Expected EXIT_PENDING.")

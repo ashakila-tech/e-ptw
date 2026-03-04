@@ -14,6 +14,7 @@ import {
   createWorkflow,
   createWorkflowData,
   saveApplication,
+  fetchUserById,
   fetchUsersByGroupName,
   createApproval,
   createApprovalData,
@@ -415,14 +416,15 @@ export function useApplicationForm(existingApp: any, router: any) {
         try {
           const officerData = await fetchPermitOfficersByPermitType(permitType!);
           const selectedOfficer = officerData && officerData.length > 0 ? officerData[0] : null;
+          const officerExtendedData = await fetchUserById(selectedOfficer.user_id);
 
           if (selectedOfficer) {
             const approval2 = await createApproval({
               company_id: companyId,
               workflow_id: workflowId,
               user_group_id: null,
-              user_id: selectedOfficer.user_id,
-              name: `${permitName || "Untitled"} - ${selectedOfficer.user?.name || "Unknown"} - Safety Officer`,
+              user_id: officerExtendedData.id,
+              name: `${permitName || "Untitled"} - ${officerExtendedData.name || "Officer"} - Safety Officer`,
               role_name: "HSE Department",
               level: 2,
             });
@@ -433,7 +435,7 @@ export function useApplicationForm(existingApp: any, router: any) {
               document_id: payload.document_id ?? 0,
               workflow_data_id: workflowDataId!,
               status: PermitStatus.WAITING,
-              approver_name: selectedOfficer.user?.name || "Safety Officer",
+              approver_name: officerExtendedData.name || "Safety Officer",
               role_name: "HSE Department",
               level: 2,
             });
@@ -442,9 +444,39 @@ export function useApplicationForm(existingApp: any, router: any) {
           console.error("Error fetching safety officer:", err);
         }
 
+        // LEVEL 3 — AREA OWNER (WAITING) — HARDCODED USER ID = 14
+        // This is for the security
+        try {
+          const SECURITY_USER_ID = 14;
+
+          const approval3 = await createApproval({
+            company_id: companyId,
+            workflow_id: workflowId,
+            user_group_id: null,
+            user_id: SECURITY_USER_ID,
+            name: `${permitName || "Untitled"} - Security Guard`,
+            role_name: "Security Guard",
+            level: 3,
+          });
+
+          await createApprovalData({
+            company_id: companyId,
+            approval_id: approval3.id,
+            document_id: payload.document_id ?? 0,
+            workflow_data_id: workflowDataId!,
+            status: PermitStatus.WAITING,
+            approver_name: "Security Guard",
+            role_name: "Security Guard",
+            level: 3,
+          });
+
+        } catch (err) {
+          console.error("Error creating site manager approval:", err);
+        }
+
         // ---------------- KEEP THIS CODE COMMENTED OUT FOR NOW ----------------
 
-        // // LEVEL 3 — SITE MANAGER (WAITING)
+        // // LEVEL — SITE MANAGER (WAITING)
         // try {
         //   const managerData = await fetchLocationManagersByLocation(location!);
         //   const selectedManager = managerData && managerData.length > 0 ? managerData[0] : null;

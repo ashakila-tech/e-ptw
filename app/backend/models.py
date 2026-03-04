@@ -103,16 +103,24 @@ class Application(Base):
     __tablename__ = "application"
     id = Column(Integer, primary_key=True, index=True)
     permit_type_id = Column(Integer, ForeignKey("permit_type.id"), nullable=False)
-    workflow_data_id = Column(Integer, ForeignKey("workflow_data.id"), nullable=True)  # NEW
+    workflow_data_id = Column(Integer, ForeignKey("workflow_data.id"), nullable=True)
     location_id = Column(Integer, ForeignKey("location.id"), nullable=False)
     applicant_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     name = Column(String, nullable=False)
     document_id = Column(Integer, ForeignKey("document.id"), nullable=True)
     status = Column(String, nullable=True)  # your enhancement (DRAFT/…)
-    created_by = Column(Integer, ForeignKey("user.id"), nullable=True)                 # NEW
-    updated_by = Column(Integer, ForeignKey("user.id"), nullable=True)                 # NEW
-    created_time = Column(DateTime, server_default=func.now())                         # NEW
-    updated_time = Column(DateTime, onupdate=func.now())
+    created_by = Column(Integer, ForeignKey("user.id"), nullable=True)
+    updated_by = Column(Integer, ForeignKey("user.id"), nullable=True)
+    created_time = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+    updated_time = Column(
+        DateTime(timezone=True),
+        onupdate=func.now(),
+        nullable=True
+    )
     permit_type = relationship("PermitType", lazy="joined")
     workflow_data = relationship("WorkflowData", lazy="joined")
     location = relationship("Location", lazy="joined")
