@@ -18,7 +18,6 @@ router = APIRouter(
 def create_application(
     payload: schemas.ApplicationIn,
     db: Session = Depends(get_db),
-    me: models.User = Depends(get_current_user),
 ):
     """
     Create a new application.
