@@ -199,6 +199,7 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
 
         # If all approvals are approved, update the application status
         permit_approved_approvals = [a for a in all_approval_data if a.level < 50]
+
         if all(a.status == "APPROVED" for a in permit_approved_approvals):
             if application and application.status != "APPROVED":
                 application.status = "APPROVED"
@@ -215,6 +216,16 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
                         <p>Please check the app for more details.</p>
                     """
                     _send_notification(db, user_id=application.applicant_id, title=title, message=message)
+    
+            # Promote security level 50 from WAITING -> PENDING
+            security_approval = db.query(models.ApprovalData).filter(
+                models.ApprovalData.workflow_data_id == obj.workflow_data_id,
+                models.ApprovalData.level == 50
+            ).first()
+            if security_approval and security_approval.status == "WAITING":
+                security_approval.status = "PENDING"
+                db.flush()
+                print(f"Security approval (level 50) for application {application.id} set to PENDING")
         
         # Custom logic for completion flow
         if obj.level == 98: # Check for special completion flow level

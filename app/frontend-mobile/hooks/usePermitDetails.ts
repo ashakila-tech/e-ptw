@@ -196,11 +196,11 @@ export function usePermitDetails(id?: string) {
   const confirmEntryAndCreateClosingWorkflow = async () => {
     if (!permit) throw new Error("Permit details are not loaded.");
 
-    // Create the closing workflow (e.g., "Job Done" approval)
-    await createClosingWorkflow();
-
     // Activate the permit
     await api.securityConfirmEntry(permit.id);
+
+    // Create the closing workflow (e.g., "Job Done" approval)
+    await createClosingWorkflow();
   };
 
   const updatePermitApproval = async (approvalDataId: number, status: string, remarks?: string) => {
