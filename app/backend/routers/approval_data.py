@@ -151,8 +151,11 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
         models.ApprovalData.workflow_data_id == obj.workflow_data_id
     ).all()
 
+    # Filter blocking approvals (levels < 50)
+    blocking_approvals = [a for a in all_approval_data if a.level < 50]
+
     # If any approver rejected, set application status to REJECTED
-    if any(a.status == "REJECTED" for a in all_approval_data):
+    if any(a.status == "REJECTED" for a in blocking_approvals):
         if application and application.status != "REJECTED":
             application.status = "REJECTED"
             application.updated_time = datetime.utcnow()
@@ -198,7 +201,7 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
                 _send_notification(db, user_id=next_approver_user_id, title=title, message=message)
 
         # If all approvals are approved, update the application status
-        if all(a.status == "APPROVED" for a in all_approval_data):
+        if all(a.status == "APPROVED" for a in blocking_approvals):
             if application and application.status != "APPROVED":
                 application.status = "APPROVED"
                 application.updated_time = datetime.utcnow()

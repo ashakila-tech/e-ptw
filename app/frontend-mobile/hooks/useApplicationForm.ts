@@ -444,7 +444,7 @@ export function useApplicationForm(existingApp: any, router: any) {
           console.error("Error fetching safety officer:", err);
         }
 
-        // LEVEL 3 — AREA OWNER (WAITING) — HARDCODED USER ID = 14
+        // LEVEL 50 — AREA OWNER (WAITING) — HARDCODED USER ID = 14
         // This is for the security
         try {
           const SECURITY_USER_ID = 14;
@@ -456,7 +456,7 @@ export function useApplicationForm(existingApp: any, router: any) {
             user_id: SECURITY_USER_ID,
             name: `${permitName || "Untitled"} - Security Guard`,
             role_name: "Security Guard",
-            level: 3,
+            level: 50,
           });
 
           await createApprovalData({
@@ -467,7 +467,7 @@ export function useApplicationForm(existingApp: any, router: any) {
             status: PermitStatus.WAITING,
             approver_name: "Security Guard",
             role_name: "Security Guard",
-            level: 3,
+            level: 50,
           });
 
         } catch (err) {
