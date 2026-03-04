@@ -196,7 +196,6 @@ def get_applications_for_approver(
 def security_confirm_entry_action(
     app_id: int,
     db: Session = Depends(get_db),
-    me: models.User = Depends(get_current_user),
 ):
     """
     Security confirmation endpoint without authentication.
@@ -221,7 +220,6 @@ def security_confirm_entry_action(
 def job_done_action(
     app_id: int,
     db: Session = Depends(get_db),
-    me: models.User = Depends(get_current_user),
 ):
     """
     Supervisor confirms job is done.
@@ -247,7 +245,6 @@ def job_done_action(
 def security_confirm_exit_action(
     app_id: int,
     db: Session = Depends(get_db),
-    me: models.User = Depends(get_current_user),
 ):
     """
     Security confirmation for exit without authentication.

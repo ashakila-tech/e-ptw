@@ -455,7 +455,7 @@ export function useApplicationForm(existingApp: any, router: any) {
             user_group_id: null,
             user_id: SECURITY_USER_ID,
             name: `${permitName || "Untitled"} - Security Guard`,
-            role_name: "Security Guard",
+            role_name: "Confirm Entry",
             level: 50,
           });
 
@@ -466,7 +466,7 @@ export function useApplicationForm(existingApp: any, router: any) {
             workflow_data_id: workflowDataId!,
             status: PermitStatus.WAITING,
             approver_name: "Security Guard",
-            role_name: "Security Guard",
+            role_name: "Confirm Entry",
             level: 50,
           });
 
