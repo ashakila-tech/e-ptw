@@ -3,11 +3,15 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from ._crud_factory import make_crud_router
-from ..deps import get_db
+from ..deps import get_db, get_current_user
 from .. import models, schemas
 
 # Create the base router
-router = APIRouter(prefix="/approvals", tags=["Approvals"])
+router = APIRouter(
+    prefix="/approvals",
+    tags=["Approvals"],
+    dependencies=[Depends(get_current_user)]
+)
 
 # Custom filter endpoint
 @router.get("/filter", response_model=List[schemas.ApprovalOut])

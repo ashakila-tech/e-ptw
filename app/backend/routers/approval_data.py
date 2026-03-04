@@ -5,13 +5,17 @@ from typing import Optional, List
 from datetime import datetime
 
 from ._crud_factory import make_crud_router
-from ..deps import get_db
+from ..deps import get_db, get_current_user
 from .. import models, schemas
 from ..utils.email import send_notification_email
 
 
 # Create the base router
-router = APIRouter(prefix="/approval-data", tags=["Approval Data"])
+router = APIRouter(
+    prefix="/approval-data",
+    tags=["Approval Data"],
+    dependencies=[Depends(get_current_user)]
+)
 
 @router.post("/", response_model=schemas.ApprovalDataOut)
 def create_approval_data(payload: schemas.ApprovalDataIn, db: Session = Depends(get_db)):

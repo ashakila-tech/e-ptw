@@ -9,7 +9,11 @@ from .. import models, schemas
 from ..deps import get_db, get_current_user, require_role
 
 # Create the base router
-router = APIRouter(prefix="/applications", tags=["Applications"])
+router = APIRouter(
+    prefix="/applications",
+    tags=["Applications"],
+    dependencies=[Depends(get_current_user)]
+)
 
 @router.post("/", response_model=schemas.ApplicationOut)
 def create_application(
