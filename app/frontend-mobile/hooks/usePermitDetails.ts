@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { PermitStatus } from "@/constants/Status";
 import * as api from "../../shared/services/api";
-
+import { ApprovalLevels } from "../../shared/constants/ApprovalLevels";
 import { useUser } from "@/contexts/UserContext";
+
 const PLACEHOLDER_THRESHOLD = 3;
-const CLOSING_FLOW_LEVEL = 98;
+// For now hardcode security id to 14
+const SECURITY_USER_ID = 14;
 
 export function usePermitDetails(id?: string) {
   const [permit, setPermit] = useState<any | null>(null);
@@ -177,7 +179,7 @@ export function usePermitDetails(id?: string) {
       user_id: supervisorApproval.user_id,
       name: `${permitName || "Untitled"} - ${supervisorApprovalData?.approver_name || "Supervisor"} - Job Done`,
       role_name: "Supervisor Job Done Confirmation",
-      level: CLOSING_FLOW_LEVEL,
+      level: ApprovalLevels.CLOSING_FLOW_LEVEL,
     });
 
     await api.createApprovalData({
@@ -188,7 +190,29 @@ export function usePermitDetails(id?: string) {
       status: PermitStatus.PENDING,
       approver_name: supervisorApprovalData?.approver_name || "Supervisor",
       role_name: "Supervisor Job Done Confirmation",
-      level: CLOSING_FLOW_LEVEL,
+      level: ApprovalLevels.CLOSING_FLOW_LEVEL,
+    });
+
+      // ----- LEVEL 99: SECURITY CONFIRM EXIT -----
+
+    const securityApprovalObj = await api.createApproval({
+      company_id: company_id || userCompanyId || 1,
+      workflow_id: workflowId,
+      user_id: SECURITY_USER_ID, // hardcoded value
+      name: `${permitName || "Untitled"} - Security - Confirm Exit`,
+      role_name: "Security Exit Confirmation",
+      level: ApprovalLevels.SECURITY_EXIT_LEVEL,
+    });
+
+    await api.createApprovalData({
+      company_id: company_id || userCompanyId || 1,
+      approval_id: securityApprovalObj.id,
+      document_id: documentId ?? 0,
+      workflow_data_id: workflowDataId,
+      status: PermitStatus.WAITING, // Will become PENDING after permit is APPROVED
+      approver_name: "Security Officer",
+      role_name: "Security Exit Confirmation",
+      level: ApprovalLevels.SECURITY_EXIT_LEVEL,
     });
   };
 

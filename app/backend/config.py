@@ -11,6 +11,13 @@ class Settings(BaseSettings):
     # Complex types must come as JSON in env; your .env already does that
     CORS_ORIGINS: List[str] = []
 
+    # Approval Levels
+    SUPERVISOR_LEVEL: 1
+    SAFETY_OFFICER_LEVEL: 2
+    SECURITY_ENTER_LEVEL: 50
+    CLOSING_FLOW_LEVEL: 98
+    SECURITY_EXIT_LEVEL: 99
+
     # JWT / security
     SECRET_KEY: str = "change-me"           # put a real value in .env
     ALGORITHM: str = "HS256"

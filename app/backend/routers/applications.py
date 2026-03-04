@@ -8,6 +8,9 @@ from ._crud_factory import make_crud_router
 from .. import models, schemas
 from ..deps import get_db, get_current_user, require_role
 
+# For now hardcode security id to 14
+SECURITY_USER_ID = 14
+
 # Create the base router
 router = APIRouter(
     prefix="/applications",
@@ -207,7 +210,7 @@ def security_confirm_entry_action(
 
     if app.status == "APPROVED":
         app.status = "ACTIVE"
-        app.updated_by = me.id
+        app.updated_by = SECURITY_USER_ID
         message = "Permit activated successfully (entry confirmed)."
     else:
         raise HTTPException(status_code=400, detail=f"Cannot confirm entry for permit with status: {app.status}")
@@ -232,7 +235,7 @@ def job_done_action(
 
     if app.status == "ACTIVE":
         app.status = "EXIT_PENDING"
-        app.updated_by = me.id
+        app.updated_by = SECURITY_USER_ID
         message = "Job done confirmed. Permit is now pending exit confirmation."
     else:
         raise HTTPException(status_code=400, detail=f"Cannot confirm job done for permit with status: {app.status}")
@@ -256,7 +259,7 @@ def security_confirm_exit_action(
 
     if app.status == "EXIT_PENDING":
         app.status = "COMPLETED"
-        app.updated_by = me.id
+        app.updated_by = SECURITY_USER_ID
         message = "Permit completed successfully (exit confirmed)."
     else:
         raise HTTPException(status_code=400, detail=f"Cannot confirm exit for permit with status: {app.status}. Expected EXIT_PENDING.")

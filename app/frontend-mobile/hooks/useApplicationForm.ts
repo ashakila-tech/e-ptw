@@ -23,6 +23,7 @@ import {
   sendNotificationToUser,
 } from "../../shared/services/api";
 import Constants from "expo-constants";
+import { ApprovalLevels } from "../../shared/constants/ApprovalLevels";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { useUser } from "@/contexts/UserContext";
 import { PermitStatus } from "@/constants/Status";
@@ -30,6 +31,9 @@ import { PermitStatus } from "@/constants/Status";
 const APPROVER_GROUP_NAME = Constants.expoConfig?.extra?.APPROVER_GROUP_NAME || process.env.EXPO_PUBLIC_APPROVER_GROUP_NAME || "Supervisor";
 const PLACEHOLDER_THRESHOLD = 3;
 const PLACEHOLDER_ID = 1;
+
+// For now hardcode security id to 14
+const SECURITY_USER_ID = 14;
 
 export function useApplicationForm(existingApp: any, router: any) {
   const { userId, userName, companyId: userCompanyId } = useUser();
@@ -384,7 +388,7 @@ export function useApplicationForm(existingApp: any, router: any) {
           user_id: jobAssigner,
           name: `${permitName || "Untitled"} - ${selectedAssigner?.label || "Unknown"} - Supervisor`,
           role_name: "Supervisor",
-          level: 1,
+          level: ApprovalLevels.SUPERVISOR_LEVEL,
         });
 
         await createApprovalData({
@@ -395,7 +399,7 @@ export function useApplicationForm(existingApp: any, router: any) {
           status: PermitStatus.PENDING,
           approver_name: selectedAssigner?.label || "Supervisor",
           role_name: "Supervisor",
-          level: 1,
+          level: ApprovalLevels.SUPERVISOR_LEVEL,
         });
 
         // Notify Supervisor
@@ -426,7 +430,7 @@ export function useApplicationForm(existingApp: any, router: any) {
               user_id: officerExtendedData.id,
               name: `${permitName || "Untitled"} - ${officerExtendedData.name || "Officer"} - Safety Officer`,
               role_name: "HSE Department",
-              level: 2,
+              level: ApprovalLevels.SAFETY_OFFICER_LEVEL,
             });
 
             await createApprovalData({
@@ -437,18 +441,16 @@ export function useApplicationForm(existingApp: any, router: any) {
               status: PermitStatus.WAITING,
               approver_name: officerExtendedData.name || "Safety Officer",
               role_name: "HSE Department",
-              level: 2,
+              level: ApprovalLevels.SAFETY_OFFICER_LEVEL,
             });
           }
         } catch (err) {
           console.error("Error fetching safety officer:", err);
         }
 
-        // LEVEL 50 — AREA OWNER (WAITING) — HARDCODED USER ID = 14
+        // LEVEL 50 — AREA OWNER (WAITING)
         // This is for the security
         try {
-          const SECURITY_USER_ID = 14;
-
           const approval3 = await createApproval({
             company_id: companyId,
             workflow_id: workflowId,
@@ -456,7 +458,7 @@ export function useApplicationForm(existingApp: any, router: any) {
             user_id: SECURITY_USER_ID,
             name: `${permitName || "Untitled"} - Security Guard`,
             role_name: "Confirm Entry",
-            level: 50,
+            level: ApprovalLevels.SECURITY_ENTER_LEVEL,
           });
 
           await createApprovalData({
@@ -467,45 +469,12 @@ export function useApplicationForm(existingApp: any, router: any) {
             status: PermitStatus.WAITING,
             approver_name: "Security Guard",
             role_name: "Confirm Entry",
-            level: 50,
+            level: ApprovalLevels.SECURITY_ENTER_LEVEL,
           });
 
         } catch (err) {
           console.error("Error creating site manager approval:", err);
         }
-
-        // ---------------- KEEP THIS CODE COMMENTED OUT FOR NOW ----------------
-
-        // // LEVEL — SITE MANAGER (WAITING)
-        // try {
-        //   const managerData = await fetchLocationManagersByLocation(location!);
-        //   const selectedManager = managerData && managerData.length > 0 ? managerData[0] : null;
-
-        //   if (selectedManager) {
-        //     const approval3 = await createApproval({
-        //       company_id: companyId,
-        //       workflow_id: workflowId,
-        //       user_group_id: null,
-        //       user_id: selectedManager.user_id,
-        //       name: `${permitName || "Untitled"} - ${selectedManager.user?.name || "Unknown"} - Site Manager`,
-        //       role_name: "Site Manager",
-        //       level: 3,
-        //     });
-
-        //     await createApprovalData({
-        //       company_id: companyId,
-        //       approval_id: approval3.id,
-        //       document_id: payload.document_id ?? 0,
-        //       workflow_data_id: workflowDataId!,
-        //       status: PermitStatus.WAITING,
-        //       approver_name: selectedManager.user?.name || "Site Manager",
-        //       role_name: "Site Manager",
-        //       level: 3,
-        //     });
-        //   }
-        // } catch (err) {
-        //   console.error("Error fetching site manager:", err);
-        // }
       }
 
       crossPlatformAlert(
