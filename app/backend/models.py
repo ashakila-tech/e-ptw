@@ -118,7 +118,6 @@ class Application(Base):
     )
     updated_time = Column(
         DateTime(timezone=True),
-        onupdate=func.now(),
         nullable=True
     )
     permit_type = relationship("PermitType", lazy="joined")

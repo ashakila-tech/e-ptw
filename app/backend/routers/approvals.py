@@ -10,7 +10,6 @@ from .. import models, schemas
 router = APIRouter(
     prefix="/approvals",
     tags=["Approvals"],
-    dependencies=[Depends(get_current_user)]
 )
 
 # Custom filter endpoint

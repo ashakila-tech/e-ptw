@@ -14,7 +14,6 @@ from ..utils.email import send_notification_email
 router = APIRouter(
     prefix="/approval-data",
     tags=["Approval Data"],
-    dependencies=[Depends(get_current_user)]
 )
 
 @router.post("/", response_model=schemas.ApprovalDataOut)

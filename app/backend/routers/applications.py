@@ -12,7 +12,6 @@ from ..deps import get_db, get_current_user, require_role
 router = APIRouter(
     prefix="/applications",
     tags=["Applications"],
-    dependencies=[Depends(get_current_user)]
 )
 
 @router.post("/", response_model=schemas.ApplicationOut)
@@ -26,8 +25,9 @@ def create_application(
     """
     # Exclude relationship IDs from the main object creation
     payload_dict = payload.model_dump(exclude={"worker_ids", "safety_equipment_ids"})
+    payload_dict["created_time"] = payload.utcnow()
+    payload_dict["created_by"] = payload.applicant_id
     payload_dict["updated_time"] = None  # new record
-    payload_dict["created_by"] = me.id
     payload_dict["updated_by"] = None  # new record
 
     obj = models.Application(**payload_dict)
@@ -89,7 +89,8 @@ def update_application(
             equipment = db.query(models.SafetyEquipment).filter(models.SafetyEquipment.id.in_(payload.safety_equipment_ids)).all()
             obj.safety_equipment = equipment
 
-    obj.updated_by = me.id
+    obj.updated_time = datetime.utcnow()
+    obj.updated_by = payload.applicant_id
     db.commit()
     db.refresh(obj)
 
