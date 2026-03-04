@@ -24,7 +24,7 @@ def create_application(
     """
     # Exclude relationship IDs from the main object creation
     payload_dict = payload.model_dump(exclude={"worker_ids", "safety_equipment_ids"})
-    payload_dict["created_time"] = payload.utcnow()
+    payload_dict["created_time"] = datetime.utcnow()
     payload_dict["created_by"] = payload.applicant_id
     payload_dict["updated_time"] = None  # new record
     payload_dict["updated_by"] = None  # new record
