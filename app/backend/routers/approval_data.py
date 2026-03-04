@@ -226,7 +226,13 @@ def approval_data_update_mutator(obj: models.ApprovalData, data: dict, db: Sessi
                 security_approval.status = "PENDING"
                 db.flush()
         
-        # Custom logic for completion flow
+        # Level 50 -> Security confirms entry -> set permit status to ACTIVE
+        if obj.level == settings.SECURITY_ENTER_LEVEL and application:
+            application.status = "ACTIVE"
+            application.updated_time = datetime.utcnow()
+            db.commit()
+
+        # Level 98 -> Supervisor Confirm Job Done -> Custom logic for completion flow
         if obj.level == settings.CLOSING_FLOW_LEVEL and application:
             application.status = "EXIT_PENDING"
             application.updated_time = datetime.utcnow()

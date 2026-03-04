@@ -23,7 +23,7 @@ import {
   sendNotificationToUser,
 } from "../../shared/services/api";
 import Constants from "expo-constants";
-// import { ApprovalLevels } from "../../shared/constants/ApprovalLevels";
+import { ApprovalLevels } from "../../shared/constants/ApprovalLevels";
 import { crossPlatformAlert } from "@/utils/CrossPlatformAlert";
 import { useUser } from "@/contexts/UserContext";
 import { PermitStatus } from "@/constants/Status";
@@ -388,8 +388,7 @@ export function useApplicationForm(existingApp: any, router: any) {
           user_id: jobAssigner,
           name: `${permitName || "Untitled"} - ${selectedAssigner?.label || "Unknown"} - Supervisor`,
           role_name: "Supervisor",
-          // level: ApprovalLevels.SUPERVISOR_LEVEL,
-          level: 1,
+          level: ApprovalLevels.SUPERVISOR_LEVEL,
         });
 
         await createApprovalData({
@@ -400,8 +399,7 @@ export function useApplicationForm(existingApp: any, router: any) {
           status: PermitStatus.PENDING,
           approver_name: selectedAssigner?.label || "Supervisor",
           role_name: "Supervisor",
-          // level: ApprovalLevels.SUPERVISOR_LEVEL,
-          level: 1,
+          level: ApprovalLevels.SUPERVISOR_LEVEL,
         });
 
         // Notify Supervisor
@@ -432,8 +430,7 @@ export function useApplicationForm(existingApp: any, router: any) {
               user_id: officerExtendedData.id,
               name: `${permitName || "Untitled"} - ${officerExtendedData.name || "Officer"} - Safety Officer`,
               role_name: "HSE Department",
-              // level: ApprovalLevels.SAFETY_OFFICER_LEVEL,
-              level: 2,
+              level: ApprovalLevels.SAFETY_OFFICER_LEVEL,
             });
 
             await createApprovalData({
@@ -444,8 +441,7 @@ export function useApplicationForm(existingApp: any, router: any) {
               status: PermitStatus.WAITING,
               approver_name: officerExtendedData.name || "Safety Officer",
               role_name: "HSE Department",
-              // level: ApprovalLevels.SAFETY_OFFICER_LEVEL,
-              level: 2,
+              level: ApprovalLevels.SAFETY_OFFICER_LEVEL,
             });
           }
         } catch (err) {
@@ -460,10 +456,9 @@ export function useApplicationForm(existingApp: any, router: any) {
             workflow_id: workflowId,
             user_group_id: null,
             user_id: SECURITY_USER_ID,
-            name: `${permitName || "Untitled"} - Security Guard`,
-            role_name: "Confirm Entry",
-            // level: ApprovalLevels.SECURITY_ENTER_LEVEL,
-            level: 50,
+            name: `${permitName || "Untitled"} - Security - Confirm Entry`,
+            role_name: "Security Entry Confirmation",
+            level: ApprovalLevels.SECURITY_ENTER_LEVEL,
           });
 
           await createApprovalData({
@@ -472,10 +467,9 @@ export function useApplicationForm(existingApp: any, router: any) {
             document_id: payload.document_id ?? 0,
             workflow_data_id: workflowDataId!,
             status: PermitStatus.WAITING,
-            approver_name: "Security Guard",
-            role_name: "Confirm Entry",
-            // level: ApprovalLevels.SECURITY_ENTER_LEVEL,
-            level: 50,
+            approver_name: "Security Officer",
+            role_name: "Security Entry Confirmation",
+            level: ApprovalLevels.SECURITY_ENTER_LEVEL,
           });
 
         } catch (err) {

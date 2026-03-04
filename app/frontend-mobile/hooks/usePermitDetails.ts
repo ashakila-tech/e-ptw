@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { PermitStatus } from "@/constants/Status";
 import * as api from "../../shared/services/api";
-// import { ApprovalLevels } from "../../shared/constants/ApprovalLevels";
+import { ApprovalLevels } from "../../shared/constants/ApprovalLevels";
 import { useUser } from "@/contexts/UserContext";
 
 const PLACEHOLDER_THRESHOLD = 3;
@@ -87,14 +87,6 @@ export function usePermitDetails(id?: string) {
             company_id: match?.company_id || permitData.company_id || 1,
           };
         });
-
-        // Manually add "Job Done" for supervisor if it exists in approvalData but not in approvalsList
-        // const jobDoneApprovalData = approvalDataFetched.find(d => d.level === 98);
-        // if (jobDoneApprovalData && !approvalsList.some(a => a.level === 98)) {
-        //   approvalsList.push({
-        //     ...jobDoneApprovalData, role_name: "Job Done Confirmation", approver_name: "Supervisor", time: jobDoneApprovalData.time, remarks: jobDoneApprovalData.remarks
-        //   });
-        // }
       }
 
       setApprovalData(approvalDataFetched);
@@ -172,6 +164,16 @@ export function usePermitDetails(id?: string) {
       throw new Error("Missing critical permit data to create closing workflow.");
     }
 
+    // LEVEL SECURITY_CONFIRM_ENTRY 50: SECURITY ENTRY (automatically APPROVED) ----
+    const securityEntryLevel = approvalData.find(ad => ad.level === ApprovalLevels.SECURITY_ENTER_LEVEL);
+    if (securityEntryLevel) {
+      await updatePermitApproval(
+        securityEntryLevel.id, 
+        PermitStatus.APPROVED,
+        "Auto-approved on entry confirmation"
+      );
+    }
+
     // LEVEL CLOSING_FLOW_LEVEL (98) — SUPERVISOR "JOB DONE" (PENDING)
     const approval = await api.createApproval({
       company_id: company_id || userCompanyId || 1,
@@ -179,8 +181,7 @@ export function usePermitDetails(id?: string) {
       user_id: supervisorApproval.user_id,
       name: `${permitName || "Untitled"} - ${supervisorApprovalData?.approver_name || "Supervisor"} - Job Done`,
       role_name: "Supervisor Job Done Confirmation",
-      // level: ApprovalLevels.CLOSING_FLOW_LEVEL,
-      level: 98,
+      level: ApprovalLevels.CLOSING_FLOW_LEVEL,
     });
 
     await api.createApprovalData({
@@ -191,11 +192,10 @@ export function usePermitDetails(id?: string) {
       status: PermitStatus.PENDING,
       approver_name: supervisorApprovalData?.approver_name || "Supervisor",
       role_name: "Supervisor Job Done Confirmation",
-      // level: ApprovalLevels.CLOSING_FLOW_LEVEL,
-      level: 98,
+      level: ApprovalLevels.CLOSING_FLOW_LEVEL,
     });
 
-      // ----- LEVEL 99: SECURITY CONFIRM EXIT -----
+    // LEVEL SECURITY CONFIRM EXIT 99
 
     const securityApprovalObj = await api.createApproval({
       company_id: company_id || userCompanyId || 1,
@@ -203,8 +203,7 @@ export function usePermitDetails(id?: string) {
       user_id: SECURITY_USER_ID, // hardcoded value
       name: `${permitName || "Untitled"} - Security - Confirm Exit`,
       role_name: "Security Exit Confirmation",
-      // level: ApprovalLevels.SECURITY_EXIT_LEVEL,
-      level: 99,
+      level: ApprovalLevels.SECURITY_EXIT_LEVEL,
     });
 
     await api.createApprovalData({
@@ -215,8 +214,7 @@ export function usePermitDetails(id?: string) {
       status: PermitStatus.WAITING, // Will become PENDING after permit is APPROVED
       approver_name: "Security Officer",
       role_name: "Security Exit Confirmation",
-      // level: ApprovalLevels.SECURITY_EXIT_LEVEL,
-      level: 99,
+      level: ApprovalLevels.SECURITY_EXIT_LEVEL,
     });
   };
 
@@ -231,38 +229,21 @@ export function usePermitDetails(id?: string) {
     await createClosingWorkflow();
   };
 
-  const updatePermitApproval = async (approvalDataId: number, status: string, remarks?: string) => {
-    if (!permit) throw new Error("Permit details are not loaded.");
-
-    const originalApprovalData = approvalData.find(ad => ad.id === approvalDataId);
-    if (!originalApprovalData) {
-      throw new Error("Could not find the corresponding approval data to update.");
-    }
-
-    const payload: any = {
-      ...originalApprovalData,
-      status,
-      time: new Date().toISOString(),
-      // Add the approver's name for the backend to use in notifications
-      approver_name: userName,
-    };
-    if (remarks !== undefined) {
-      payload.remarks = remarks;
-    }
-
-    // 1. Update the approval status in the backend
-    // The backend will now handle sending notifications based on the new status.
-    await api.updateApprovalData(payload);
-
-    // 2. Refresh the permit details to reflect changes
-    await fetchPermit();
-  };
-
   const confirmPermitExit = async () => {
     if (!permit) throw new Error("Permit details are not loaded.");
 
     // 1. Call API to confirm exit
     await api.securityConfirmExit(permit.id);
+
+    // LEVEL SECURITY EXIT CONFIRM 99: SECURITY EXIT (automatically APPROVED) ----
+    const securityExitLevel = approvalData.find(ad => ad.level === ApprovalLevels.SECURITY_EXIT_LEVEL);
+    if (securityExitLevel) {
+      await updatePermitApproval(
+        securityExitLevel.id, 
+        PermitStatus.APPROVED,
+        "Auto-approved on exit confirmation"
+      );
+    }
 
     // 2. Send Notifications
     const title = `Permit Completed: ${permit.name}`;
@@ -294,6 +275,33 @@ export function usePermitDetails(id?: string) {
     await Promise.all(notifyPromises);
 
     // 3. Refresh data
+    await fetchPermit();
+  };
+
+  const updatePermitApproval = async (approvalDataId: number, status: string, remarks?: string) => {
+    if (!permit) throw new Error("Permit details are not loaded.");
+
+    const originalApprovalData = approvalData.find(ad => ad.id === approvalDataId);
+    if (!originalApprovalData) {
+      throw new Error("Could not find the corresponding approval data to update.");
+    }
+
+    const payload: any = {
+      ...originalApprovalData,
+      status,
+      time: new Date().toISOString(),
+      // Add the approver's name for the backend to use in notifications
+      approver_name: userName,
+    };
+    if (remarks !== undefined) {
+      payload.remarks = remarks;
+    }
+
+    // 1. Update the approval status in the backend
+    // The backend will now handle sending notifications based on the new status.
+    await api.updateApprovalData(payload);
+
+    // 2. Refresh the permit details to reflect changes
     await fetchPermit();
   };
 
