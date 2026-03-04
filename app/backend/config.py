@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@db:5432/ptw"
 
     # Complex types must come as JSON in env; your .env already does that
-    CORS_ORIGINS: List[str] = ["http://54.252.159.4:4000", "http://54.252.159.4:4001"]
+    CORS_ORIGINS: List[str] = []
 
     # JWT / security
     SECRET_KEY: str = "change-me"           # put a real value in .env
