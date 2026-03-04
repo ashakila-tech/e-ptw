@@ -12,11 +12,11 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = []
 
     # Approval Levels
-    SUPERVISOR_LEVEL: 1
-    SAFETY_OFFICER_LEVEL: 2
-    SECURITY_ENTER_LEVEL: 50
-    CLOSING_FLOW_LEVEL: 98
-    SECURITY_EXIT_LEVEL: 99
+    SUPERVISOR_LEVEL: int = 1
+    SAFETY_OFFICER_LEVEL: int = 2
+    SECURITY_ENTER_LEVEL: int = 50
+    CLOSING_FLOW_LEVEL: int = 98
+    SECURITY_EXIT_LEVEL: int = 99
 
     # JWT / security
     SECRET_KEY: str = "change-me"           # put a real value in .env

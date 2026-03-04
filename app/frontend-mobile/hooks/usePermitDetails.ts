@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { PermitStatus } from "@/constants/Status";
 import * as api from "../../shared/services/api";
-import { ApprovalLevels } from "../../shared/constants/ApprovalLevels";
+// import { ApprovalLevels } from "../../shared/constants/ApprovalLevels";
 import { useUser } from "@/contexts/UserContext";
 
 const PLACEHOLDER_THRESHOLD = 3;
@@ -179,7 +179,8 @@ export function usePermitDetails(id?: string) {
       user_id: supervisorApproval.user_id,
       name: `${permitName || "Untitled"} - ${supervisorApprovalData?.approver_name || "Supervisor"} - Job Done`,
       role_name: "Supervisor Job Done Confirmation",
-      level: ApprovalLevels.CLOSING_FLOW_LEVEL,
+      // level: ApprovalLevels.CLOSING_FLOW_LEVEL,
+      level: 98,
     });
 
     await api.createApprovalData({
@@ -190,7 +191,8 @@ export function usePermitDetails(id?: string) {
       status: PermitStatus.PENDING,
       approver_name: supervisorApprovalData?.approver_name || "Supervisor",
       role_name: "Supervisor Job Done Confirmation",
-      level: ApprovalLevels.CLOSING_FLOW_LEVEL,
+      // level: ApprovalLevels.CLOSING_FLOW_LEVEL,
+      level: 98,
     });
 
       // ----- LEVEL 99: SECURITY CONFIRM EXIT -----
@@ -201,7 +203,8 @@ export function usePermitDetails(id?: string) {
       user_id: SECURITY_USER_ID, // hardcoded value
       name: `${permitName || "Untitled"} - Security - Confirm Exit`,
       role_name: "Security Exit Confirmation",
-      level: ApprovalLevels.SECURITY_EXIT_LEVEL,
+      // level: ApprovalLevels.SECURITY_EXIT_LEVEL,
+      level: 99,
     });
 
     await api.createApprovalData({
@@ -212,7 +215,8 @@ export function usePermitDetails(id?: string) {
       status: PermitStatus.WAITING, // Will become PENDING after permit is APPROVED
       approver_name: "Security Officer",
       role_name: "Security Exit Confirmation",
-      level: ApprovalLevels.SECURITY_EXIT_LEVEL,
+      // level: ApprovalLevels.SECURITY_EXIT_LEVEL,
+      level: 99,
     });
   };
 
