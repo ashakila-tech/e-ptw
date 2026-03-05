@@ -13,7 +13,8 @@ import { usePermitTab } from "@/hooks/usePermitTab";
 import PermitCard from "@/components/PermitCard";
 import LoadingScreen from "@/components/LoadingScreen";
 import { PermitStatus } from "@/constants/Status";
-import { Entypo } from "@expo/vector-icons";
+// import { Entypo } from "@expo/vector-icons";
+import { SquarePlus, Mail, Flag, List } from "lucide-react-native";
 import { AppStrings } from "../../../shared/constants/AppStrings";
 
 export default function Home() {
@@ -95,7 +96,7 @@ export default function Home() {
         <View className="justify-center items-center px-6 py-6">
           <Link href="/permits/form" asChild>
             <Pressable className="bg-bg1 w-full py-4 rounded flex-row justify-center items-center mb-4">
-              <Entypo name="squared-plus" size={18} color="white" />
+              <SquarePlus size={18} color="white" />
               <Text className="text-white text-center font-semibold text-lg ml-2">
                 Apply Permit
               </Text>
@@ -104,7 +105,7 @@ export default function Home() {
 
           <Link href="/feedbacks/form" asChild>
             <Pressable className="bg-white border border-bg1 w-full py-4 rounded flex-row justify-center items-center mb-4">
-              <Entypo name="mail" size={18} color="#000" />
+              <Mail size={18} color="#000" />
               <Text className="text-bg1 text-center font-semibold text-lg ml-2">
                 Give Feedback
               </Text>
@@ -113,7 +114,7 @@ export default function Home() {
 
           <Link href="/reports/form" asChild>
             <Pressable className="bg-white border border-bg1 w-full py-4 rounded flex-row justify-center items-center">
-              <Entypo name="flag" size={18} color="#000" />
+              <Flag size={18} color="#000" />
               <Text className="text-bg1 text-center font-semibold text-lg ml-2">
                 Near Miss Report
               </Text>
@@ -122,7 +123,7 @@ export default function Home() {
 
           <Link href="/reports/list" asChild>
             <Pressable className="bg-white border border-bg1 w-full py-4 rounded flex-row justify-center items-center mt-4">
-              <Entypo name="list" size={18} color="#000" />
+              <List size={18} color="#000" />
               <Text className="text-bg1 text-center font-semibold text-lg ml-2">
                 View Reports
               </Text>
